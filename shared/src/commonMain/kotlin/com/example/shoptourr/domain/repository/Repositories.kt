@@ -1,7 +1,9 @@
 package com.example.shoptourr.domain.repository
 
 import com.example.shoptourr.domain.model.AuthSession
+import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.HomeSnapshot
+import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
@@ -21,5 +23,6 @@ interface AuthRepository {
 
 interface TripRepository {
     suspend fun refreshTrips(): Result<Unit>
+    suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary>
     fun observeHome(): Flow<HomeSnapshot>
 }

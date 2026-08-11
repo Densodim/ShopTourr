@@ -34,3 +34,13 @@ data class TripSummary(
         }
     }
 }
+
+data class CreateTripDraft(
+    val city: String,
+    val country: String,
+    val startDate: String,
+    val endDate: String,
+    val budget: Money,
+    val countryCode: String? = null,
+    val defaultVatRatePercent: String? = null,
+)

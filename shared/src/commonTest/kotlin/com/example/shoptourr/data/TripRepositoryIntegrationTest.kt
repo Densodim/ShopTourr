@@ -1,16 +1,11 @@
 package com.example.shoptourr.data
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.home.HomeResponse
-import com.example.shoptourr.api.trip.TripStatus
-import com.example.shoptourr.api.trip.TripSummaryDto
-import com.example.shoptourr.api.user.ThemePreference
-import com.example.shoptourr.api.user.UserDto
-import com.example.shoptourr.api.user.UserStatsDto
 import com.example.shoptourr.data.local.InMemoryTripLocalStore
 import com.example.shoptourr.data.remote.HomeApi
+import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.TripRepositoryImpl
+import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.domain.model.TripStatus as DomainTripStatus
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -24,6 +19,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.example.shoptourr.api.common.MoneyDto
+import com.example.shoptourr.api.home.HomeResponse
+import com.example.shoptourr.api.trip.TripStatus
+import com.example.shoptourr.api.trip.TripSummaryDto
+import com.example.shoptourr.api.user.ThemePreference
+import com.example.shoptourr.api.user.UserDto
+import com.example.shoptourr.api.user.UserStatsDto
 
 class TripRepositoryIntegrationTest {
 
@@ -62,7 +64,15 @@ class TripRepositoryIntegrationTest {
             tokenProvider = { null },
         )
         val local = InMemoryTripLocalStore()
-        val repo = TripRepositoryImpl(HomeApi(client, "https://api.test"), local)
+        val outbox = InMemorySyncOutbox()
+        val repo = TripRepositoryImpl(
+            homeApi = HomeApi(client, "https://api.test"),
+            tripApi = TripApi(client, "https://api.test"),
+            localStore = local,
+            outbox = outbox,
+            idGenerator = { "local-trip" },
+            clock = { 1L },
+        )
 
         repo.refreshTrips().getOrThrow()
         val snapshot = repo.observeHome().first()

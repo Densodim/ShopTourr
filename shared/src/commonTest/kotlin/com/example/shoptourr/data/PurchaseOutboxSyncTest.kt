@@ -1,11 +1,9 @@
 package com.example.shoptourr.data
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.common.VatBreakdownDto
-import com.example.shoptourr.api.purchase.PurchaseCategory
-import com.example.shoptourr.api.purchase.PurchaseDto
 import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
+import com.example.shoptourr.data.local.InMemoryTripLocalStore
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
@@ -29,6 +27,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.example.shoptourr.api.common.MoneyDto
+import com.example.shoptourr.api.common.VatBreakdownDto
+import com.example.shoptourr.api.purchase.PurchaseCategory
+import com.example.shoptourr.api.purchase.PurchaseDto
 
 class PurchaseOutboxSyncTest {
 
@@ -97,6 +99,8 @@ class PurchaseOutboxSyncTest {
             outbox = outbox,
             purchaseApi = PurchaseApi(client, "https://api.test"),
             purchaseLocalStore = local,
+            tripApi = TripApi(client, "https://api.test"),
+            tripLocalStore = InMemoryTripLocalStore(),
             clock = { 1_700_000_000_100L },
         )
         val drained = processor.drainOnce()

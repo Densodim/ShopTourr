@@ -4,7 +4,14 @@ import com.example.shoptourr.api.trip.TripSummaryDto
 import com.example.shoptourr.api.trip.TripStatus as ApiTripStatus
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.HomeApi
+import com.example.shoptourr.data.remote.TripApi
+import com.example.shoptourr.data.sync.CreateTripPayload
+import com.example.shoptourr.data.sync.SyncMutationType
+import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.data.sync.SyncOutboxEntry
+import com.example.shoptourr.data.sync.SyncPayloadCodec
 import com.example.shoptourr.domain.error.AppError
+import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.TripStatus
@@ -15,7 +22,11 @@ import kotlinx.coroutines.flow.map
 
 class TripRepositoryImpl(
     private val homeApi: HomeApi,
+    private val tripApi: TripApi,
     private val localStore: TripLocalStore,
+    private val outbox: SyncOutbox,
+    private val idGenerator: () -> String,
+    private val clock: () -> Long,
 ) : TripRepository {
 
     override suspend fun refreshTrips(): Result<Unit> =
@@ -27,12 +38,46 @@ class TripRepositoryImpl(
                 addAll(home.archive.map { it.toDomain() })
             }
             localStore.replaceAll(trips)
-        }.fold(
-            onSuccess = { Result.success(Unit) },
-            onFailure = { error ->
-                Result.failure(error as? AppError ?: AppError.Unknown(error.message))
-            },
-        )
+        }.mapAppError()
+
+    override suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary> =
+        runCatching {
+            val localId = idGenerator()
+            val now = clock()
+            val trip = TripSummary(
+                id = localId,
+                city = draft.city,
+                country = draft.country,
+                status = TripStatus.UPCOMING,
+                startDate = draft.startDate,
+                endDate = draft.endDate,
+                budget = draft.budget,
+                spent = Money.zero(draft.budget.currency),
+                purchaseCount = 0,
+            )
+            localStore.replaceAll(localStore.all() + trip)
+            val payload = CreateTripPayload(
+                localId = localId,
+                city = draft.city,
+                country = draft.country,
+                countryCode = draft.countryCode,
+                startDate = draft.startDate,
+                endDate = draft.endDate,
+                budgetAmount = draft.budget.toDecimalString(),
+                budgetCurrency = draft.budget.currency,
+                defaultVatRatePercent = draft.defaultVatRatePercent,
+            )
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-trip-$localId",
+                    type = SyncMutationType.CREATE_TRIP,
+                    payloadJson = SyncPayloadCodec.encodeTrip(payload),
+                    idempotencyKey = localId,
+                    createdAtEpochMs = now,
+                )
+            )
+            trip
+        }.mapAppError()
 
     override fun observeHome(): Flow<HomeSnapshot> =
         localStore.observeAll().map { trips ->
@@ -62,4 +107,12 @@ class TripRepositoryImpl(
         ApiTripStatus.PAST -> TripStatus.PAST
         ApiTripStatus.ARCHIVED -> TripStatus.ARCHIVED
     }
+
+    private fun <T> Result<T>.mapAppError(): Result<T> =
+        fold(
+            onSuccess = { Result.success(it) },
+            onFailure = { error ->
+                Result.failure(error as? AppError ?: AppError.Unknown(error.message))
+            },
+        )
 }
