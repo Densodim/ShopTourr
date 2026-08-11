@@ -1,0 +1,24 @@
+CREATE TABLE SyncOutboxEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    idempotency_key TEXT NOT NULL,
+    created_at_epoch_ms INTEGER NOT NULL,
+    updated_at_epoch_ms INTEGER NOT NULL,
+    failure_count INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL
+);
+
+selectPending:
+SELECT * FROM SyncOutboxEntity
+WHERE status = 'PENDING' OR status = 'FAILED'
+ORDER BY created_at_epoch_ms ASC;
+
+upsert:
+INSERT OR REPLACE INTO SyncOutboxEntity(
+    id, type, payload_json, idempotency_key,
+    created_at_epoch_ms, updated_at_epoch_ms, failure_count, status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM SyncOutboxEntity WHERE id = :id;

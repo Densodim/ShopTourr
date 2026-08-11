@@ -1,0 +1,47 @@
+CREATE TABLE TripEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    city TEXT NOT NULL,
+    country TEXT NOT NULL,
+    country_code TEXT,
+    flag_emoji TEXT,
+    status TEXT NOT NULL,
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
+    dates_label TEXT,
+    budget_amount TEXT NOT NULL,
+    budget_currency TEXT NOT NULL,
+    spent_amount TEXT NOT NULL,
+    spent_currency TEXT NOT NULL,
+    purchase_count INTEGER NOT NULL DEFAULT 0,
+    day_count INTEGER NOT NULL DEFAULT 0,
+    current_day_number INTEGER,
+    default_vat_rate_percent TEXT NOT NULL,
+    exchange_rate_json TEXT,
+    updated_at_epoch_ms INTEGER NOT NULL,
+    deleted_at_epoch_ms INTEGER
+);
+
+selectAllActive:
+SELECT * FROM TripEntity
+WHERE deleted_at_epoch_ms IS NULL
+ORDER BY start_date DESC;
+
+selectById:
+SELECT * FROM TripEntity
+WHERE id = :id
+LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO TripEntity(
+    id, city, country, country_code, flag_emoji, status,
+    start_date, end_date, dates_label,
+    budget_amount, budget_currency, spent_amount, spent_currency,
+    purchase_count, day_count, current_day_number,
+    default_vat_rate_percent, exchange_rate_json,
+    updated_at_epoch_ms, deleted_at_epoch_ms
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+softDelete:
+UPDATE TripEntity
+SET deleted_at_epoch_ms = :deletedAt
+WHERE id = :id;
