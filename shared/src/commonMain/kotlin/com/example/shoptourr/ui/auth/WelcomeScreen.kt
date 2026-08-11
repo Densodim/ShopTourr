@@ -12,33 +12,42 @@ import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun WelcomeScreen(
     onSignUp: () -> Unit,
     onSignIn: () -> Unit,
 ) {
+    val title = t("welcome_title")
+    val titleLines = title.split('\n')
     VoyageScreen {
         Spacer(Modifier.height(48.dp))
         VoyageEyebrow("Voyage")
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "Путешествуй.\nСчитай. Вспоминай.",
+            text = titleLines.firstOrNull().orEmpty(),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
+        if (titleLines.size > 1) {
+            Text(
+                text = titleLines.drop(1).joinToString("\n"),
+                style = MaterialTheme.typography.displayLarge.copy(fontStyle = FontStyle.Italic),
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "Трекер поездок, VAT и Tax Free — в одном кармане.",
+            text = t("welcome_sub"),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontStyle = FontStyle.Italic,
         )
         Spacer(Modifier.height(40.dp))
-        VoyageButton(text = "Создать аккаунт", onClick = onSignUp)
+        VoyageButton(text = t("create_account"), onClick = onSignUp)
         Spacer(Modifier.height(12.dp))
         VoyageButton(
-            text = "Войти",
+            text = t("have_account"),
             onClick = onSignIn,
             variant = VoyageButtonVariant.Secondary,
         )

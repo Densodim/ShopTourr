@@ -22,6 +22,7 @@ import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun HomeScreen(
@@ -70,7 +71,11 @@ internal fun HomeContent(
         VoyageEyebrow("Voyage")
         Spacer(Modifier.height(8.dp))
         Text(
-            text = if (snapshot?.userName.isNullOrBlank()) "С возвращением" else "Привет, ${snapshot.userName}",
+            text = if (snapshot?.userName.isNullOrBlank()) {
+                t("welcome_back")
+            } else {
+                "${t("hello")}, ${snapshot.userName}"
+            },
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -93,16 +98,16 @@ internal fun HomeContent(
         Spacer(Modifier.height(20.dp))
 
         VoyageSurfaceBlock {
-            VoyageEyebrow("Сейчас в поездке")
+            VoyageEyebrow(t("current_trip"))
             Spacer(Modifier.height(8.dp))
             Text(
-                text = snapshot?.currentTripCity ?: "Нет активной поездки",
+                text = snapshot?.currentTripCity ?: "—",
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "Предстоящие · ${snapshot?.upcomingCount ?: 0}   Архив · ${snapshot?.archiveCount ?: 0}",
+                text = "${t("upcoming")} · ${snapshot?.upcomingCount ?: 0}   ${t("archive")} · ${snapshot?.archiveCount ?: 0}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -119,54 +124,54 @@ internal fun HomeContent(
         if (snapshot?.currentTripId == null && !state.isLoading) {
             Spacer(Modifier.height(16.dp))
             EmptyState(
-                title = "Начните главу",
-                message = "Создайте поездку, чтобы трекать покупки, VAT и маршрут",
-                actionLabel = "Новая поездка",
+                title = t("new_trip"),
+                message = t("where_to"),
+                actionLabel = t("create_trip"),
                 onAction = onCreateTrip,
             )
         }
 
         Spacer(Modifier.height(24.dp))
-        VoyageSection(title = "Действия") {
+        VoyageSection(title = t("tab_home")) {
             VoyageButton(
-                text = "Обновить",
+                text = t("see_all"),
                 onClick = { onIntent(HomeIntent.Refresh) },
                 isLoading = state.isLoading,
                 variant = VoyageButtonVariant.Secondary,
             )
             Spacer(Modifier.height(10.dp))
-            VoyageButton(text = "Новая поездка", onClick = onCreateTrip)
+            VoyageButton(text = t("new_trip"), onClick = onCreateTrip)
             Spacer(Modifier.height(10.dp))
             VoyageButton(
-                text = "Профиль",
+                text = t("profile"),
                 onClick = onOpenProfile,
                 variant = VoyageButtonVariant.Secondary,
             )
             Spacer(Modifier.height(10.dp))
             VoyageButton(
-                text = "Wishlist",
+                text = t("wishlist"),
                 onClick = onOpenWishlist,
                 variant = VoyageButtonVariant.Secondary,
             )
             val tripId = snapshot?.currentTripId
             if (tripId != null) {
                 Spacer(Modifier.height(10.dp))
-                VoyageButton(text = "Открыть поездку", onClick = { onOpenTrip(tripId) })
+                VoyageButton(text = t("tab_trips"), onClick = { onOpenTrip(tripId) })
                 Spacer(Modifier.height(10.dp))
                 VoyageButton(
-                    text = "Добавить покупку",
+                    text = t("add"),
                     onClick = { onAddPurchase(tripId) },
                     variant = VoyageButtonVariant.Ghost,
                 )
                 Spacer(Modifier.height(10.dp))
                 VoyageButton(
-                    text = "Карта",
+                    text = t("map"),
                     onClick = { onOpenMap(tripId) },
                     variant = VoyageButtonVariant.Secondary,
                 )
                 Spacer(Modifier.height(10.dp))
                 VoyageButton(
-                    text = "Статистика",
+                    text = t("stats"),
                     onClick = { onOpenStats(tripId) },
                     variant = VoyageButtonVariant.Secondary,
                 )
@@ -174,7 +179,7 @@ internal fun HomeContent(
         }
 
         if (state.isLoading && snapshot != null) {
-            LoadingBlock(label = "Обновляем…")
+            LoadingBlock(label = "…")
         }
     }
 }

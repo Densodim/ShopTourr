@@ -30,6 +30,7 @@ import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -84,35 +85,35 @@ internal fun AddPurchaseContent(
     }
 
     VoyageScreen {
-        VoyageTopBar(title = "Покупка", onBack = onBack)
+        VoyageTopBar(title = t("new_purchase"), onBack = onBack)
         Spacer(Modifier.height(16.dp))
-        VoyageSection(title = "Основное") {
+        VoyageSection(title = t("item_name")) {
             VoyageTextField(
                 value = state.name,
                 onValueChange = { onIntent(AddPurchaseIntent.NameChanged(it)) },
-                label = "Название",
+                label = t("item_name"),
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.amount,
                 onValueChange = { onIntent(AddPurchaseIntent.AmountChanged(it)) },
-                label = "Сумма",
+                label = t("amount"),
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.currency,
                 onValueChange = { onIntent(AddPurchaseIntent.CurrencyChanged(it)) },
-                label = "Валюта",
+                label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
-            Text("Категория", color = MaterialTheme.colorScheme.onBackground)
+            Text(t("category"), color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PurchaseCategory.entries.take(3).forEach { category ->
                     FilterChip(
                         selected = state.category == category,
                         onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                        label = { Text(category.name.lowercase()) },
+                        label = { Text(t(category.i18nKey())) },
                     )
                 }
             }
@@ -122,7 +123,7 @@ internal fun AddPurchaseContent(
                     FilterChip(
                         selected = state.category == category,
                         onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                        label = { Text(category.name.lowercase()) },
+                        label = { Text(t(category.i18nKey())) },
                     )
                 }
             }
@@ -130,34 +131,34 @@ internal fun AddPurchaseContent(
             VoyageTextField(
                 value = state.place,
                 onValueChange = { onIntent(AddPurchaseIntent.PlaceChanged(it)) },
-                label = "Место",
+                label = t("place"),
             )
         }
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = "VAT / Tax Free") {
+        VoyageSection(title = t("vat")) {
             VoyageTextField(
                 value = state.vatRatePercent,
                 onValueChange = { onIntent(AddPurchaseIntent.VatRateChanged(it)) },
-                label = "VAT %",
+                label = t("vat"),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = state.vatIncluded,
                     onCheckedChange = { onIntent(AddPurchaseIntent.VatIncludedChanged(it)) },
                 )
-                Text("VAT included", color = MaterialTheme.colorScheme.onBackground)
+                Text(t("vat_included"), color = MaterialTheme.colorScheme.onBackground)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = state.taxRefundEligible,
                     onCheckedChange = { onIntent(AddPurchaseIntent.TaxRefundChanged(it)) },
                 )
-                Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
+                Text(t("taxfree"), color = MaterialTheme.colorScheme.onBackground)
             }
         }
         if (state.travelers.isNotEmpty()) {
             Spacer(Modifier.height(20.dp))
-            VoyageSection(title = "Разделить") {
+            VoyageSection(title = t("split_with")) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -175,7 +176,7 @@ internal fun AddPurchaseContent(
                 state.yourShare?.let { share ->
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Ваша доля: ${share.toDecimalString()} ${share.currency}",
+                        text = "${t("your_share")}: ${share.toDecimalString()} ${share.currency}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -183,10 +184,10 @@ internal fun AddPurchaseContent(
             }
         }
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = "Чек") {
+        VoyageSection(title = t("receipt")) {
             if (state.receiptMediaId != null) {
                 Text(
-                    text = if (state.isUploadingReceipt) "Загрузка чека…" else "Чек прикреплён",
+                    text = if (state.isUploadingReceipt) t("scanning") else t("detected"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(8.dp))
@@ -196,7 +197,7 @@ internal fun AddPurchaseContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 VoyageButton(
-                    text = "Галерея",
+                    text = t("from_gallery"),
                     onClick = { galleryPicker.launch() },
                     enabled = !state.isUploadingReceipt && !state.isLoading,
                     isLoading = false,
@@ -205,7 +206,7 @@ internal fun AddPurchaseContent(
                     fillMaxWidth = false,
                 )
                 VoyageButton(
-                    text = "Камера",
+                    text = t("from_camera"),
                     onClick = { cameraPicker.launch() },
                     enabled = !state.isUploadingReceipt && !state.isLoading,
                     isLoading = state.isUploadingReceipt,
@@ -218,12 +219,12 @@ internal fun AddPurchaseContent(
                 Spacer(Modifier.height(12.dp))
                 VoyageSurfaceBlock {
                     Text(
-                        text = "OCR: ${ocr.suggestedName ?: "—"} · conf ${ocr.confidence}",
+                        text = "${t("detected")}: ${ocr.suggestedName ?: "—"} · conf ${ocr.confidence}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(8.dp))
                     VoyageButton(
-                        text = "Применить OCR",
+                        text = t("scan_receipt"),
                         onClick = { onIntent(AddPurchaseIntent.ApplyOcr) },
                         variant = VoyageButtonVariant.Ghost,
                     )
@@ -236,11 +237,20 @@ internal fun AddPurchaseContent(
         }
         Spacer(Modifier.height(24.dp))
         VoyageButton(
-            text = "Сохранить",
+            text = t("save"),
             onClick = { onIntent(AddPurchaseIntent.Submit) },
             isLoading = state.isLoading,
         )
     }
+}
+
+private fun PurchaseCategory.i18nKey(): String = when (this) {
+    PurchaseCategory.FOOD -> "cat_food"
+    PurchaseCategory.TRANSPORT -> "cat_transport"
+    PurchaseCategory.SOUVENIRS -> "cat_souvenirs"
+    PurchaseCategory.HOTEL -> "cat_hotel"
+    PurchaseCategory.CULTURE -> "cat_culture"
+    PurchaseCategory.OTHER -> "cat_other"
 }
 
 internal fun contentTypeForFileName(name: String): String =

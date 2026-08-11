@@ -21,6 +21,7 @@ import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun LoginScreen(
@@ -50,24 +51,19 @@ internal fun LoginContent(
         VoyageEyebrow("Voyage")
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "VOYAGE",
+            text = if (state.isRegisterMode) t("hi_there") else t("welcome_back"),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Каждая поездка",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = "— глава истории",
-            style = MaterialTheme.typography.titleLarge.copy(fontStyle = FontStyle.Italic),
-            color = MaterialTheme.colorScheme.primary,
+            text = if (state.isRegisterMode) t("take_seconds") else t("where_left"),
+            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(28.dp))
         Text(
-            text = if (state.isRegisterMode) "Создать аккаунт" else "Войти",
+            text = if (state.isRegisterMode) t("signup") else t("signin"),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -76,20 +72,20 @@ internal fun LoginContent(
             VoyageTextField(
                 value = state.displayName,
                 onValueChange = { onIntent(AuthIntent.DisplayNameChanged(it)) },
-                label = "Имя",
+                label = t("name"),
             )
             Spacer(Modifier.height(12.dp))
         }
         VoyageTextField(
             value = state.email,
             onValueChange = { onIntent(AuthIntent.EmailChanged(it)) },
-            label = "Email",
+            label = t("email"),
         )
         Spacer(Modifier.height(12.dp))
         VoyageTextField(
             value = state.password,
             onValueChange = { onIntent(AuthIntent.PasswordChanged(it)) },
-            label = "Пароль",
+            label = t("password"),
             isPassword = true,
         )
         state.error?.let { err ->
@@ -98,13 +94,17 @@ internal fun LoginContent(
         }
         Spacer(Modifier.height(24.dp))
         VoyageButton(
-            text = if (state.isRegisterMode) "Зарегистрироваться" else "Войти",
+            text = if (state.isRegisterMode) t("sign_up") else t("sign_in"),
             onClick = { onIntent(AuthIntent.Submit) },
             isLoading = state.isLoading,
         )
         Spacer(Modifier.height(8.dp))
         VoyageButton(
-            text = if (state.isRegisterMode) "Уже есть аккаунт? Войти" else "Создать аккаунт",
+            text = if (state.isRegisterMode) {
+                "${t("already_account")} ${t("sign_in")}"
+            } else {
+                "${t("no_account")} ${t("sign_up")}"
+            },
             onClick = { onIntent(AuthIntent.ToggleMode) },
             variant = VoyageButtonVariant.Ghost,
             enabled = !state.isLoading,

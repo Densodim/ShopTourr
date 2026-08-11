@@ -48,13 +48,18 @@ class UpdatePreferencesUseCase(
     private val userRepository: UserRepository,
 ) {
     suspend operator fun invoke(draft: UpdatePreferencesDraft): Result<UserPreferences> {
-        if (draft.locale != null && draft.locale.isBlank()) {
-            return Result.failure(AppError.Validation("locale"))
+        val normalizedLocale = draft.locale?.let { raw ->
+            val tag = raw.trim().lowercase()
+            when {
+                tag == "ru" || tag.startsWith("ru-") -> "ru"
+                tag == "en" || tag.startsWith("en-") -> "en"
+                else -> return Result.failure(AppError.Validation("locale"))
+            }
         }
         if (draft.preferredCurrency != null && draft.preferredCurrency.length != 3) {
             return Result.failure(AppError.Validation("preferredCurrency"))
         }
-        return userRepository.updatePreferences(draft)
+        return userRepository.updatePreferences(draft.copy(locale = normalizedLocale))
     }
 }
 

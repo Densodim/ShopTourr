@@ -29,6 +29,7 @@ import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun ProfileScreen(
@@ -59,7 +60,7 @@ internal fun ProfileContent(
     onIntent: (ProfileIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Профиль", onBack = { onIntent(ProfileIntent.Back) })
+        VoyageTopBar(title = t("profile"), onBack = { onIntent(ProfileIntent.Back) })
         Spacer(Modifier.height(8.dp))
         Text(
             text = state.profile?.email ?: "—",
@@ -69,44 +70,50 @@ internal fun ProfileContent(
         state.profile?.stats?.let { stats ->
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Поездки: ${stats.tripsCount} · Страны: ${stats.countriesCount} · Wishlist: ${stats.wishlistCount}",
+                text = "${t("trips_count")}: ${stats.tripsCount} · ${t("countries")}: ${stats.countriesCount} · ${t("wishlist")}: ${stats.wishlistCount}",
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.bodyMedium,
             )
         }
         Spacer(Modifier.height(16.dp))
         if (state.isLoading && state.profile == null) {
-            LoadingBlock(label = "Загружаем профиль…")
+            LoadingBlock(label = "…")
             return@VoyageScreen
         }
-        VoyageSection(title = "Профиль") {
+        VoyageSection(title = t("profile")) {
             VoyageTextField(
                 value = state.displayNameDraft,
                 onValueChange = { onIntent(ProfileIntent.DisplayNameChanged(it)) },
-                label = "Имя",
+                label = t("name"),
             )
             Spacer(Modifier.height(12.dp))
             VoyageButton(
-                text = "Сохранить профиль",
+                text = t("edit_profile"),
                 onClick = { onIntent(ProfileIntent.SaveProfile) },
                 isLoading = state.isSaving,
             )
         }
         Spacer(Modifier.height(24.dp))
-        VoyageSection(title = "Настройки") {
-            VoyageTextField(
-                value = state.localeDraft,
-                onValueChange = { onIntent(ProfileIntent.LocaleChanged(it)) },
-                label = "Locale",
-            )
+        VoyageSection(title = t("settings")) {
+            Text(t("language"), color = MaterialTheme.colorScheme.onBackground)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("ru" to "RU", "en" to "EN").forEach { (tag, label) ->
+                    FilterChip(
+                        selected = state.localeDraft.trim().lowercase().startsWith(tag),
+                        onClick = { onIntent(ProfileIntent.LocaleChanged(tag)) },
+                        label = { Text(label) },
+                    )
+                }
+            }
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.currencyDraft,
                 onValueChange = { onIntent(ProfileIntent.CurrencyChanged(it)) },
-                label = "Валюта",
+                label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
-            Text("Тема", color = MaterialTheme.colorScheme.onBackground)
+            Text(t("theme"), color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ThemeMode.entries.forEach { theme ->
@@ -122,10 +129,10 @@ internal fun ProfileContent(
                     checked = state.pushDraft,
                     onCheckedChange = { onIntent(ProfileIntent.PushChanged(it)) },
                 )
-                Text("Push-уведомления", color = MaterialTheme.colorScheme.onBackground)
+                Text(t("push_notif"), color = MaterialTheme.colorScheme.onBackground)
             }
             VoyageButton(
-                text = "Сохранить настройки",
+                text = t("preferences"),
                 onClick = { onIntent(ProfileIntent.SavePreferences) },
                 isLoading = state.isSaving,
                 variant = VoyageButtonVariant.Secondary,
@@ -134,14 +141,14 @@ internal fun ProfileContent(
         Spacer(Modifier.height(24.dp))
         VoyageSurfaceBlock {
             Text(
-                text = "Premium: ${state.profile?.premiumPlan?.name ?: "FREE"}",
+                text = "${t("premium")}: ${state.profile?.premiumPlan?.name ?: "FREE"}",
                 color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium,
             )
             if (state.profile?.isPremium != true) {
                 Spacer(Modifier.height(12.dp))
                 VoyageButton(
-                    text = "Активировать Plus",
+                    text = t("premium"),
                     onClick = { onIntent(ProfileIntent.ActivatePlus) },
                     enabled = !state.isSaving,
                 )
@@ -153,7 +160,7 @@ internal fun ProfileContent(
         }
         Spacer(Modifier.height(24.dp))
         VoyageButton(
-            text = "Выйти",
+            text = t("logout"),
             onClick = { onIntent(ProfileIntent.Logout) },
             enabled = !state.isSaving,
             variant = VoyageButtonVariant.Ghost,

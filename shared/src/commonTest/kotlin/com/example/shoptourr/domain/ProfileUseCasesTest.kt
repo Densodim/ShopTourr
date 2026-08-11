@@ -60,6 +60,28 @@ class ProfileUseCasesTest {
     }
 
     @Test
+    fun `update preferences rejects unsupported locale`() = runTest {
+        val repo = FakeUserRepository(
+            preferences = UserPreferences("ru", "EUR", ThemeMode.DARK, true, true),
+        )
+        val result = UpdatePreferencesUseCase(repo)(
+            UpdatePreferencesDraft(locale = "de"),
+        )
+        assertEquals(AppError.Validation("locale"), result.exceptionOrNull())
+    }
+
+    @Test
+    fun `update preferences normalizes en-US to en`() = runTest {
+        val repo = FakeUserRepository(
+            preferences = UserPreferences("ru", "EUR", ThemeMode.SYSTEM, true, false),
+        )
+        val result = UpdatePreferencesUseCase(repo)(
+            UpdatePreferencesDraft(locale = "en-US"),
+        ).getOrThrow()
+        assertEquals("en", result.locale)
+    }
+
+    @Test
     fun `update preferences applies theme and currency`() = runTest {
         val repo = FakeUserRepository(
             preferences = UserPreferences("ru", "EUR", ThemeMode.SYSTEM, true, false),
