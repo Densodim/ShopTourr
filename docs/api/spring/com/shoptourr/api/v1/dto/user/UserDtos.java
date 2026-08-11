@@ -1,6 +1,7 @@
 package com.shoptourr.api.v1.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -18,6 +19,11 @@ public final class UserDtos {
         SYSTEM, LIGHT, DARK
     }
 
+    /** Monetization tier (P3). FREE is default. */
+    public enum PremiumPlan {
+        FREE, PLUS, PRO
+    }
+
     public record UserDto(
             UUID id,
             String displayName,
@@ -29,7 +35,12 @@ public final class UserDtos {
             ThemePreference theme,
             boolean pushNotificationsEnabled,
             Instant memberSince,
+            PremiumPlan premiumPlan,
             UserStatsDto stats
+    ) {}
+
+    public record ActivatePremiumRequest(
+            @NotNull PremiumPlan plan
     ) {}
 
     public record UserStatsDto(

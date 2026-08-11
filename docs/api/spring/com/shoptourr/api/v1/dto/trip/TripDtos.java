@@ -44,6 +44,25 @@ public final class TripDtos {
             @Size(min = 1, max = 2) String avatarGlyph
     ) {}
 
+    public enum TripInviteStatus {
+        PENDING, ACCEPTED, DECLINED, EXPIRED
+    }
+
+    /** Invite a real account by email onto a shared trip (P3). */
+    public record InviteTravelerRequest(
+            @NotBlank @Size(max = 254) String email,
+            @Size(min = 1, max = 60) String displayNameHint
+    ) {}
+
+    public record TripInviteDto(
+            UUID id,
+            UUID tripId,
+            String email,
+            TripInviteStatus status,
+            Instant createdAt,
+            Instant expiresAt
+    ) {}
+
     /**
      * Full trip for detail screen. Counters are server-computed.
      */

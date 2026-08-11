@@ -7,7 +7,11 @@ import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.model.PurchaseDraft
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
+import com.example.shoptourr.domain.usecase.AddTravelerUseCase
+import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
+import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
+import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.fake.FakePurchaseRepository
 import com.example.shoptourr.fake.FakeTripRepository
 import com.example.shoptourr.presentation.trip.TripDetailIntent
@@ -37,23 +41,36 @@ class TripDetailViewModelTest {
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
 
+    private fun tripRepo(trip: TripSummary) = FakeTripRepository(
+        initial = HomeSnapshot("Mila", trip.city, 0, 0, trip.id),
+        trips = listOf(trip),
+    )
+
+    private fun vm(trips: FakeTripRepository, purchases: FakePurchaseRepository = FakePurchaseRepository()) =
+        TripDetailViewModel(
+            tripId = "lisbon",
+            observeTripDetail = ObserveTripDetailUseCase(trips, purchases),
+            refreshTrip = RefreshTripUseCase(trips),
+            addTraveler = AddTravelerUseCase(trips),
+            inviteTraveler = InviteTravelerUseCase(trips),
+            refreshExchangeRate = RefreshExchangeRateUseCase(trips),
+        )
+
+    private val sampleTrip = TripSummary(
+        id = "lisbon",
+        city = "Lisbon",
+        country = "Portugal",
+        status = TripStatus.ACTIVE,
+        startDate = "2026-08-01",
+        endDate = "2026-08-10",
+        budget = Money.parse("1000.00", "EUR"),
+        spent = Money.zero("EUR"),
+        purchaseCount = 0,
+    )
+
     @Test
     fun `loads trip detail and purchases`() = runTest {
-        val trip = TripSummary(
-            id = "lisbon",
-            city = "Lisbon",
-            country = "Portugal",
-            status = TripStatus.ACTIVE,
-            startDate = "2026-08-01",
-            endDate = "2026-08-10",
-            budget = Money.parse("1000.00", "EUR"),
-            spent = Money.zero("EUR"),
-            purchaseCount = 0,
-        )
-        val trips = FakeTripRepository(
-            initial = HomeSnapshot("Mila", "Lisbon", 0, 0, "lisbon"),
-            trips = listOf(trip),
-        )
+        val trips = tripRepo(sampleTrip)
         val purchases = FakePurchaseRepository()
         purchases.create(
             "lisbon",
@@ -66,12 +83,9 @@ class TripDetailViewModelTest {
                 place = null,
             ),
         )
-        val vm = TripDetailViewModel(
-            tripId = "lisbon",
-            observeTripDetail = ObserveTripDetailUseCase(trips, purchases),
-        )
+        val viewModel = vm(trips, purchases)
 
-        vm.state.test {
+        viewModel.state.test {
             var state = awaitItem()
             if (state.detail == null) state = awaitItem()
             assertEquals("Lisbon", state.detail?.trip?.city)
@@ -79,35 +93,28 @@ class TripDetailViewModelTest {
             assertNull(state.error)
             cancelAndIgnoreRemainingEvents()
         }
-        vm.onCleared()
+        viewModel.onCleared()
     }
 
     @Test
     fun `add purchase intent emits navigation event`() = runTest {
-        val trip = TripSummary(
-            id = "lisbon",
-            city = "Lisbon",
-            country = "Portugal",
-            status = TripStatus.ACTIVE,
-            startDate = "2026-08-01",
-            endDate = "2026-08-10",
-            budget = Money.parse("1000.00", "EUR"),
-            spent = Money.zero("EUR"),
-            purchaseCount = 0,
-        )
-        val vm = TripDetailViewModel(
-            tripId = "lisbon",
-            observeTripDetail = ObserveTripDetailUseCase(
-                FakeTripRepository(trips = listOf(trip)),
-                FakePurchaseRepository(),
-            ),
-        )
-
-        vm.events.test {
-            vm.onIntent(TripDetailIntent.AddPurchase)
+        val viewModel = vm(tripRepo(sampleTrip))
+        viewModel.events.test {
+            viewModel.onIntent(TripDetailIntent.AddPurchase)
             assertIs<TripDetailUiEvent.NavigateAddPurchase>(awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
-        vm.onCleared()
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `invite traveler stores last invite`() = runTest {
+        val trips = tripRepo(sampleTrip)
+        val viewModel = vm(trips)
+        viewModel.onIntent(TripDetailIntent.InviteEmailChanged("friend@voyage.app"))
+        viewModel.onIntent(TripDetailIntent.InviteTraveler)
+        assertEquals("friend@voyage.app", viewModel.state.value.lastInvite?.email)
+        assertEquals(1, trips.inviteCalls)
+        viewModel.onCleared()
     }
 }

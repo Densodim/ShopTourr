@@ -6,6 +6,12 @@ enum class ThemeMode {
     DARK,
 }
 
+enum class PremiumPlan {
+    FREE,
+    PLUS,
+    PRO,
+}
+
 data class UserStats(
     val tripsCount: Int,
     val countriesCount: Int,
@@ -22,8 +28,11 @@ data class UserProfile(
     val theme: ThemeMode,
     val pushNotificationsEnabled: Boolean,
     val memberSince: String,
+    val premiumPlan: PremiumPlan = PremiumPlan.FREE,
     val stats: UserStats,
-)
+) {
+    val isPremium: Boolean get() = premiumPlan != PremiumPlan.FREE
+}
 
 data class UserPreferences(
     val locale: String,

@@ -8,6 +8,7 @@ import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.model.UserProfile
 import com.example.shoptourr.domain.model.UserStats
+import com.example.shoptourr.domain.usecase.ActivatePremiumUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
 import com.example.shoptourr.domain.usecase.ObserveProfileUseCase
@@ -26,6 +27,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -69,6 +71,7 @@ class ProfileViewModelTest {
         refreshPreferences = RefreshPreferencesUseCase(userRepo),
         updateProfile = UpdateProfileUseCase(userRepo),
         updatePreferences = UpdatePreferencesUseCase(userRepo),
+        activatePremium = ActivatePremiumUseCase(userRepo),
         logout = LogoutUseCase(authRepo),
     )
 

@@ -1,11 +1,13 @@
 package com.example.shoptourr.presentation.export
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateExportDraft
 import com.example.shoptourr.domain.model.ExportFormat
 import com.example.shoptourr.domain.model.ExportJob
 import com.example.shoptourr.domain.usecase.CreateExportUseCase
 import com.example.shoptourr.domain.usecase.ObserveExportJobUseCase
+import com.example.shoptourr.domain.usecase.ObservePremiumUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
@@ -23,6 +25,7 @@ data class ExportUiState(
     val tripId: String,
     val isLoading: Boolean = false,
     val isPolling: Boolean = false,
+    val isPremium: Boolean = false,
     val format: ExportFormat = ExportFormat.PDF,
     val includeTaxFree: Boolean = true,
     val includeDiary: Boolean = false,
@@ -48,12 +51,20 @@ class ExportViewModel(
     private val observeExportJob: ObserveExportJobUseCase,
     private val createExport: CreateExportUseCase,
     private val refreshExportJob: RefreshExportJobUseCase,
+    private val observePremium: ObservePremiumUseCase,
     private val pollIntervalMs: Long = 1_000L,
 ) : BaseViewModel<ExportUiState, ExportUiEvent>(ExportUiState(tripId = tripId)) {
 
     private var pollJob: Job? = null
+    private var isPremium: Boolean = false
 
     init {
+        launch {
+            observePremium().collectLatest { premium ->
+                isPremium = premium
+                updateState { copy(isPremium = premium) }
+            }
+        }
         launch {
             observeExportJob(state.value.tripId).collectLatest { job ->
                 updateState { copy(job = job) }
@@ -78,6 +89,18 @@ class ExportViewModel(
 
     private fun create() {
         launch {
+            if (state.value.format == ExportFormat.PDF && !isPremium) {
+                updateState {
+                    copy(
+                        isLoading = false,
+                        error = AppError.Validation("premium").toUiError().copy(
+                            title = "Premium Required",
+                            message = "PDF export requires Plus or Pro",
+                        ),
+                    )
+                }
+                return@launch
+            }
             updateState { copy(isLoading = true, error = null) }
             val draft = CreateExportDraft(
                 format = state.value.format,

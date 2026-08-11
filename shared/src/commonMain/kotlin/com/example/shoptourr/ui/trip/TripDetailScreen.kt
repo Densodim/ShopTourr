@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -37,6 +38,7 @@ fun TripDetailScreen(
     onOpenMap: (tripId: String) -> Unit = {},
     onOpenStats: (tripId: String) -> Unit = {},
     onOpenExport: (tripId: String) -> Unit = {},
+    onLoggedOut: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
@@ -52,6 +54,7 @@ fun TripDetailScreen(
                 is TripDetailUiEvent.NavigateStats -> onOpenStats(event.tripId)
                 is TripDetailUiEvent.NavigateExport -> onOpenExport(event.tripId)
                 TripDetailUiEvent.NavigateBack -> onBack()
+                TripDetailUiEvent.Logout -> onLoggedOut()
             }
         }
     }
@@ -107,6 +110,59 @@ fun TripDetailScreen(
             text = "Потрачено: ${detail.spentTotal.toDecimalString()} ${detail.spentTotal.currency}",
             color = MaterialTheme.colorScheme.onBackground,
         )
+        detail.trip.exchangeRate?.let { fx ->
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "FX: 1 ${fx.tripCurrency} = ${fx.rate} ${fx.quoteCurrency}",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = { viewModel.onIntent(TripDetailIntent.RefreshFx) }) {
+                Text("Обновить курс")
+            }
+        }
+        if (detail.trip.travelers.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text("Участники", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+            detail.trip.travelers.forEach { traveler ->
+                Text(
+                    text = "${traveler.avatarGlyph} ${traveler.name}" + if (traveler.isOwner) " · owner" else "",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = state.travelerNameDraft,
+            onValueChange = { viewModel.onIntent(TripDetailIntent.TravelerNameChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Имя участника") },
+            singleLine = true,
+        )
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.AddTraveler) },
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Добавить участника")
+        }
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = state.inviteEmailDraft,
+            onValueChange = { viewModel.onIntent(TripDetailIntent.InviteEmailChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Email приглашения") },
+            singleLine = true,
+        )
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.InviteTraveler) },
+            enabled = !state.isWorking,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Пригласить аккаунт")
+        }
+        state.lastInvite?.let {
+            Text("Invite ${it.status.name.lowercase()}: ${it.email}", color = MaterialTheme.colorScheme.primary)
+        }
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = { viewModel.onIntent(TripDetailIntent.AddPurchase) },

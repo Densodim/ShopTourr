@@ -144,6 +144,20 @@ fun ProfileScreen(
         ) {
             Text("Сохранить настройки")
         }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Premium: ${state.profile?.premiumPlan?.name ?: "FREE"}",
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        if (state.profile?.isPremium != true) {
+            Button(
+                onClick = { viewModel.onIntent(ProfileIntent.ActivatePlus) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isSaving,
+            ) {
+                Text("Активировать Plus")
+            }
+        }
         state.error?.let { err ->
             Spacer(Modifier.height(8.dp))
             Text(text = err.title, color = MaterialTheme.colorScheme.error)

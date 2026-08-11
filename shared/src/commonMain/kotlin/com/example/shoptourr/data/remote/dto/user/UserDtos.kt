@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 enum class ThemePreference { SYSTEM, LIGHT, DARK }
 
 @Serializable
+enum class PremiumPlan { FREE, PLUS, PRO }
+
+@Serializable
 data class UserStatsDto(
     val tripsCount: Int,
     val countriesCount: Int,
@@ -23,7 +26,13 @@ data class UserDto(
     val theme: ThemePreference,
     val pushNotificationsEnabled: Boolean,
     val memberSince: String,
+    val premiumPlan: PremiumPlan = PremiumPlan.FREE,
     val stats: UserStatsDto,
+)
+
+@Serializable
+data class ActivatePremiumRequest(
+    val plan: PremiumPlan,
 )
 
 @Serializable

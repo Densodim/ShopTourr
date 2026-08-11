@@ -4,10 +4,16 @@ import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.ExportFormat
 import com.example.shoptourr.domain.model.ExportJob
 import com.example.shoptourr.domain.model.ExportJobStatus
+import com.example.shoptourr.domain.model.PremiumPlan
+import com.example.shoptourr.domain.model.ThemeMode
+import com.example.shoptourr.domain.model.UserProfile
+import com.example.shoptourr.domain.model.UserStats
 import com.example.shoptourr.domain.usecase.CreateExportUseCase
 import com.example.shoptourr.domain.usecase.ObserveExportJobUseCase
+import com.example.shoptourr.domain.usecase.ObservePremiumUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.fake.FakeExportRepository
+import com.example.shoptourr.fake.FakeUserRepository
 import com.example.shoptourr.presentation.export.ExportIntent
 import com.example.shoptourr.presentation.export.ExportViewModel
 import kotlin.test.Test
@@ -24,6 +30,19 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExportViewModelTest {
+
+    private val premiumProfile = UserProfile(
+        id = "u1",
+        displayName = "Mila",
+        email = "mila@voyage.app",
+        locale = "ru",
+        preferredCurrency = "EUR",
+        theme = ThemeMode.SYSTEM,
+        pushNotificationsEnabled = true,
+        memberSince = "2026-01-01",
+        premiumPlan = PremiumPlan.PLUS,
+        stats = UserStats(0, 0, 0),
+    )
 
     @Test
     fun `create starts polling until ready`() = runTest {
@@ -50,6 +69,7 @@ class ExportViewModelTest {
                 observeExportJob = ObserveExportJobUseCase(repo),
                 createExport = CreateExportUseCase(repo),
                 refreshExportJob = RefreshExportJobUseCase(repo),
+                observePremium = ObservePremiumUseCase(FakeUserRepository(profile = premiumProfile)),
                 pollIntervalMs = 10L,
             )
             vm.onIntent(ExportIntent.Create)
@@ -76,9 +96,32 @@ class ExportViewModelTest {
                     FakeExportRepository(createError = AppError.Unauthorized),
                 ),
                 refreshExportJob = RefreshExportJobUseCase(FakeExportRepository()),
+                observePremium = ObservePremiumUseCase(FakeUserRepository(profile = premiumProfile)),
             )
+            vm.onIntent(ExportIntent.FormatChanged(ExportFormat.CSV))
             vm.onIntent(ExportIntent.Create)
             assertEquals("Session Expired", vm.state.value.error?.title)
+            vm.onCleared()
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `pdf without premium is blocked`() = runTest {
+        val dispatcher = UnconfinedTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val free = premiumProfile.copy(premiumPlan = PremiumPlan.FREE)
+            val vm = ExportViewModel(
+                tripId = "lisbon",
+                observeExportJob = ObserveExportJobUseCase(FakeExportRepository()),
+                createExport = CreateExportUseCase(FakeExportRepository()),
+                refreshExportJob = RefreshExportJobUseCase(FakeExportRepository()),
+                observePremium = ObservePremiumUseCase(FakeUserRepository(profile = free)),
+            )
+            vm.onIntent(ExportIntent.Create)
+            assertEquals("Premium Required", vm.state.value.error?.title)
             vm.onCleared()
         } finally {
             Dispatchers.resetMain()

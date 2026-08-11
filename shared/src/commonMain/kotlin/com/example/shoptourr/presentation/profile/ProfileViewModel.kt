@@ -1,11 +1,13 @@
 package com.example.shoptourr.presentation.profile
 
 import com.example.shoptourr.domain.error.asAppError
+import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.ThemeMode
 import com.example.shoptourr.domain.model.UpdatePreferencesDraft
 import com.example.shoptourr.domain.model.UpdateProfileDraft
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.model.UserProfile
+import com.example.shoptourr.domain.usecase.ActivatePremiumUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
 import com.example.shoptourr.domain.usecase.ObserveProfileUseCase
@@ -44,6 +46,7 @@ sealed interface ProfileIntent {
     data class PushChanged(val value: Boolean) : ProfileIntent
     data object SaveProfile : ProfileIntent
     data object SavePreferences : ProfileIntent
+    data object ActivatePlus : ProfileIntent
     data object Logout : ProfileIntent
     data object Back : ProfileIntent
 }
@@ -60,6 +63,7 @@ class ProfileViewModel(
     private val refreshPreferences: RefreshPreferencesUseCase,
     private val updateProfile: UpdateProfileUseCase,
     private val updatePreferences: UpdatePreferencesUseCase,
+    private val activatePremium: ActivatePremiumUseCase,
     private val logout: LogoutUseCase,
 ) : BaseViewModel<ProfileUiState, ProfileUiEvent>(ProfileUiState()) {
 
@@ -107,6 +111,7 @@ class ProfileViewModel(
                 updateState { copy(pushDraft = intent.value, error = null) }
             ProfileIntent.SaveProfile -> saveProfile()
             ProfileIntent.SavePreferences -> savePreferences()
+            ProfileIntent.ActivatePlus -> activatePlus()
             ProfileIntent.Logout -> logoutUser()
             ProfileIntent.Back -> emitEvent(ProfileUiEvent.NavigateBack)
         }
@@ -156,6 +161,19 @@ class ProfileViewModel(
                     darkMode = current.themeDraft == ThemeMode.DARK,
                 )
             )
+                .onSuccess { updateState { copy(isSaving = false) } }
+                .onFailure { throwable ->
+                    updateState {
+                        copy(isSaving = false, error = throwable.asAppError().toUiError())
+                    }
+                }
+        }
+    }
+
+    private fun activatePlus() {
+        launch {
+            updateState { copy(isSaving = true, error = null) }
+            activatePremium(PremiumPlan.PLUS)
                 .onSuccess { updateState { copy(isSaving = false) } }
                 .onFailure { throwable ->
                     updateState {

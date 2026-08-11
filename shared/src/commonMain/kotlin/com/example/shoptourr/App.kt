@@ -122,6 +122,7 @@ fun App() {
                     onOpenMap = { tripId -> destination = AppDestination.Route(tripId) },
                     onOpenStats = { tripId -> destination = AppDestination.Stats(tripId) },
                     onOpenExport = { tripId -> destination = AppDestination.Export(tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
                     onBack = { destination = AppDestination.Home },
                 )
             }

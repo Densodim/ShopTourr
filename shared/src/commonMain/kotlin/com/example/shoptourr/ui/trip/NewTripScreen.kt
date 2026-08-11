@@ -106,6 +106,28 @@ fun NewTripScreen(
             label = { Text("Валюта") },
             singleLine = true,
         )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.quoteCurrency,
+            onValueChange = { viewModel.onIntent(NewTripIntent.QuoteCurrencyChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Quote FX (RUB…)") },
+            singleLine = true,
+        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = state.travelerDraft,
+            onValueChange = { viewModel.onIntent(NewTripIntent.TravelerDraftChanged(it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Участник") },
+            singleLine = true,
+        )
+        TextButton(onClick = { viewModel.onIntent(NewTripIntent.AddTraveler) }) {
+            Text("Добавить участника")
+        }
+        state.travelers.forEach { traveler ->
+            Text(traveler.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         state.error?.let { err ->
             Spacer(Modifier.height(8.dp))
             Text(text = err.title, color = MaterialTheme.colorScheme.error)

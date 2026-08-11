@@ -1,8 +1,12 @@
 package com.example.shoptourr.domain.repository
 
 import com.example.shoptourr.domain.model.AuthSession
+import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.CreateTripDraft
+import com.example.shoptourr.domain.model.ExchangeRate
 import com.example.shoptourr.domain.model.HomeSnapshot
+import com.example.shoptourr.domain.model.Traveler
+import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.User
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +27,11 @@ interface AuthRepository {
 
 interface TripRepository {
     suspend fun refreshTrips(): Result<Unit>
+    suspend fun refreshTrip(tripId: String): Result<TripSummary>
     suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary>
+    suspend fun addTraveler(tripId: String, draft: CreateTravelerDraft): Result<Traveler>
+    suspend fun inviteTraveler(tripId: String, email: String): Result<TripInvite>
+    suspend fun refreshExchangeRate(tripId: String): Result<ExchangeRate>
     fun observeHome(): Flow<HomeSnapshot>
     fun observeTrip(tripId: String): Flow<TripSummary?>
 }

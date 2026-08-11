@@ -1,6 +1,7 @@
 package com.example.shoptourr.presentation.trip
 
 import com.example.shoptourr.domain.error.asAppError
+import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
@@ -18,6 +19,9 @@ data class NewTripUiState(
     val endDate: String = "",
     val budgetAmount: String = "",
     val budgetCurrency: String = "EUR",
+    val quoteCurrency: String = "RUB",
+    val travelerDraft: String = "",
+    val travelers: List<CreateTravelerDraft> = emptyList(),
     val isLoading: Boolean = false,
     val error: UiError? = null,
 ) : UiState
@@ -29,6 +33,9 @@ sealed interface NewTripIntent {
     data class EndDateChanged(val value: String) : NewTripIntent
     data class BudgetChanged(val value: String) : NewTripIntent
     data class CurrencyChanged(val value: String) : NewTripIntent
+    data class QuoteCurrencyChanged(val value: String) : NewTripIntent
+    data class TravelerDraftChanged(val value: String) : NewTripIntent
+    data object AddTraveler : NewTripIntent
     data object Submit : NewTripIntent
 }
 
@@ -48,6 +55,20 @@ class NewTripViewModel(
             is NewTripIntent.EndDateChanged -> updateState { copy(endDate = intent.value, error = null) }
             is NewTripIntent.BudgetChanged -> updateState { copy(budgetAmount = intent.value, error = null) }
             is NewTripIntent.CurrencyChanged -> updateState { copy(budgetCurrency = intent.value, error = null) }
+            is NewTripIntent.QuoteCurrencyChanged ->
+                updateState { copy(quoteCurrency = intent.value.uppercase(), error = null) }
+            is NewTripIntent.TravelerDraftChanged ->
+                updateState { copy(travelerDraft = intent.value, error = null) }
+            NewTripIntent.AddTraveler -> {
+                val name = state.value.travelerDraft.trim()
+                if (name.isEmpty()) return
+                updateState {
+                    copy(
+                        travelers = travelers + CreateTravelerDraft(name = name),
+                        travelerDraft = "",
+                    )
+                }
+            }
             NewTripIntent.Submit -> submit()
         }
     }
@@ -62,6 +83,8 @@ class NewTripViewModel(
                 startDate = current.startDate,
                 endDate = current.endDate,
                 budget = Money.parse(current.budgetAmount.ifBlank { "0" }, current.budgetCurrency),
+                quoteCurrency = current.quoteCurrency.ifBlank { null },
+                travelers = current.travelers,
             )
             createTrip(draft)
                 .onSuccess { trip ->

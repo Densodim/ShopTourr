@@ -64,6 +64,8 @@ import com.example.shoptourr.domain.repository.TaxFreeRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.repository.UserRepository
 import com.example.shoptourr.domain.repository.WishlistRepository
+import com.example.shoptourr.domain.usecase.ActivatePremiumUseCase
+import com.example.shoptourr.domain.usecase.AddTravelerUseCase
 import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.CreateExportUseCase
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
@@ -72,6 +74,7 @@ import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
+import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
@@ -80,6 +83,7 @@ import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
 import com.example.shoptourr.domain.usecase.ObserveExportJobUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
+import com.example.shoptourr.domain.usecase.ObservePremiumUseCase
 import com.example.shoptourr.domain.usecase.ObserveProfileUseCase
 import com.example.shoptourr.domain.usecase.ObserveRouteUseCase
 import com.example.shoptourr.domain.usecase.ObserveStatsUseCase
@@ -88,6 +92,7 @@ import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.ObserveWishlistUseCase
 import com.example.shoptourr.domain.usecase.RefreshAlertsUseCase
 import com.example.shoptourr.domain.usecase.RefreshDiaryUseCase
+import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshPreferencesUseCase
@@ -95,6 +100,7 @@ import com.example.shoptourr.domain.usecase.RefreshProfileUseCase
 import com.example.shoptourr.domain.usecase.RefreshRouteUseCase
 import com.example.shoptourr.domain.usecase.RefreshStatsUseCase
 import com.example.shoptourr.domain.usecase.RefreshTaxFreeUseCase
+import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
 import com.example.shoptourr.domain.usecase.RegisterUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
@@ -272,6 +278,12 @@ val domainModule = module {
     factoryOf(::ObserveExportJobUseCase)
     factoryOf(::CreateExportUseCase)
     factoryOf(::RefreshExportJobUseCase)
+    factoryOf(::RefreshTripUseCase)
+    factoryOf(::AddTravelerUseCase)
+    factoryOf(::InviteTravelerUseCase)
+    factoryOf(::RefreshExchangeRateUseCase)
+    factoryOf(::ActivatePremiumUseCase)
+    factoryOf(::ObservePremiumUseCase)
 }
 
 val presentationModule = module {
@@ -284,6 +296,10 @@ val presentationModule = module {
         TripDetailViewModel(
             tripId = params.get(),
             observeTripDetail = get(),
+            refreshTrip = get(),
+            addTraveler = get(),
+            inviteTraveler = get(),
+            refreshExchangeRate = get(),
         )
     }
     factory { params ->
@@ -337,6 +353,7 @@ val presentationModule = module {
             observeExportJob = get(),
             createExport = get(),
             refreshExportJob = get(),
+            observePremium = get(),
         )
     }
 }

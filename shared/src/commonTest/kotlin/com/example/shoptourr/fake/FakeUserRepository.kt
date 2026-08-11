@@ -1,5 +1,6 @@
 package com.example.shoptourr.fake
 
+import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.UpdatePreferencesDraft
 import com.example.shoptourr.domain.model.UpdateProfileDraft
 import com.example.shoptourr.domain.model.UserPreferences
@@ -23,6 +24,8 @@ class FakeUserRepository(
     var updatePreferencesCalls: Int = 0
         private set
     var refreshProfileCalls: Int = 0
+        private set
+    var activatePremiumCalls: Int = 0
         private set
 
     override fun observeProfile(): Flow<UserProfile?> = profileState.asStateFlow()
@@ -66,6 +69,16 @@ class FakeUserRepository(
             darkMode = draft.darkMode ?: current.darkMode,
         )
         prefsState.value = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun activatePremium(plan: PremiumPlan): Result<UserProfile> {
+        activatePremiumCalls += 1
+        updateError?.let { return Result.failure(it) }
+        val current = profileState.value
+            ?: return Result.failure(com.example.shoptourr.domain.error.AppError.NotFound)
+        val updated = current.copy(premiumPlan = plan)
+        profileState.value = updated
         return Result.success(updated)
     }
 }

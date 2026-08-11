@@ -3,6 +3,7 @@ package com.example.shoptourr.data.sync
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
 import com.example.shoptourr.data.remote.dto.purchase.CreatePurchaseRequest
 import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory as ApiPurchaseCategory
+import com.example.shoptourr.data.remote.dto.trip.CreateTravelerRequest
 import com.example.shoptourr.data.remote.dto.trip.CreateTripRequest
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
@@ -33,6 +34,7 @@ data class CreatePurchasePayload(
     val purchaseDate: String?,
     val purchaseTime: String?,
     val receiptMediaId: String? = null,
+    val splitWithTravelerIds: List<String> = emptyList(),
 )
 
 @Serializable
@@ -46,7 +48,16 @@ data class CreateTripPayload(
     val budgetAmount: String,
     val budgetCurrency: String,
     val defaultVatRatePercent: String?,
-)
+    val quoteCurrency: String? = null,
+    val travelers: List<Traveler> = emptyList(),
+) {
+    @Serializable
+    data class Traveler(
+        val name: String,
+        val colorHex: String,
+        val avatarGlyph: String? = null,
+    )
+}
 
 data class DrainResult(
     val successCount: Int,
@@ -107,6 +118,7 @@ class SyncOutboxProcessor(
                 purchaseDate = payload.purchaseDate,
                 purchaseTime = payload.purchaseTime,
                 receiptMediaId = payload.receiptMediaId,
+                splitWithTravelerIds = payload.splitWithTravelerIds,
             ),
             idempotencyKey = entry.idempotencyKey,
         )
@@ -144,6 +156,14 @@ class SyncOutboxProcessor(
                 endDate = payload.endDate,
                 budget = MoneyDto(payload.budgetAmount, payload.budgetCurrency),
                 defaultVatRatePercent = payload.defaultVatRatePercent,
+                quoteCurrency = payload.quoteCurrency,
+                travelers = payload.travelers.map {
+                    CreateTravelerRequest(
+                        name = it.name,
+                        colorHex = it.colorHex,
+                        avatarGlyph = it.avatarGlyph,
+                    )
+                }.ifEmpty { null },
             ),
             idempotencyKey = entry.idempotencyKey,
         )

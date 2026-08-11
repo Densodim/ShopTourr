@@ -1,5 +1,6 @@
 package com.example.shoptourr.domain.repository
 
+import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.UpdatePreferencesDraft
 import com.example.shoptourr.domain.model.UpdateProfileDraft
 import com.example.shoptourr.domain.model.UserPreferences
@@ -13,4 +14,5 @@ interface UserRepository {
     suspend fun updateProfile(draft: UpdateProfileDraft): Result<UserProfile>
     suspend fun refreshPreferences(): Result<UserPreferences>
     suspend fun updatePreferences(draft: UpdatePreferencesDraft): Result<UserPreferences>
+    suspend fun activatePremium(plan: PremiumPlan): Result<UserProfile>
 }

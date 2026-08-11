@@ -1,5 +1,6 @@
 package com.example.shoptourr.data.remote
 
+import com.example.shoptourr.data.remote.dto.user.ActivatePremiumRequest
 import com.example.shoptourr.data.remote.dto.user.UpdatePreferencesRequest
 import com.example.shoptourr.data.remote.dto.user.UpdateProfileRequest
 import com.example.shoptourr.data.remote.dto.user.UserDto
@@ -8,6 +9,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
@@ -43,6 +45,15 @@ class UserApi(
 
     suspend fun updatePreferences(request: UpdatePreferencesRequest): UserPreferencesDto {
         val response: HttpResponse = client.patch("$root/me/preferences") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
+        return response.body()
+    }
+
+    suspend fun activatePremium(request: ActivatePremiumRequest): UserDto {
+        val response: HttpResponse = client.post("$root/me/premium/activate") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }

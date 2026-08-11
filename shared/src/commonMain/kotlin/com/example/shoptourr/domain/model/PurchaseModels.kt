@@ -20,6 +20,7 @@ data class PurchaseDraft(
     val purchaseDate: String? = null,
     val purchaseTime: String? = null,
     val receiptMediaId: String? = null,
+    val splitWithTravelerIds: List<String> = emptyList(),
 )
 
 data class Purchase(

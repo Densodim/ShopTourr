@@ -1,5 +1,6 @@
 package com.example.shoptourr.data.local
 
+import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.ThemeMode
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.model.UserProfile
@@ -61,6 +62,7 @@ class SettingsUserLocalStore(
         settings[KEY_THEME] = profile.theme.name
         settings[KEY_PUSH] = profile.pushNotificationsEnabled
         settings[KEY_MEMBER_SINCE] = profile.memberSince
+        settings[KEY_PREMIUM] = profile.premiumPlan.name
         settings[KEY_TRIPS] = profile.stats.tripsCount
         settings[KEY_COUNTRIES] = profile.stats.countriesCount
         settings[KEY_WISHLIST] = profile.stats.wishlistCount
@@ -79,7 +81,7 @@ class SettingsUserLocalStore(
     override fun clear() {
         listOf(
             KEY_ID, KEY_DISPLAY_NAME, KEY_EMAIL, KEY_AVATAR, KEY_LOCALE, KEY_CURRENCY,
-            KEY_THEME, KEY_PUSH, KEY_MEMBER_SINCE, KEY_TRIPS, KEY_COUNTRIES, KEY_WISHLIST,
+            KEY_THEME, KEY_PUSH, KEY_MEMBER_SINCE, KEY_PREMIUM, KEY_TRIPS, KEY_COUNTRIES, KEY_WISHLIST,
             KEY_PREF_LOCALE, KEY_PREF_CURRENCY, KEY_PREF_THEME, KEY_PREF_PUSH, KEY_PREF_DARK,
         ).forEach { settings.remove(it) }
         profileState.value = null
@@ -98,6 +100,9 @@ class SettingsUserLocalStore(
             theme = ThemeMode.valueOf(settings.getString(KEY_THEME, ThemeMode.SYSTEM.name)),
             pushNotificationsEnabled = settings.getBoolean(KEY_PUSH, true),
             memberSince = settings.getString(KEY_MEMBER_SINCE, ""),
+            premiumPlan = runCatching {
+                PremiumPlan.valueOf(settings.getString(KEY_PREMIUM, PremiumPlan.FREE.name))
+            }.getOrDefault(PremiumPlan.FREE),
             stats = UserStats(
                 tripsCount = settings.getInt(KEY_TRIPS, 0),
                 countriesCount = settings.getInt(KEY_COUNTRIES, 0),
@@ -127,6 +132,7 @@ class SettingsUserLocalStore(
         const val KEY_THEME = "user.profile.theme"
         const val KEY_PUSH = "user.profile.push"
         const val KEY_MEMBER_SINCE = "user.profile.member_since"
+        const val KEY_PREMIUM = "user.profile.premium"
         const val KEY_TRIPS = "user.profile.trips"
         const val KEY_COUNTRIES = "user.profile.countries"
         const val KEY_WISHLIST = "user.profile.wishlist"

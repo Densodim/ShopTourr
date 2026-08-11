@@ -2,12 +2,15 @@ package com.example.shoptourr.data.repository
 
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.remote.UserApi
+import com.example.shoptourr.data.remote.dto.user.ActivatePremiumRequest
+import com.example.shoptourr.data.remote.dto.user.PremiumPlan as ApiPremiumPlan
 import com.example.shoptourr.data.remote.dto.user.ThemePreference
 import com.example.shoptourr.data.remote.dto.user.UpdatePreferencesRequest
 import com.example.shoptourr.data.remote.dto.user.UpdateProfileRequest
 import com.example.shoptourr.data.remote.dto.user.UserDto
 import com.example.shoptourr.data.remote.dto.user.UserPreferencesDto
 import com.example.shoptourr.data.remote.mapHttpAppError
+import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.ThemeMode
 import com.example.shoptourr.domain.model.UpdatePreferencesDraft
 import com.example.shoptourr.domain.model.UpdateProfileDraft
@@ -61,6 +64,15 @@ class UserRepositoryImpl(
             localStore.savePreferences(prefs)
             prefs
         }.mapHttpAppError()
+
+    override suspend fun activatePremium(plan: PremiumPlan): Result<UserProfile> =
+        runCatching {
+            val profile = api.activatePremium(
+                ActivatePremiumRequest(plan = plan.toDto()),
+            ).toDomain()
+            localStore.saveProfile(profile)
+            profile
+        }.mapHttpAppError()
 }
 
 private fun UserDto.toDomain(): UserProfile =
@@ -74,6 +86,7 @@ private fun UserDto.toDomain(): UserProfile =
         theme = theme.toDomain(),
         pushNotificationsEnabled = pushNotificationsEnabled,
         memberSince = memberSince,
+        premiumPlan = premiumPlan.toDomain(),
         stats = UserStats(
             tripsCount = stats.tripsCount,
             countriesCount = stats.countriesCount,
@@ -100,4 +113,16 @@ private fun ThemeMode.toDto(): ThemePreference = when (this) {
     ThemeMode.SYSTEM -> ThemePreference.SYSTEM
     ThemeMode.LIGHT -> ThemePreference.LIGHT
     ThemeMode.DARK -> ThemePreference.DARK
+}
+
+private fun ApiPremiumPlan.toDomain(): PremiumPlan = when (this) {
+    ApiPremiumPlan.FREE -> PremiumPlan.FREE
+    ApiPremiumPlan.PLUS -> PremiumPlan.PLUS
+    ApiPremiumPlan.PRO -> PremiumPlan.PRO
+}
+
+private fun PremiumPlan.toDto(): ApiPremiumPlan = when (this) {
+    PremiumPlan.FREE -> ApiPremiumPlan.FREE
+    PremiumPlan.PLUS -> ApiPremiumPlan.PLUS
+    PremiumPlan.PRO -> ApiPremiumPlan.PRO
 }

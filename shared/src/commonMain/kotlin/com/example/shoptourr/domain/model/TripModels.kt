@@ -1,5 +1,38 @@
 package com.example.shoptourr.domain.model
 
+data class Traveler(
+    val id: String,
+    val name: String,
+    val colorHex: String,
+    val avatarGlyph: String,
+    val isOwner: Boolean,
+)
+
+data class CreateTravelerDraft(
+    val name: String,
+    val colorHex: String = "#FFD84D",
+    val avatarGlyph: String? = null,
+)
+
+data class ExchangeRate(
+    val tripCurrency: String,
+    val quoteCurrency: String,
+    val rate: String,
+    val rateDate: String,
+    val provider: String? = null,
+)
+
+enum class TripInviteStatus { PENDING, ACCEPTED, DECLINED, EXPIRED }
+
+data class TripInvite(
+    val id: String,
+    val tripId: String,
+    val email: String,
+    val status: TripInviteStatus,
+    val createdAt: String,
+    val expiresAt: String? = null,
+)
+
 enum class TripStatus {
     UPCOMING,
     ACTIVE,
@@ -21,6 +54,8 @@ data class TripSummary(
     val datesLabel: String? = null,
     val currentDayNumber: Int? = null,
     val dayCount: Int? = null,
+    val exchangeRate: ExchangeRate? = null,
+    val travelers: List<Traveler> = emptyList(),
 ) {
     companion object {
         fun toHomeSnapshot(userName: String, trips: List<TripSummary>): HomeSnapshot {
@@ -44,4 +79,6 @@ data class CreateTripDraft(
     val budget: Money,
     val countryCode: String? = null,
     val defaultVatRatePercent: String? = null,
+    val quoteCurrency: String? = null,
+    val travelers: List<CreateTravelerDraft> = emptyList(),
 )

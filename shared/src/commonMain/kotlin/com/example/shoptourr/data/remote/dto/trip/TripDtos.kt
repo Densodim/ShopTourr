@@ -24,6 +24,25 @@ data class CreateTravelerRequest(
 )
 
 @Serializable
+enum class TripInviteStatus { PENDING, ACCEPTED, DECLINED, EXPIRED }
+
+@Serializable
+data class InviteTravelerRequest(
+    val email: String,
+    val displayNameHint: String? = null,
+)
+
+@Serializable
+data class TripInviteDto(
+    val id: String,
+    val tripId: String,
+    val email: String,
+    val status: TripInviteStatus,
+    val createdAt: String,
+    val expiresAt: String? = null,
+)
+
+@Serializable
 data class TripDto(
     val id: String,
     val city: String,

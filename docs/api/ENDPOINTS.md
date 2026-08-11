@@ -75,6 +75,14 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 | GET | `/media/{mediaId}` | — | `MediaAssetDto` |
 | GET | `/media/{mediaId}/ocr` | — | `ReceiptOcrResultDto` (P2) |
 
+## Shared trips / FX / Premium (P3)
+| Method | Path | Request | Response |
+|---|---|---|---|
+| POST | `/trips/{tripId}/travelers` | `CreateTravelerRequest` | `TravelerDto` 201 |
+| POST | `/trips/{tripId}/invites` | `InviteTravelerRequest` | `TripInviteDto` 201 |
+| POST | `/trips/{tripId}/exchange-rate/refresh` | — | `ExchangeRateDto` 200 |
+| POST | `/me/premium/activate` | `ActivatePremiumRequest` | `UserDto` 200 |
+
 ## Copy into Spring Boot
 
 ```text
