@@ -36,6 +36,13 @@ class SqlDelightWishlistLocalStore(
         upsertInternal(item)
     }
 
+    override suspend fun replaceId(oldId: String, item: WishlistItem) = withContext(Dispatchers.IO) {
+        db.transaction {
+            db.wishlistEntityQueries.deleteById(oldId)
+            upsertInternal(item)
+        }
+    }
+
     override suspend fun remove(id: String) {
         withContext(Dispatchers.IO) {
             db.wishlistEntityQueries.deleteById(id)

@@ -122,6 +122,7 @@ import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
 import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
 import com.example.shoptourr.epochMillis
 import io.ktor.client.HttpClient
+import kotlinx.datetime.Instant
 import org.koin.core.qualifier.named
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
@@ -238,8 +239,27 @@ val dataModule = module {
         )
     } bind PurchaseRepository::class
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
-    singleOf(::WishlistRepositoryImpl) { bind<WishlistRepository>() }
-    singleOf(::DiaryRepositoryImpl) { bind<DiaryRepository>() }
+    single {
+        WishlistRepositoryImpl(
+            api = get(),
+            localStore = get(),
+            outbox = get(),
+            idGenerator = { "w-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
+            clock = { epochMillis() },
+        )
+    } bind WishlistRepository::class
+    single {
+        DiaryRepositoryImpl(
+            api = get(),
+            localStore = get(),
+            outbox = get(),
+            idGenerator = { "d-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
+            clock = { epochMillis() },
+            today = {
+                Instant.fromEpochMilliseconds(epochMillis()).toString().substringBefore('T')
+            },
+        )
+    } bind DiaryRepository::class
     singleOf(::TaxFreeRepositoryImpl) { bind<TaxFreeRepository>() }
     singleOf(::AlertsRepositoryImpl) { bind<AlertsRepository>() }
     singleOf(::RouteRepositoryImpl) { bind<RouteRepository>() }
@@ -254,6 +274,10 @@ val dataModule = module {
             purchaseLocalStore = get(),
             tripApi = get(),
             tripLocalStore = get(),
+            wishlistApi = get(),
+            wishlistLocalStore = get(),
+            diaryApi = get(),
+            diaryLocalStore = get(),
             clock = { epochMillis() },
         )
     }
@@ -310,11 +334,21 @@ val domainModule = module {
     factoryOf(::UpdatePreferencesUseCase)
     factoryOf(::ObserveWishlistUseCase)
     factoryOf(::RefreshWishlistUseCase)
-    factoryOf(::CreateWishlistItemUseCase)
+    factory {
+        CreateWishlistItemUseCase(
+            wishlistRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::DeleteWishlistItemUseCase)
     factoryOf(::ObserveDiaryUseCase)
     factoryOf(::RefreshDiaryUseCase)
-    factoryOf(::CreateDiaryEntryUseCase)
+    factory {
+        CreateDiaryEntryUseCase(
+            diaryRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::DeleteDiaryEntryUseCase)
     factoryOf(::ObserveTaxFreeUseCase)
     factoryOf(::RefreshTaxFreeUseCase)

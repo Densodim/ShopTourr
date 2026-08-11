@@ -10,6 +10,7 @@ interface WishlistLocalStore {
     fun all(): List<WishlistItem>
     suspend fun replaceAll(items: List<WishlistItem>)
     suspend fun upsert(item: WishlistItem)
+    suspend fun replaceId(oldId: String, item: WishlistItem)
     suspend fun remove(id: String)
 }
 
@@ -23,6 +24,9 @@ class InMemoryWishlistLocalStore : WishlistLocalStore {
     }
     override suspend fun upsert(item: WishlistItem) {
         items.value = items.value.filterNot { it.id == item.id } + item
+    }
+    override suspend fun replaceId(oldId: String, item: WishlistItem) {
+        items.value = items.value.filterNot { it.id == oldId || it.id == item.id } + item
     }
     override suspend fun remove(id: String) {
         items.value = items.value.filterNot { it.id == id }

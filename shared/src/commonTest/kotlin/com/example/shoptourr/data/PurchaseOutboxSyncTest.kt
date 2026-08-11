@@ -1,9 +1,13 @@
 package com.example.shoptourr.data
 
+import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
 import com.example.shoptourr.data.local.InMemoryTripLocalStore
+import com.example.shoptourr.data.local.InMemoryWishlistLocalStore
+import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.TripApi
+import com.example.shoptourr.data.remote.WishlistApi
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
 import com.example.shoptourr.data.remote.dto.common.VatBreakdownDto
@@ -85,6 +89,10 @@ class PurchaseOutboxSyncTest {
             purchaseLocalStore = local,
             tripApi = TripApi(client, "https://api.test"),
             tripLocalStore = InMemoryTripLocalStore(),
+            wishlistApi = WishlistApi(client, "https://api.test"),
+            wishlistLocalStore = InMemoryWishlistLocalStore(),
+            diaryApi = DiaryApi(client, "https://api.test"),
+            diaryLocalStore = InMemoryDiaryLocalStore(),
             clock = { 1_700_000_000_100L },
         )
         val created = CreatePurchaseUseCase(

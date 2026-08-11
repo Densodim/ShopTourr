@@ -1,17 +1,23 @@
 package com.example.shoptourr.domain
 
+import com.example.shoptourr.domain.model.CreateDiaryDraft
+import com.example.shoptourr.domain.model.CreateTripDraft
+import com.example.shoptourr.domain.model.CreateWishlistDraft
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.model.PurchaseDraft
 import com.example.shoptourr.domain.model.SyncDrainResult
+import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
+import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
-import com.example.shoptourr.domain.model.CreateTripDraft
+import com.example.shoptourr.fake.FakeDiaryRepository
 import com.example.shoptourr.fake.FakePurchaseRepository
 import com.example.shoptourr.fake.FakeSyncRepository
 import com.example.shoptourr.fake.FakeTripRepository
+import com.example.shoptourr.fake.FakeWishlistRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -91,14 +97,27 @@ class DrainSyncOutboxUseCaseTest {
     }
 
     @Test
-    fun `refresh home drains outbox before remote refresh`() = runTest {
+    fun `create wishlist drains outbox after local success`() = runTest {
         val sync = FakeSyncRepository()
-        val trips = FakeTripRepository()
-        RefreshHomeUseCase(
-            tripRepository = trips,
+        CreateWishlistItemUseCase(
+            wishlistRepository = FakeWishlistRepository(),
             drainSyncOutbox = DrainSyncOutboxUseCase(sync),
-        )().getOrThrow()
+        )(
+            CreateWishlistDraft("Pastel", "Lisbon", Money.parse("1.20", "EUR")),
+        ).getOrThrow()
         assertEquals(1, sync.drainCalls)
-        assertEquals(1, trips.refreshCalls)
+    }
+
+    @Test
+    fun `create diary drains outbox after local success`() = runTest {
+        val sync = FakeSyncRepository()
+        CreateDiaryEntryUseCase(
+            diaryRepository = FakeDiaryRepository(),
+            drainSyncOutbox = DrainSyncOutboxUseCase(sync),
+        )(
+            "lisbon",
+            CreateDiaryDraft(mood = "happy", text = "Pasteis"),
+        ).getOrThrow()
+        assertEquals(1, sync.drainCalls)
     }
 }

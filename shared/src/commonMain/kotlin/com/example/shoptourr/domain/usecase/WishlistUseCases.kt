@@ -20,6 +20,7 @@ class RefreshWishlistUseCase(
 
 class CreateWishlistItemUseCase(
     private val wishlistRepository: WishlistRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(draft: CreateWishlistDraft): Result<WishlistItem> {
         if (draft.name.trim().isEmpty()) return Result.failure(AppError.Validation("name"))
@@ -31,7 +32,9 @@ class CreateWishlistItemUseCase(
                 city = draft.city.trim(),
                 note = draft.note?.trim()?.ifEmpty { null },
             )
-        )
+        ).onSuccess {
+            drainSyncOutbox?.invoke()
+        }
     }
 }
 

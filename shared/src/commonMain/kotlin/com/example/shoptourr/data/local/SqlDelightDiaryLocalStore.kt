@@ -34,6 +34,13 @@ class SqlDelightDiaryLocalStore(
         upsertInternal(entry)
     }
 
+    override suspend fun replaceId(oldId: String, entry: DiaryEntry) = withContext(Dispatchers.IO) {
+        db.transaction {
+            db.diaryEntityQueries.deleteById(oldId)
+            upsertInternal(entry)
+        }
+    }
+
     override suspend fun removeEntry(tripId: String, entryId: String) {
         withContext(Dispatchers.IO) {
             db.diaryEntityQueries.deleteById(entryId)

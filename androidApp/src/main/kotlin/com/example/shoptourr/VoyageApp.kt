@@ -19,11 +19,9 @@ import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
-import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
-import com.example.shoptourr.epochMillis
 import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -56,16 +54,6 @@ private val androidDatabaseModule = module {
         SecureTokenStore(
             secure = get(),
             legacy = SettingsTokenStore(get<Settings>()),
-        )
-    }
-    single {
-        SyncOutboxProcessor(
-            outbox = get(),
-            purchaseApi = get(),
-            purchaseLocalStore = get(),
-            tripApi = get(),
-            tripLocalStore = get(),
-            clock = { epochMillis() },
         )
     }
 }

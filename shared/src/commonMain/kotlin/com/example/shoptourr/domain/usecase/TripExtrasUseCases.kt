@@ -26,6 +26,7 @@ class RefreshDiaryUseCase(
 
 class CreateDiaryEntryUseCase(
     private val diaryRepository: DiaryRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(tripId: String, draft: CreateDiaryDraft): Result<DiaryEntry> {
         if (tripId.isBlank()) return Result.failure(AppError.Validation("tripId"))
@@ -34,7 +35,9 @@ class CreateDiaryEntryUseCase(
         return diaryRepository.create(
             tripId,
             draft.copy(mood = draft.mood.trim(), text = draft.text.trim()),
-        )
+        ).onSuccess {
+            drainSyncOutbox?.invoke()
+        }
     }
 }
 

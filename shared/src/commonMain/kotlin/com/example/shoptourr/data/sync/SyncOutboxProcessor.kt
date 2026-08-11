@@ -1,20 +1,28 @@
 package com.example.shoptourr.data.sync
 
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.diary.CreateDiaryEntryRequest
 import com.example.shoptourr.data.remote.dto.purchase.CreatePurchaseRequest
 import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory as ApiPurchaseCategory
 import com.example.shoptourr.data.remote.dto.trip.CreateTravelerRequest
 import com.example.shoptourr.data.remote.dto.trip.CreateTripRequest
+import com.example.shoptourr.data.remote.dto.wishlist.CreateWishlistItemRequest
+import com.example.shoptourr.data.local.DiaryLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
+import com.example.shoptourr.data.local.WishlistLocalStore
+import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.TripApi
+import com.example.shoptourr.data.remote.WishlistApi
+import com.example.shoptourr.domain.model.DiaryEntry
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.VatCalculator
+import com.example.shoptourr.domain.model.WishlistItem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -59,6 +67,26 @@ data class CreateTripPayload(
     )
 }
 
+@Serializable
+data class CreateWishlistPayload(
+    val localId: String,
+    val name: String,
+    val city: String,
+    val targetAmount: String,
+    val targetCurrency: String,
+    val iconEmoji: String? = null,
+    val note: String? = null,
+)
+
+@Serializable
+data class CreateDiaryPayload(
+    val localId: String,
+    val tripId: String,
+    val entryDate: String? = null,
+    val mood: String,
+    val text: String,
+)
+
 data class DrainResult(
     val successCount: Int,
     val failureCount: Int,
@@ -69,8 +97,12 @@ object SyncPayloadCodec {
 
     fun encodePurchase(payload: CreatePurchasePayload): String = json.encodeToString(payload)
     fun encodeTrip(payload: CreateTripPayload): String = json.encodeToString(payload)
+    fun encodeWishlist(payload: CreateWishlistPayload): String = json.encodeToString(payload)
+    fun encodeDiary(payload: CreateDiaryPayload): String = json.encodeToString(payload)
     fun decodePurchase(raw: String): CreatePurchasePayload = json.decodeFromString(raw)
     fun decodeTrip(raw: String): CreateTripPayload = json.decodeFromString(raw)
+    fun decodeWishlist(raw: String): CreateWishlistPayload = json.decodeFromString(raw)
+    fun decodeDiary(raw: String): CreateDiaryPayload = json.decodeFromString(raw)
 }
 
 class SyncOutboxProcessor(
@@ -79,6 +111,10 @@ class SyncOutboxProcessor(
     private val purchaseLocalStore: PurchaseLocalStore,
     private val tripApi: TripApi,
     private val tripLocalStore: TripLocalStore,
+    private val wishlistApi: WishlistApi,
+    private val wishlistLocalStore: WishlistLocalStore,
+    private val diaryApi: DiaryApi,
+    private val diaryLocalStore: DiaryLocalStore,
     private val clock: () -> Long = { 0L },
 ) {
     suspend fun drainOnce(limit: Int = 20): DrainResult {
@@ -89,6 +125,8 @@ class SyncOutboxProcessor(
                 when (entry.type) {
                     SyncMutationType.CREATE_PURCHASE -> drainCreatePurchase(entry)
                     SyncMutationType.CREATE_TRIP -> drainCreateTrip(entry)
+                    SyncMutationType.CREATE_WISHLIST -> drainCreateWishlist(entry)
+                    SyncMutationType.CREATE_DIARY -> drainCreateDiary(entry)
                     else -> return@forEach
                 }
             }.isSuccess
@@ -184,5 +222,56 @@ class SyncOutboxProcessor(
         )
         val replaced = tripLocalStore.all().map { if (it.id == payload.localId) serverTrip else it }
         tripLocalStore.replaceAll(replaced)
+    }
+
+    private suspend fun drainCreateWishlist(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeWishlist(entry.payloadJson)
+        val response = wishlistApi.create(
+            request = CreateWishlistItemRequest(
+                name = payload.name,
+                city = payload.city,
+                targetPrice = MoneyDto(payload.targetAmount, payload.targetCurrency),
+                iconEmoji = payload.iconEmoji,
+                note = payload.note,
+            ),
+            idempotencyKey = entry.idempotencyKey,
+        )
+        wishlistLocalStore.replaceId(
+            oldId = payload.localId,
+            item = WishlistItem(
+                id = response.id,
+                name = response.name,
+                city = response.city,
+                targetPrice = Money.parse(response.targetPrice.amount, response.targetPrice.currency),
+                iconEmoji = response.iconEmoji,
+                note = response.note,
+                createdAt = response.createdAt,
+            ),
+        )
+    }
+
+    private suspend fun drainCreateDiary(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeDiary(entry.payloadJson)
+        val response = diaryApi.create(
+            tripId = payload.tripId,
+            request = CreateDiaryEntryRequest(
+                entryDate = payload.entryDate,
+                mood = payload.mood,
+                text = payload.text,
+            ),
+            idempotencyKey = entry.idempotencyKey,
+        )
+        diaryLocalStore.replaceId(
+            oldId = payload.localId,
+            entry = DiaryEntry(
+                id = response.id,
+                tripId = response.tripId,
+                entryDate = response.entryDate,
+                mood = response.mood,
+                text = response.text,
+                createdAt = response.createdAt,
+                updatedAt = response.updatedAt,
+            ),
+        )
     }
 }

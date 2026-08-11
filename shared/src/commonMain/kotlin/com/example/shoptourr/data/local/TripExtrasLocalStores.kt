@@ -13,6 +13,7 @@ interface DiaryLocalStore {
     fun observe(tripId: String): Flow<List<DiaryDayGroup>>
     suspend fun replaceDays(tripId: String, days: List<DiaryDayGroup>)
     suspend fun upsertEntry(entry: DiaryEntry)
+    suspend fun replaceId(oldId: String, entry: DiaryEntry)
     suspend fun removeEntry(tripId: String, entryId: String)
 }
 
@@ -30,6 +31,13 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
         val existing = byTrip.value[entry.tripId].orEmpty()
             .flatMap { it.entries }
             .filterNot { it.id == entry.id } + entry
+        byTrip.value = byTrip.value + (entry.tripId to group(existing))
+    }
+
+    override suspend fun replaceId(oldId: String, entry: DiaryEntry) {
+        val existing = byTrip.value[entry.tripId].orEmpty()
+            .flatMap { it.entries }
+            .filterNot { it.id == oldId || it.id == entry.id } + entry
         byTrip.value = byTrip.value + (entry.tripId to group(existing))
     }
 

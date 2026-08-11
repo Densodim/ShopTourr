@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -27,9 +28,10 @@ class WishlistApi(
         return response.body()
     }
 
-    suspend fun create(request: CreateWishlistItemRequest): WishlistItemDto {
+    suspend fun create(request: CreateWishlistItemRequest, idempotencyKey: String): WishlistItemDto {
         val response: HttpResponse = client.post("$root/wishlist") {
             contentType(ContentType.Application.Json)
+            header("Idempotency-Key", idempotencyKey)
             setBody(request)
         }
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)

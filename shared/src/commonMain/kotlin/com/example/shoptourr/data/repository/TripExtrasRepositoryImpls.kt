@@ -9,7 +9,6 @@ import com.example.shoptourr.data.remote.TaxFreeApi
 import com.example.shoptourr.data.remote.dto.alert.AlertSeverity as ApiAlertSeverity
 import com.example.shoptourr.data.remote.dto.alert.AlertType as ApiAlertType
 import com.example.shoptourr.data.remote.dto.alert.BudgetAlertDto
-import com.example.shoptourr.data.remote.dto.diary.CreateDiaryEntryRequest
 import com.example.shoptourr.data.remote.dto.diary.DiaryDayGroupDto
 import com.example.shoptourr.data.remote.dto.diary.DiaryEntryDto
 import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory as ApiPurchaseCategory
@@ -17,6 +16,11 @@ import com.example.shoptourr.data.remote.dto.taxfree.TaxFreeEligibleItemDto
 import com.example.shoptourr.data.remote.dto.taxfree.TaxFreeRulesDto
 import com.example.shoptourr.data.remote.dto.taxfree.TaxFreeSummaryDto
 import com.example.shoptourr.data.remote.mapHttpAppError
+import com.example.shoptourr.data.sync.CreateDiaryPayload
+import com.example.shoptourr.data.sync.SyncMutationType
+import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.data.sync.SyncOutboxEntry
+import com.example.shoptourr.data.sync.SyncPayloadCodec
 import com.example.shoptourr.domain.model.AlertSeverity
 import com.example.shoptourr.domain.model.AlertType
 import com.example.shoptourr.domain.model.BudgetAlert
@@ -32,10 +36,15 @@ import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.TaxFreeRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
 
 class DiaryRepositoryImpl(
     private val api: DiaryApi,
     private val localStore: DiaryLocalStore,
+    private val outbox: SyncOutbox,
+    private val idGenerator: () -> String,
+    private val clock: () -> Long,
+    private val today: () -> String,
 ) : DiaryRepository {
     override fun observeDiary(tripId: String): Flow<List<DiaryDayGroup>> =
         localStore.observe(tripId)
@@ -48,15 +57,37 @@ class DiaryRepositoryImpl(
 
     override suspend fun create(tripId: String, draft: CreateDiaryDraft): Result<DiaryEntry> =
         runCatching {
-            val entry = api.create(
-                tripId,
-                CreateDiaryEntryRequest(
-                    entryDate = draft.entryDate,
-                    mood = draft.mood,
-                    text = draft.text,
-                ),
-            ).toDomain()
+            val localId = idGenerator()
+            val now = clock()
+            val stamp = Instant.fromEpochMilliseconds(now).toString()
+            val entryDate = draft.entryDate ?: today()
+            val entry = DiaryEntry(
+                id = localId,
+                tripId = tripId,
+                entryDate = entryDate,
+                mood = draft.mood,
+                text = draft.text,
+                createdAt = stamp,
+                updatedAt = stamp,
+            )
             localStore.upsertEntry(entry)
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-diary-$localId",
+                    type = SyncMutationType.CREATE_DIARY,
+                    payloadJson = SyncPayloadCodec.encodeDiary(
+                        CreateDiaryPayload(
+                            localId = localId,
+                            tripId = tripId,
+                            entryDate = draft.entryDate,
+                            mood = draft.mood,
+                            text = draft.text,
+                        ),
+                    ),
+                    idempotencyKey = localId,
+                    createdAtEpochMs = now,
+                ),
+            )
             entry
         }.mapHttpAppError()
 
