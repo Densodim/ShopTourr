@@ -106,4 +106,15 @@ class AuthViewModelTest {
         assertEquals("Ada", viewModel.state.value.user?.displayName)
         viewModel.onCleared()
     }
+
+    @Test
+    fun `set register mode opens signup from welcome`() = runTest {
+        val viewModel = vm(FakeAuthRepository())
+        assertFalse(viewModel.state.value.isRegisterMode)
+        viewModel.onIntent(AuthIntent.SetRegisterMode(true))
+        assertTrue(viewModel.state.value.isRegisterMode)
+        viewModel.onIntent(AuthIntent.SetRegisterMode(false))
+        assertFalse(viewModel.state.value.isRegisterMode)
+        viewModel.onCleared()
+    }
 }

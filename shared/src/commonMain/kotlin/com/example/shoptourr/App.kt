@@ -9,7 +9,7 @@ import cafe.adriel.voyager.transitions.SlideTransition
 import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.ui.navigation.HomeVoyageScreen
-import com.example.shoptourr.ui.navigation.LoginVoyageScreen
+import com.example.shoptourr.ui.navigation.WelcomeVoyageScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import org.koin.compose.koinInject
 
@@ -25,7 +25,7 @@ fun App() {
 
         val isLoggedIn = koinInject<IsLoggedInUseCase>()
         Navigator(
-            screen = if (isLoggedIn()) HomeVoyageScreen else LoginVoyageScreen,
+            screen = if (isLoggedIn()) HomeVoyageScreen else WelcomeVoyageScreen,
         ) { navigator ->
             SlideTransition(navigator)
         }

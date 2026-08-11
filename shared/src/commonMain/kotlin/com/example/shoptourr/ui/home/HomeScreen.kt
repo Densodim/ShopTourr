@@ -31,6 +31,8 @@ fun HomeScreen(
     onAddPurchase: (tripId: String) -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onOpenWishlist: () -> Unit = {},
+    onOpenMap: (tripId: String) -> Unit = {},
+    onOpenStats: (tripId: String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     HomeContent(
@@ -41,6 +43,8 @@ fun HomeScreen(
         onAddPurchase = onAddPurchase,
         onOpenProfile = onOpenProfile,
         onOpenWishlist = onOpenWishlist,
+        onOpenMap = onOpenMap,
+        onOpenStats = onOpenStats,
     )
 }
 
@@ -53,6 +57,8 @@ internal fun HomeContent(
     onAddPurchase: (tripId: String) -> Unit,
     onOpenProfile: () -> Unit,
     onOpenWishlist: () -> Unit,
+    onOpenMap: (tripId: String) -> Unit,
+    onOpenStats: (tripId: String) -> Unit,
 ) {
     val snapshot = state.snapshot
     if (state.isLoading && snapshot == null) {
@@ -151,6 +157,18 @@ internal fun HomeContent(
                     text = "Добавить покупку",
                     onClick = { onAddPurchase(tripId) },
                     variant = VoyageButtonVariant.Ghost,
+                )
+                Spacer(Modifier.height(10.dp))
+                VoyageButton(
+                    text = "Карта",
+                    onClick = { onOpenMap(tripId) },
+                    variant = VoyageButtonVariant.Secondary,
+                )
+                Spacer(Modifier.height(10.dp))
+                VoyageButton(
+                    text = "Статистика",
+                    onClick = { onOpenStats(tripId) },
+                    variant = VoyageButtonVariant.Secondary,
                 )
             }
         }

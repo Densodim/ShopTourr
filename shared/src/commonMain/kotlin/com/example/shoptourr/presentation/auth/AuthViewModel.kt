@@ -24,6 +24,7 @@ data class AuthUiState(
 
 sealed interface AuthIntent {
     data object ToggleMode : AuthIntent
+    data class SetRegisterMode(val enabled: Boolean) : AuthIntent
     data class DisplayNameChanged(val value: String) : AuthIntent
     data class EmailChanged(val value: String) : AuthIntent
     data class PasswordChanged(val value: String) : AuthIntent
@@ -44,6 +45,8 @@ class AuthViewModel(
         when (intent) {
             AuthIntent.ToggleMode ->
                 updateState { copy(isRegisterMode = !isRegisterMode, error = null) }
+            is AuthIntent.SetRegisterMode ->
+                updateState { copy(isRegisterMode = intent.enabled, error = null) }
             is AuthIntent.DisplayNameChanged ->
                 updateState { copy(displayName = intent.value, error = null) }
             is AuthIntent.EmailChanged ->

@@ -1,10 +1,12 @@
 package com.example.shoptourr.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
+import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
@@ -19,6 +21,7 @@ import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.example.shoptourr.ui.alerts.AlertsScreen
 import com.example.shoptourr.ui.auth.LoginScreen
+import com.example.shoptourr.ui.auth.WelcomeScreen
 import com.example.shoptourr.ui.diary.DiaryScreen
 import com.example.shoptourr.ui.export.ExportScreen
 import com.example.shoptourr.ui.home.HomeScreen
@@ -33,11 +36,25 @@ import com.example.shoptourr.ui.wishlist.WishlistScreen
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
-object LoginVoyageScreen : Screen {
+object WelcomeVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        WelcomeScreen(
+            onSignUp = { navigator.push(LoginVoyageScreen(registerMode = true)) },
+            onSignIn = { navigator.push(LoginVoyageScreen(registerMode = false)) },
+        )
+    }
+}
+
+data class LoginVoyageScreen(val registerMode: Boolean = false) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = koinInject<AuthViewModel>()
+        LaunchedEffect(registerMode) {
+            viewModel.onIntent(AuthIntent.SetRegisterMode(registerMode))
+        }
         LoginScreen(
             viewModel = viewModel,
             onLoggedIn = { navigator.replaceAll(HomeVoyageScreen) },
@@ -57,6 +74,8 @@ object HomeVoyageScreen : Screen {
             onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
             onOpenProfile = { navigator.push(ProfileVoyageScreen) },
             onOpenWishlist = { navigator.push(WishlistVoyageScreen) },
+            onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
+            onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
         )
     }
 }
@@ -82,7 +101,7 @@ object ProfileVoyageScreen : Screen {
         ProfileScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -95,7 +114,7 @@ object WishlistVoyageScreen : Screen {
         WishlistScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -114,7 +133,7 @@ data class TripDetailVoyageScreen(val tripId: String) : Screen {
             onOpenMap = { id -> navigator.push(RouteVoyageScreen(id)) },
             onOpenStats = { id -> navigator.push(StatsVoyageScreen(id)) },
             onOpenExport = { id -> navigator.push(ExportVoyageScreen(id)) },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
             onBack = { navigator.pop() },
         )
     }
@@ -141,7 +160,7 @@ data class DiaryVoyageScreen(val tripId: String) : Screen {
         DiaryScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -154,7 +173,7 @@ data class TaxFreeVoyageScreen(val tripId: String) : Screen {
         TaxFreeScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -167,7 +186,7 @@ data class AlertsVoyageScreen(val tripId: String) : Screen {
         AlertsScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -180,7 +199,7 @@ data class RouteVoyageScreen(val tripId: String) : Screen {
         RouteScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -193,7 +212,7 @@ data class StatsVoyageScreen(val tripId: String) : Screen {
         StatsScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
@@ -206,7 +225,7 @@ data class ExportVoyageScreen(val tripId: String) : Screen {
         ExportScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
-            onLoggedOut = { navigator.replaceAll(LoginVoyageScreen) },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
         )
     }
 }
