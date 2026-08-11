@@ -155,6 +155,33 @@ internal fun AddPurchaseContent(
                 Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
             }
         }
+        if (state.travelers.isNotEmpty()) {
+            Spacer(Modifier.height(20.dp))
+            VoyageSection(title = "Разделить") {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    state.travelers.forEach { traveler ->
+                        FilterChip(
+                            selected = traveler.id in state.selectedTravelerIds,
+                            onClick = { onIntent(AddPurchaseIntent.ToggleTraveler(traveler.id)) },
+                            label = {
+                                Text("${traveler.avatarGlyph} ${traveler.name}")
+                            },
+                        )
+                    }
+                }
+                state.yourShare?.let { share ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Ваша доля: ${share.toDecimalString()} ${share.currency}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(20.dp))
         VoyageSection(title = "Чек") {
             if (state.receiptMediaId != null) {

@@ -408,6 +408,7 @@ val presentationModule = module {
             createPurchase = get(),
             uploadReceipt = get(),
             fetchReceiptOcr = get(),
+            observeTripDetail = get(),
         )
     }
     factory { params ->

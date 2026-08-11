@@ -71,4 +71,23 @@ class CreatePurchaseUseCaseTest {
         )
         assertEquals(AppError.Validation("amount"), result.exceptionOrNull())
     }
+
+    @Test
+    fun `forwards split traveler ids to repository`() = runTest {
+        val repo = FakePurchaseRepository()
+        val result = CreatePurchaseUseCase(repo)(
+            tripId = "lisbon",
+            draft = PurchaseDraft(
+                name = "Dinner",
+                category = PurchaseCategory.FOOD,
+                amount = Money.parse("32.50", "EUR"),
+                vatIncluded = true,
+                vatRatePercent = "23",
+                place = "Market",
+                splitWithTravelerIds = listOf("me", "a", "k"),
+            ),
+        )
+        assertTrue(result.isSuccess)
+        assertEquals(listOf("me", "a", "k"), repo.lastDraft?.splitWithTravelerIds)
+    }
 }

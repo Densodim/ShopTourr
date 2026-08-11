@@ -16,6 +16,8 @@ class FakePurchaseRepository(
         private set
     var enqueuedSyncCalls: Int = 0
         private set
+    var lastDraft: PurchaseDraft? = null
+        private set
 
     private val items = MutableStateFlow<List<Purchase>>(emptyList())
 
@@ -23,6 +25,7 @@ class FakePurchaseRepository(
         createError?.let { return Result.failure(it) }
         createCalls += 1
         enqueuedSyncCalls += 1
+        lastDraft = draft
         val vat = VatCalculator.breakdown(draft.amount, draft.vatRatePercent, draft.vatIncluded)
         val purchase = Purchase(
             id = "p-$createCalls",
