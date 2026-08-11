@@ -22,6 +22,7 @@ import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
+import com.example.shoptourr.domain.push.PushTokenProvider
 import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -56,4 +57,5 @@ private val androidDatabaseModule = module {
             legacy = SettingsTokenStore(get<Settings>()),
         )
     }
+    single<PushTokenProvider> { FcmPushTokenProvider(androidContext()) }
 }

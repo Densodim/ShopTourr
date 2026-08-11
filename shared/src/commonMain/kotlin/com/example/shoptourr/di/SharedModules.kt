@@ -2,6 +2,7 @@ package com.example.shoptourr.di
 
 import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.hash.createDefaultContentChecksum
+import com.example.shoptourr.data.media.FileKitReceiptImageCompressor
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryExportLocalStore
@@ -61,6 +62,7 @@ import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.example.shoptourr.domain.hash.ContentChecksum
+import com.example.shoptourr.domain.media.ReceiptImageCompressor
 import com.example.shoptourr.domain.push.PushTokenProvider
 import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
@@ -171,6 +173,7 @@ val dataModule = module {
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<ContentChecksum> { createDefaultContentChecksum() }
+    single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
 
     single {
         createVoyageHttpClient(
@@ -329,6 +332,7 @@ val domainModule = module {
         UploadReceiptUseCase(
             mediaRepository = get(),
             checksum = get(),
+            compressor = get(),
         )
     }
     factoryOf(::FetchReceiptOcrUseCase)

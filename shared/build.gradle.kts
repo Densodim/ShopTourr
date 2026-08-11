@@ -76,6 +76,7 @@ kotlin {
             implementation(libs.voyager.koin)
             implementation(libs.filekit.dialogs)
             implementation(libs.filekit.dialogs.compose)
+            implementation(libs.filekit.core)
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)

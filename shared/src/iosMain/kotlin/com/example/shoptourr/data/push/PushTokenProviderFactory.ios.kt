@@ -2,6 +2,17 @@ package com.example.shoptourr.data.push
 
 import com.example.shoptourr.domain.model.PushPlatform
 import com.example.shoptourr.domain.push.PushTokenProvider
+import platform.Foundation.NSBundle
+import platform.UIKit.UIDevice
 
-actual fun createDefaultPushTokenProvider(): PushTokenProvider =
-    NoOpPushTokenProvider(platform = PushPlatform.IOS, appVersion = "ios")
+class ApnsPushTokenProvider(
+    override val appVersion: String? =
+        NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleShortVersionString") as? String,
+    override val deviceName: String? = UIDevice.currentDevice.name,
+) : PushTokenProvider {
+    override val platform: PushPlatform = PushPlatform.IOS
+
+    override suspend fun currentToken(): String? = DevicePushTokenHolder.token
+}
+
+actual fun createDefaultPushTokenProvider(): PushTokenProvider = ApnsPushTokenProvider()
