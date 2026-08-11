@@ -19,16 +19,18 @@ import com.example.shoptourr.domain.repository.MediaRepository
 
 class MediaRepositoryImpl(
     private val api: MediaApi,
+    private val idempotencyKey: () -> String,
 ) : MediaRepository {
     override suspend fun createReceiptUploadIntent(draft: ReceiptUploadDraft): Result<MediaUploadIntent> =
         runCatching {
             api.createUploadIntent(
-                CreateMediaUploadIntentRequest(
+                request = CreateMediaUploadIntentRequest(
                     purpose = ApiMediaPurpose.RECEIPT,
                     contentType = draft.contentType,
                     byteSize = draft.bytes.size.toLong(),
                     sha256Hex = draft.sha256Hex,
                 ),
+                idempotencyKey = idempotencyKey(),
             ).toDomain()
         }.mapHttpAppError()
 

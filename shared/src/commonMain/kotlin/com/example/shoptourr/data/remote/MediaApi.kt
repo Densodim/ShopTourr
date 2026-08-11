@@ -14,6 +14,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -25,9 +26,13 @@ class MediaApi(
 ) {
     private val root get() = baseUrl.trimEnd('/')
 
-    suspend fun createUploadIntent(request: CreateMediaUploadIntentRequest): MediaUploadIntentResponse {
+    suspend fun createUploadIntent(
+        request: CreateMediaUploadIntentRequest,
+        idempotencyKey: String,
+    ): MediaUploadIntentResponse {
         val response: HttpResponse = client.post("$root/media/upload-intents") {
             contentType(ContentType.Application.Json)
+            header("Idempotency-Key", idempotencyKey)
             setBody(request)
         }
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
@@ -40,7 +45,13 @@ class MediaApi(
         requiredHeaders: Map<String, String>,
     ) {
         val response: HttpResponse = uploadClient.put(uploadUrl) {
-            requiredHeaders.forEach { (key, value) -> header(key, value) }
+            requiredHeaders.forEach { (key, value) ->
+                if (key.equals(HttpHeaders.ContentType, ignoreCase = true)) {
+                    contentType(ContentType.parse(value))
+                } else {
+                    header(key, value)
+                }
+            }
             setBody(bytes)
         }
         if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {

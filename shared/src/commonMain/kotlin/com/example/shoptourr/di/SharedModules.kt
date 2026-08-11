@@ -1,6 +1,7 @@
 package com.example.shoptourr.di
 
 import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
+import com.example.shoptourr.data.hash.createDefaultContentChecksum
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryExportLocalStore
@@ -59,6 +60,7 @@ import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
+import com.example.shoptourr.domain.hash.ContentChecksum
 import com.example.shoptourr.domain.push.PushTokenProvider
 import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
@@ -168,6 +170,7 @@ val dataModule = module {
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
+    single<ContentChecksum> { createDefaultContentChecksum() }
 
     single {
         createVoyageHttpClient(
@@ -265,7 +268,12 @@ val dataModule = module {
     singleOf(::RouteRepositoryImpl) { bind<RouteRepository>() }
     singleOf(::StatsRepositoryImpl) { bind<StatsRepository>() }
     singleOf(::ExportRepositoryImpl) { bind<ExportRepository>() }
-    singleOf(::MediaRepositoryImpl) { bind<MediaRepository>() }
+    single {
+        MediaRepositoryImpl(
+            api = get(),
+            idempotencyKey = { "m-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
+        )
+    } bind MediaRepository::class
     singleOf(::PushRepositoryImpl) { bind<PushRepository>() }
     single {
         SyncOutboxProcessor(
@@ -317,7 +325,12 @@ val domainModule = module {
             drainSyncOutbox = get(),
         )
     }
-    factoryOf(::UploadReceiptUseCase)
+    factory {
+        UploadReceiptUseCase(
+            mediaRepository = get(),
+            checksum = get(),
+        )
+    }
     factoryOf(::FetchReceiptOcrUseCase)
     factory {
         CreateTripUseCase(

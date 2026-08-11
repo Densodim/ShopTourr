@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,11 @@ import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddPurchaseScreen(
@@ -56,6 +62,18 @@ internal fun AddPurchaseContent(
     onIntent: (AddPurchaseIntent) -> Unit,
     onBack: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val receiptPicker = rememberFilePickerLauncher(
+        type = FileKitType.Image,
+    ) { file ->
+        if (file == null) return@rememberFilePickerLauncher
+        scope.launch {
+            val bytes = file.readBytes()
+            val contentType = contentTypeForFileName(file.name)
+            onIntent(AddPurchaseIntent.AttachReceipt(contentType = contentType, bytes = bytes))
+        }
+    }
+
     VoyageScreen {
         VoyageTopBar(title = "Покупка", onBack = onBack)
         Spacer(Modifier.height(16.dp))
@@ -131,15 +149,12 @@ internal fun AddPurchaseContent(
         Spacer(Modifier.height(20.dp))
         VoyageSection(title = "Чек") {
             VoyageButton(
-                text = if (state.receiptMediaId != null) "Чек прикреплён" else "Прикрепить чек (демо)",
-                onClick = {
-                    onIntent(
-                        AddPurchaseIntent.AttachReceipt(
-                            contentType = "image/jpeg",
-                            bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()),
-                        ),
-                    )
+                text = when {
+                    state.isUploadingReceipt -> "Загрузка чека…"
+                    state.receiptMediaId != null -> "Чек прикреплён"
+                    else -> "Прикрепить чек"
                 },
+                onClick = { receiptPicker.launch() },
                 enabled = !state.isUploadingReceipt && !state.isLoading,
                 isLoading = state.isUploadingReceipt,
                 variant = VoyageButtonVariant.Secondary,
@@ -172,3 +187,11 @@ internal fun AddPurchaseContent(
         )
     }
 }
+
+internal fun contentTypeForFileName(name: String): String =
+    when (name.substringAfterLast('.', missingDelimiterValue = "").lowercase()) {
+        "png" -> "image/png"
+        "webp" -> "image/webp"
+        "heic", "heif" -> "image/heic"
+        else -> "image/jpeg"
+    }
