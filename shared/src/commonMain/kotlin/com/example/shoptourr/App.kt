@@ -10,6 +10,7 @@ import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
+import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.map.RouteViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
@@ -22,6 +23,7 @@ import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.example.shoptourr.ui.alerts.AlertsScreen
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.diary.DiaryScreen
+import com.example.shoptourr.ui.export.ExportScreen
 import com.example.shoptourr.ui.home.HomeScreen
 import com.example.shoptourr.ui.map.RouteScreen
 import com.example.shoptourr.ui.profile.ProfileScreen
@@ -48,6 +50,7 @@ private sealed interface AppDestination {
     data class Alerts(val tripId: String) : AppDestination
     data class Route(val tripId: String) : AppDestination
     data class Stats(val tripId: String) : AppDestination
+    data class Export(val tripId: String) : AppDestination
 }
 
 @Composable
@@ -118,6 +121,7 @@ fun App() {
                     onOpenAlerts = { tripId -> destination = AppDestination.Alerts(tripId) },
                     onOpenMap = { tripId -> destination = AppDestination.Route(tripId) },
                     onOpenStats = { tripId -> destination = AppDestination.Stats(tripId) },
+                    onOpenExport = { tripId -> destination = AppDestination.Export(tripId) },
                     onBack = { destination = AppDestination.Home },
                 )
             }
@@ -179,6 +183,14 @@ fun App() {
                 val statsViewModel = koinInject<StatsViewModel> { parametersOf(dest.tripId) }
                 StatsScreen(
                     viewModel = statsViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            is AppDestination.Export -> {
+                val exportViewModel = koinInject<ExportViewModel> { parametersOf(dest.tripId) }
+                ExportScreen(
+                    viewModel = exportViewModel,
                     onBack = { destination = AppDestination.TripDetail(dest.tripId) },
                     onLoggedOut = { destination = AppDestination.Login },
                 )

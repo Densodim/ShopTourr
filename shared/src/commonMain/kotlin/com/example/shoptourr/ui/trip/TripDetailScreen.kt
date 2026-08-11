@@ -36,6 +36,7 @@ fun TripDetailScreen(
     onOpenAlerts: (tripId: String) -> Unit = {},
     onOpenMap: (tripId: String) -> Unit = {},
     onOpenStats: (tripId: String) -> Unit = {},
+    onOpenExport: (tripId: String) -> Unit = {},
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
@@ -49,6 +50,7 @@ fun TripDetailScreen(
                 is TripDetailUiEvent.NavigateAlerts -> onOpenAlerts(event.tripId)
                 is TripDetailUiEvent.NavigateMap -> onOpenMap(event.tripId)
                 is TripDetailUiEvent.NavigateStats -> onOpenStats(event.tripId)
+                is TripDetailUiEvent.NavigateExport -> onOpenExport(event.tripId)
                 TripDetailUiEvent.NavigateBack -> onBack()
             }
         }
@@ -146,6 +148,13 @@ fun TripDetailScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Статистика")
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.OpenExport) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Экспорт")
         }
         Spacer(Modifier.height(16.dp))
         Text(

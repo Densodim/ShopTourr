@@ -23,6 +23,7 @@ sealed interface TripDetailIntent {
     data object OpenAlerts : TripDetailIntent
     data object OpenMap : TripDetailIntent
     data object OpenStats : TripDetailIntent
+    data object OpenExport : TripDetailIntent
     data object Back : TripDetailIntent
 }
 
@@ -33,6 +34,7 @@ sealed interface TripDetailUiEvent : UiEvent {
     data class NavigateAlerts(val tripId: String) : TripDetailUiEvent
     data class NavigateMap(val tripId: String) : TripDetailUiEvent
     data class NavigateStats(val tripId: String) : TripDetailUiEvent
+    data class NavigateExport(val tripId: String) : TripDetailUiEvent
     data object NavigateBack : TripDetailUiEvent
 }
 
@@ -72,6 +74,7 @@ class TripDetailViewModel(
             TripDetailIntent.OpenAlerts -> emitEvent(TripDetailUiEvent.NavigateAlerts(tripId))
             TripDetailIntent.OpenMap -> emitEvent(TripDetailUiEvent.NavigateMap(tripId))
             TripDetailIntent.OpenStats -> emitEvent(TripDetailUiEvent.NavigateStats(tripId))
+            TripDetailIntent.OpenExport -> emitEvent(TripDetailUiEvent.NavigateExport(tripId))
             TripDetailIntent.Back -> emitEvent(TripDetailUiEvent.NavigateBack)
         }
     }

@@ -1,22 +1,16 @@
-package com.example.shoptourr.data.remote.dto.export
+package com.example.shoptourr.domain.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 enum class ExportFormat { PDF, CSV }
 
-@Serializable
 enum class ExportJobStatus { QUEUED, RUNNING, READY, FAILED, EXPIRED }
 
-@Serializable
-data class CreateExportRequest(
+data class CreateExportDraft(
     val format: ExportFormat,
     val includeTaxFree: Boolean = true,
     val includeDiary: Boolean = false,
 )
 
-@Serializable
-data class ExportJobDto(
+data class ExportJob(
     val id: String,
     val tripId: String,
     val format: ExportFormat,
@@ -26,4 +20,12 @@ data class ExportJobDto(
     val errorCode: String? = null,
     val createdAt: String,
     val finishedAt: String? = null,
-)
+) {
+    val isTerminal: Boolean
+        get() = status == ExportJobStatus.READY ||
+            status == ExportJobStatus.FAILED ||
+            status == ExportJobStatus.EXPIRED
+
+    val isInProgress: Boolean
+        get() = status == ExportJobStatus.QUEUED || status == ExportJobStatus.RUNNING
+}
