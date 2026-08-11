@@ -70,6 +70,10 @@ kotlin {
 
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.no.arg)
+
+            implementation(libs.voyager.navigator)
+            implementation(libs.voyager.transitions)
+            implementation(libs.voyager.koin)
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
