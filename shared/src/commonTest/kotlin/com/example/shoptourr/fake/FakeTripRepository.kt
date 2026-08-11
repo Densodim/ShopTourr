@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class FakeTripRepository(
     initial: HomeSnapshot = HomeSnapshot("", null, 0, 0),
+    private val createError: Throwable? = null,
 ) : TripRepository {
     private val home = MutableStateFlow(initial)
     private var queuedRefresh: HomeSnapshot? = null
@@ -40,6 +41,7 @@ class FakeTripRepository(
     }
 
     override suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary> {
+        createError?.let { return Result.failure(it) }
         createCalls += 1
         val trip = TripSummary(
             id = "trip-$createCalls",

@@ -24,6 +24,7 @@ import com.example.shoptourr.presentation.home.HomeViewModel
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
+    onCreateTrip: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snapshot = state.snapshot
@@ -37,7 +38,7 @@ fun HomeScreen(
         horizontalAlignment = Alignment.Start,
     ) {
         Text(
-            text = if (snapshot?.userName.isNullOrBlank()) "Voyage" else "Привет, ${snapshot?.userName}",
+            text = if (snapshot?.userName.isNullOrBlank()) "Voyage" else "Привет, ${snapshot.userName}",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -66,7 +67,8 @@ fun HomeScreen(
             )
             state.error?.let { err ->
                 Spacer(Modifier.height(8.dp))
-                Text(text = err.message ?: "Error", color = MaterialTheme.colorScheme.error)
+                Text(text = err.title, color = MaterialTheme.colorScheme.error)
+                Text(text = err.message, color = MaterialTheme.colorScheme.error)
             }
             Spacer(Modifier.height(24.dp))
             Button(
@@ -74,6 +76,13 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Обновить")
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onCreateTrip,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Новая поездка")
             }
         }
     }

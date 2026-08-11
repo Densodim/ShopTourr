@@ -8,6 +8,7 @@ import com.example.shoptourr.domain.repository.AuthRepository
 class FakeAuthRepository(
     var session: AuthSession? = null,
     var error: AppError? = null,
+    private val loggedInOverride: Boolean? = null,
 ) : AuthRepository {
     var loginCalls: Int = 0
         private set
@@ -36,5 +37,5 @@ class FakeAuthRepository(
 
     override fun currentUser(): User? = session?.user
 
-    override fun isLoggedIn(): Boolean = session != null
+    override fun isLoggedIn(): Boolean = loggedInOverride ?: (session != null)
 }
