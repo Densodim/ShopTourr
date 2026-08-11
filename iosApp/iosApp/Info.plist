@@ -4,5 +4,9 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Voyage needs camera access to photograph receipts.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Voyage needs photo library access to attach receipt images.</string>
 </dict>
 </plist>

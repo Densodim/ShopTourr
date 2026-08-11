@@ -3,6 +3,7 @@ package com.example.shoptourr.ui.purchase
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -30,6 +31,7 @@ import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
@@ -63,14 +65,21 @@ internal fun AddPurchaseContent(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-    val receiptPicker = rememberFilePickerLauncher(
+    val attachReceipt: suspend (String, ByteArray) -> Unit = { contentType, bytes ->
+        onIntent(AddPurchaseIntent.AttachReceipt(contentType = contentType, bytes = bytes))
+    }
+    val galleryPicker = rememberFilePickerLauncher(
         type = FileKitType.Image,
     ) { file ->
         if (file == null) return@rememberFilePickerLauncher
         scope.launch {
-            val bytes = file.readBytes()
-            val contentType = contentTypeForFileName(file.name)
-            onIntent(AddPurchaseIntent.AttachReceipt(contentType = contentType, bytes = bytes))
+            attachReceipt(contentTypeForFileName(file.name), file.readBytes())
+        }
+    }
+    val cameraPicker = rememberCameraPickerLauncher { file ->
+        if (file == null) return@rememberCameraPickerLauncher
+        scope.launch {
+            attachReceipt(contentTypeForFileName(file.name), file.readBytes())
         }
     }
 
@@ -148,17 +157,36 @@ internal fun AddPurchaseContent(
         }
         Spacer(Modifier.height(20.dp))
         VoyageSection(title = "Чек") {
-            VoyageButton(
-                text = when {
-                    state.isUploadingReceipt -> "Загрузка чека…"
-                    state.receiptMediaId != null -> "Чек прикреплён"
-                    else -> "Прикрепить чек"
-                },
-                onClick = { receiptPicker.launch() },
-                enabled = !state.isUploadingReceipt && !state.isLoading,
-                isLoading = state.isUploadingReceipt,
-                variant = VoyageButtonVariant.Secondary,
-            )
+            if (state.receiptMediaId != null) {
+                Text(
+                    text = if (state.isUploadingReceipt) "Загрузка чека…" else "Чек прикреплён",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                VoyageButton(
+                    text = "Галерея",
+                    onClick = { galleryPicker.launch() },
+                    enabled = !state.isUploadingReceipt && !state.isLoading,
+                    isLoading = false,
+                    variant = VoyageButtonVariant.Secondary,
+                    modifier = Modifier.weight(1f),
+                    fillMaxWidth = false,
+                )
+                VoyageButton(
+                    text = "Камера",
+                    onClick = { cameraPicker.launch() },
+                    enabled = !state.isUploadingReceipt && !state.isLoading,
+                    isLoading = state.isUploadingReceipt,
+                    variant = VoyageButtonVariant.Secondary,
+                    modifier = Modifier.weight(1f),
+                    fillMaxWidth = false,
+                )
+            }
             state.ocr?.let { ocr ->
                 Spacer(Modifier.height(12.dp))
                 VoyageSurfaceBlock {
