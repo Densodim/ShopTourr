@@ -1,18 +1,33 @@
 package com.example.shoptourr.data
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.example.shoptourr.data.local.SqlDelightAlertsLocalStore
+import com.example.shoptourr.data.local.SqlDelightDiaryLocalStore
+import com.example.shoptourr.data.local.SqlDelightExportLocalStore
 import com.example.shoptourr.data.local.SqlDelightPurchaseLocalStore
+import com.example.shoptourr.data.local.SqlDelightRouteLocalStore
+import com.example.shoptourr.data.local.SqlDelightStatsLocalStore
+import com.example.shoptourr.data.local.SqlDelightTaxFreeLocalStore
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
 import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
-import com.example.shoptourr.data.local.SqlDelightDiaryLocalStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutboxEntry
 import com.example.shoptourr.db.VoyageDatabase
+import com.example.shoptourr.domain.model.AlertSeverity
+import com.example.shoptourr.domain.model.AlertType
+import com.example.shoptourr.domain.model.BudgetAlert
 import com.example.shoptourr.domain.model.DiaryEntry
+import com.example.shoptourr.domain.model.ExportFormat
+import com.example.shoptourr.domain.model.ExportJob
+import com.example.shoptourr.domain.model.ExportJobStatus
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseCategory
+import com.example.shoptourr.domain.model.TaxFreeRules
+import com.example.shoptourr.domain.model.TaxFreeSummary
+import com.example.shoptourr.domain.model.TripRoute
+import com.example.shoptourr.domain.model.TripStats
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.VatCalculator
@@ -162,5 +177,73 @@ class SqlDelightStoresHostTest {
         assertEquals(listOf("2026-04-16", "2026-04-15"), days.map { it.date })
         store.removeEntry("lisbon", "d1")
         assertEquals(1, store.observe("lisbon").first().single().entries.size)
+    }
+
+    @Test
+    fun `trip cache stores tax free alerts route stats export`() = runTest {
+        val db = database()
+        val taxFree = SqlDelightTaxFreeLocalStore(db, clock = { 1L })
+        val alerts = SqlDelightAlertsLocalStore(db, clock = { 1L })
+        val route = SqlDelightRouteLocalStore(db, clock = { 1L })
+        val stats = SqlDelightStatsLocalStore(db, clock = { 1L })
+        val export = SqlDelightExportLocalStore(db, clock = { 1L })
+
+        taxFree.save(
+            TaxFreeSummary(
+                tripId = "lisbon",
+                rules = TaxFreeRules(
+                    currency = "EUR",
+                    minimumPurchase = Money.parse("50.00", "EUR"),
+                    estimatedRefundRate = "0.13",
+                    regionLabel = "EU",
+                ),
+                eligibleCount = 0,
+                eligibleTotal = Money.parse("0.00", "EUR"),
+                estimatedRefundTotal = Money.parse("0.00", "EUR"),
+                items = emptyList(),
+            )
+        )
+        alerts.replaceAll(
+            "lisbon",
+            listOf(
+                BudgetAlert(
+                    id = "a1",
+                    type = AlertType.BUDGET_ALMOST_GONE,
+                    severity = AlertSeverity.WARNING,
+                    titleKey = "t",
+                    bodyKey = "b",
+                    createdAt = "2026-08-11T00:00:00Z",
+                    read = false,
+                ),
+            ),
+        )
+        route.save(TripRoute(tripId = "lisbon", stopCount = 0, stops = emptyList()))
+        stats.save(
+            TripStats(
+                tripId = "lisbon",
+                totalSpent = Money.parse("10.00", "EUR"),
+                budget = Money.parse("100.00", "EUR"),
+                dailyAverage = Money.parse("1.00", "EUR"),
+                remaining = Money.parse("90.00", "EUR"),
+                onBudget = true,
+                byCategory = emptyList(),
+                byDay = emptyList(),
+            )
+        )
+        export.save(
+            ExportJob(
+                id = "e1",
+                tripId = "lisbon",
+                format = ExportFormat.CSV,
+                status = ExportJobStatus.QUEUED,
+                createdAt = "2026-08-11T00:00:00Z",
+            )
+        )
+
+        assertEquals("lisbon", taxFree.observe("lisbon").first()!!.tripId)
+        assertEquals("a1", alerts.observe("lisbon").first().single().id)
+        assertEquals(0, route.observe("lisbon").first()!!.stopCount)
+        assertEquals("10.00", stats.observe("lisbon").first()!!.totalSpent.toDecimalString())
+        assertEquals(ExportJobStatus.QUEUED, export.observe("lisbon").first()!!.status)
     }
 }

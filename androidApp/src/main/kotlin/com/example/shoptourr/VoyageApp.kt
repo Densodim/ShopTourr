@@ -2,13 +2,23 @@ package com.example.shoptourr
 
 import android.app.Application
 import com.example.shoptourr.data.connectivity.AndroidConnectivityMonitor
+import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DatabaseDriverFactory
 import com.example.shoptourr.data.local.DiaryLocalStore
+import com.example.shoptourr.data.local.ExportLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
+import com.example.shoptourr.data.local.RouteLocalStore
+import com.example.shoptourr.data.local.SqlDelightAlertsLocalStore
 import com.example.shoptourr.data.local.SqlDelightDiaryLocalStore
+import com.example.shoptourr.data.local.SqlDelightExportLocalStore
 import com.example.shoptourr.data.local.SqlDelightPurchaseLocalStore
+import com.example.shoptourr.data.local.SqlDelightRouteLocalStore
+import com.example.shoptourr.data.local.SqlDelightStatsLocalStore
+import com.example.shoptourr.data.local.SqlDelightTaxFreeLocalStore
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
 import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
+import com.example.shoptourr.data.local.StatsLocalStore
+import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.data.local.createVoyageDatabase
@@ -48,6 +58,11 @@ private val androidDatabaseModule = module {
     single<PurchaseLocalStore> { SqlDelightPurchaseLocalStore(get()) }
     single<WishlistLocalStore> { SqlDelightWishlistLocalStore(get()) }
     single<DiaryLocalStore> { SqlDelightDiaryLocalStore(get()) }
+    single<TaxFreeLocalStore> { SqlDelightTaxFreeLocalStore(get()) }
+    single<AlertsLocalStore> { SqlDelightAlertsLocalStore(get()) }
+    single<RouteLocalStore> { SqlDelightRouteLocalStore(get()) }
+    single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
+    single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
     single<SecureKeyValueStore> { AndroidEncryptedSecureStore(androidContext()) }

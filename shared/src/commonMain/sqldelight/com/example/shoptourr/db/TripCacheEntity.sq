@@ -1,0 +1,21 @@
+CREATE TABLE TripCacheEntity (
+    kind TEXT NOT NULL,
+    trip_id TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    updated_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (kind, trip_id)
+);
+
+selectByKindAndTrip:
+SELECT * FROM TripCacheEntity
+WHERE kind = :kind AND trip_id = :tripId
+LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO TripCacheEntity(
+    kind, trip_id, payload_json, updated_at_epoch_ms
+) VALUES (?, ?, ?, ?);
+
+deleteByKindAndTrip:
+DELETE FROM TripCacheEntity
+WHERE kind = :kind AND trip_id = :tripId;

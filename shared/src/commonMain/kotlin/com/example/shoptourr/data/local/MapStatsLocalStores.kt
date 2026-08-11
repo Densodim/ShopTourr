@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.map
 
 interface RouteLocalStore {
     fun observe(tripId: String): Flow<TripRoute?>
-    fun save(route: TripRoute)
+    suspend fun save(route: TripRoute)
 }
 
 class InMemoryRouteLocalStore : RouteLocalStore {
@@ -16,14 +16,14 @@ class InMemoryRouteLocalStore : RouteLocalStore {
 
     override fun observe(tripId: String): Flow<TripRoute?> = byTrip.map { it[tripId] }
 
-    override fun save(route: TripRoute) {
+    override suspend fun save(route: TripRoute) {
         byTrip.value = byTrip.value + (route.tripId to route)
     }
 }
 
 interface StatsLocalStore {
     fun observe(tripId: String): Flow<TripStats?>
-    fun save(stats: TripStats)
+    suspend fun save(stats: TripStats)
 }
 
 class InMemoryStatsLocalStore : StatsLocalStore {
@@ -31,7 +31,7 @@ class InMemoryStatsLocalStore : StatsLocalStore {
 
     override fun observe(tripId: String): Flow<TripStats?> = byTrip.map { it[tripId] }
 
-    override fun save(stats: TripStats) {
+    override suspend fun save(stats: TripStats) {
         byTrip.value = byTrip.value + (stats.tripId to stats)
     }
 }

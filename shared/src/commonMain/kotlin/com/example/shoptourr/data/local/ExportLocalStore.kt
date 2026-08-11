@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.map
 
 interface ExportLocalStore {
     fun observe(tripId: String): Flow<ExportJob?>
-    fun save(job: ExportJob)
+    suspend fun save(job: ExportJob)
 }
 
 class InMemoryExportLocalStore : ExportLocalStore {
@@ -15,7 +15,7 @@ class InMemoryExportLocalStore : ExportLocalStore {
 
     override fun observe(tripId: String): Flow<ExportJob?> = byTrip.map { it[tripId] }
 
-    override fun save(job: ExportJob) {
+    override suspend fun save(job: ExportJob) {
         byTrip.value = byTrip.value + (job.tripId to job)
     }
 }

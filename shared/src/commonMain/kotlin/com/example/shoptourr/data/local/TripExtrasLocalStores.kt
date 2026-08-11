@@ -57,7 +57,7 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
 
 interface TaxFreeLocalStore {
     fun observe(tripId: String): Flow<TaxFreeSummary?>
-    fun save(summary: TaxFreeSummary)
+    suspend fun save(summary: TaxFreeSummary)
 }
 
 class InMemoryTaxFreeLocalStore : TaxFreeLocalStore {
@@ -66,14 +66,14 @@ class InMemoryTaxFreeLocalStore : TaxFreeLocalStore {
     override fun observe(tripId: String): Flow<TaxFreeSummary?> =
         byTrip.map { it[tripId] }
 
-    override fun save(summary: TaxFreeSummary) {
+    override suspend fun save(summary: TaxFreeSummary) {
         byTrip.value = byTrip.value + (summary.tripId to summary)
     }
 }
 
 interface AlertsLocalStore {
     fun observe(tripId: String): Flow<List<BudgetAlert>>
-    fun replaceAll(tripId: String, alerts: List<BudgetAlert>)
+    suspend fun replaceAll(tripId: String, alerts: List<BudgetAlert>)
 }
 
 class InMemoryAlertsLocalStore : AlertsLocalStore {
@@ -82,7 +82,7 @@ class InMemoryAlertsLocalStore : AlertsLocalStore {
     override fun observe(tripId: String): Flow<List<BudgetAlert>> =
         byTrip.map { it[tripId].orEmpty() }
 
-    override fun replaceAll(tripId: String, alerts: List<BudgetAlert>) {
+    override suspend fun replaceAll(tripId: String, alerts: List<BudgetAlert>) {
         byTrip.value = byTrip.value + (tripId to alerts)
     }
 }
