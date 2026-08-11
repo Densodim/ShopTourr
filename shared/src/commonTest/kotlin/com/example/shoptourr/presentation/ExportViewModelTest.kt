@@ -100,7 +100,7 @@ class ExportViewModelTest {
             )
             vm.onIntent(ExportIntent.FormatChanged(ExportFormat.CSV))
             vm.onIntent(ExportIntent.Create)
-            assertEquals("Session Expired", vm.state.value.error?.title)
+            assertEquals("Сессия истекла", vm.state.value.error?.title)
             vm.onCleared()
         } finally {
             Dispatchers.resetMain()
@@ -121,7 +121,7 @@ class ExportViewModelTest {
                 observePremium = ObservePremiumUseCase(FakeUserRepository(profile = free)),
             )
             vm.onIntent(ExportIntent.Create)
-            assertEquals("Premium Required", vm.state.value.error?.title)
+            assertEquals("Нужен Premium", vm.state.value.error?.title)
             vm.onCleared()
         } finally {
             Dispatchers.resetMain()

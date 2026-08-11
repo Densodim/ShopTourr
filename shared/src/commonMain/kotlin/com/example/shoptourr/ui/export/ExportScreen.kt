@@ -1,20 +1,13 @@
 package com.example.shoptourr.ui.export
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,7 +19,15 @@ import com.example.shoptourr.domain.model.ExportFormat
 import com.example.shoptourr.domain.model.ExportJobStatus
 import com.example.shoptourr.presentation.export.ExportIntent
 import com.example.shoptourr.presentation.export.ExportUiEvent
+import com.example.shoptourr.presentation.export.ExportUiState
 import com.example.shoptourr.presentation.export.ExportViewModel
+import com.example.shoptourr.ui.components.LoadingBlock
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSurfaceBlock
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun ExportScreen(
@@ -45,98 +46,95 @@ fun ExportScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp),
-    ) {
-        TextButton(onClick = { viewModel.onIntent(ExportIntent.Back) }) {
-            Text("Назад")
-        }
-        Text(
-            text = "Экспорт",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    ExportContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+    )
+}
+
+@Composable
+internal fun ExportContent(
+    state: ExportUiState,
+    onIntent: (ExportIntent) -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Экспорт", onBack = { onIntent(ExportIntent.Back) })
         Spacer(Modifier.height(16.dp))
-        Text("Формат", color = MaterialTheme.colorScheme.onBackground)
-        Row {
-            TextButton(
-                onClick = { viewModel.onIntent(ExportIntent.FormatChanged(ExportFormat.PDF)) },
-            ) {
-                Text(if (state.format == ExportFormat.PDF) "• PDF" else "PDF")
-            }
-            TextButton(
-                onClick = { viewModel.onIntent(ExportIntent.FormatChanged(ExportFormat.CSV)) },
-            ) {
-                Text(if (state.format == ExportFormat.CSV) "• CSV" else "CSV")
-            }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = state.includeTaxFree,
-                onCheckedChange = { viewModel.onIntent(ExportIntent.IncludeTaxFreeChanged(it)) },
-            )
-            Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = state.includeDiary,
-                onCheckedChange = { viewModel.onIntent(ExportIntent.IncludeDiaryChanged(it)) },
-            )
-            Text("Дневник", color = MaterialTheme.colorScheme.onBackground)
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = { viewModel.onIntent(ExportIntent.Create) },
-            enabled = !state.isLoading && !state.isPolling,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text("Создать экспорт")
-        }
-        state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(err.title, color = MaterialTheme.colorScheme.error)
-            Text(err.message, color = MaterialTheme.colorScheme.error)
-        }
-        Spacer(Modifier.height(16.dp))
-        if (state.isLoading || state.isPolling) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = if (state.isPolling) "Готовим файл…" else "Создаём…",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        VoyageSection(title = "Формат") {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = state.format == ExportFormat.PDF,
+                    onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.PDF)) },
+                    label = { Text("PDF") },
+                )
+                FilterChip(
+                    selected = state.format == ExportFormat.CSV,
+                    onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.CSV)) },
+                    label = { Text("CSV") },
                 )
             }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.includeTaxFree,
+                    onCheckedChange = { onIntent(ExportIntent.IncludeTaxFreeChanged(it)) },
+                )
+                Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.includeDiary,
+                    onCheckedChange = { onIntent(ExportIntent.IncludeDiaryChanged(it)) },
+                )
+                Text("Дневник", color = MaterialTheme.colorScheme.onBackground)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        VoyageButton(
+            text = "Создать экспорт",
+            onClick = { onIntent(ExportIntent.Create) },
+            enabled = !state.isLoading && !state.isPolling,
+            isLoading = state.isLoading,
+        )
+        state.error?.let { err ->
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
+        }
+        if (state.isPolling) {
+            LoadingBlock(label = "Готовим файл…")
         }
         state.job?.let { job ->
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = "Статус: ${job.status.name.lowercase()}",
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            when (job.status) {
-                ExportJobStatus.READY -> {
-                    Text(
-                        text = job.downloadUrl ?: "Готово",
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    job.expiresAt?.let {
-                        Text("Истекает: $it", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(16.dp))
+            VoyageSurfaceBlock {
+                Text(
+                    text = "Статус: ${job.status.name.lowercase()}",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                when (job.status) {
+                    ExportJobStatus.READY -> {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = job.downloadUrl ?: "Готово",
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        job.expiresAt?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text("Истекает: $it", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
+                    ExportJobStatus.FAILED -> {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = job.errorCode ?: "Ошибка экспорта",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    ExportJobStatus.EXPIRED -> {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Ссылка истекла", color = MaterialTheme.colorScheme.error)
+                    }
+                    else -> Unit
                 }
-                ExportJobStatus.FAILED -> {
-                    Text(
-                        text = job.errorCode ?: "Ошибка экспорта",
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                ExportJobStatus.EXPIRED -> {
-                    Text("Ссылка истекла", color = MaterialTheme.colorScheme.error)
-                }
-                else -> Unit
             }
         }
     }

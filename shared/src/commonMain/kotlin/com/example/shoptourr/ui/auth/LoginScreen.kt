@@ -1,31 +1,26 @@
 package com.example.shoptourr.ui.auth
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthUiEvent
+import com.example.shoptourr.presentation.auth.AuthUiState
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageEyebrow
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageTextField
 
 @Composable
 fun LoginScreen(
@@ -40,14 +35,20 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    LoginContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+    )
+}
+
+@Composable
+internal fun LoginContent(
+    state: AuthUiState,
+    onIntent: (AuthIntent) -> Unit,
+) {
+    VoyageScreen {
+        VoyageEyebrow("Voyage")
+        Spacer(Modifier.height(12.dp))
         Text(
             text = "VOYAGE",
             style = MaterialTheme.typography.headlineMedium,
@@ -64,53 +65,49 @@ fun LoginScreen(
             style = MaterialTheme.typography.titleLarge.copy(fontStyle = FontStyle.Italic),
             color = MaterialTheme.colorScheme.primary,
         )
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(28.dp))
+        Text(
+            text = if (state.isRegisterMode) "Создать аккаунт" else "Войти",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(16.dp))
         if (state.isRegisterMode) {
-            OutlinedTextField(
+            VoyageTextField(
                 value = state.displayName,
-                onValueChange = { viewModel.onIntent(AuthIntent.DisplayNameChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Имя") },
-                singleLine = true,
+                onValueChange = { onIntent(AuthIntent.DisplayNameChanged(it)) },
+                label = "Имя",
             )
             Spacer(Modifier.height(12.dp))
         }
-        OutlinedTextField(
+        VoyageTextField(
             value = state.email,
-            onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Email") },
-            singleLine = true,
+            onValueChange = { onIntent(AuthIntent.EmailChanged(it)) },
+            label = "Email",
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        VoyageTextField(
             value = state.password,
-            onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Пароль") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
+            onValueChange = { onIntent(AuthIntent.PasswordChanged(it)) },
+            label = "Пароль",
+            isPassword = true,
         )
         state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(err.title, color = MaterialTheme.colorScheme.error)
-            Text(err.message, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
         }
         Spacer(Modifier.height(24.dp))
-        if (state.isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            Button(
-                onClick = { viewModel.onIntent(AuthIntent.Submit) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(if (state.isRegisterMode) "Зарегистрироваться" else "Войти")
-            }
-            TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
-                Text(
-                    if (state.isRegisterMode) "Уже есть аккаунт? Войти" else "Создать аккаунт",
-                )
-            }
-        }
+        VoyageButton(
+            text = if (state.isRegisterMode) "Зарегистрироваться" else "Войти",
+            onClick = { onIntent(AuthIntent.Submit) },
+            isLoading = state.isLoading,
+        )
+        Spacer(Modifier.height(8.dp))
+        VoyageButton(
+            text = if (state.isRegisterMode) "Уже есть аккаунт? Войти" else "Создать аккаунт",
+            onClick = { onIntent(AuthIntent.ToggleMode) },
+            variant = VoyageButtonVariant.Ghost,
+            enabled = !state.isLoading,
+        )
     }
 }

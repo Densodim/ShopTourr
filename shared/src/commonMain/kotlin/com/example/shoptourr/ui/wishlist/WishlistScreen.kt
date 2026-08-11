@@ -4,22 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.wishlist.WishlistIntent
 import com.example.shoptourr.presentation.wishlist.WishlistUiEvent
+import com.example.shoptourr.presentation.wishlist.WishlistUiState
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
+import com.example.shoptourr.ui.components.EmptyState
+import com.example.shoptourr.ui.components.LoadingBlock
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun WishlistScreen(
@@ -48,90 +48,72 @@ fun WishlistScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-    ) {
-        TextButton(onClick = { viewModel.onIntent(WishlistIntent.Back) }) {
-            Text("Назад")
-        }
-        Text(
-            text = "Wishlist",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    WishlistContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+    )
+}
+
+@Composable
+internal fun WishlistContent(
+    state: WishlistUiState,
+    onIntent: (WishlistIntent) -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Wishlist", onBack = { onIntent(WishlistIntent.Back) })
         Spacer(Modifier.height(12.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            OutlinedTextField(
+        VoyageSection(title = "Добавить") {
+            VoyageTextField(
                 value = state.nameDraft,
-                onValueChange = { viewModel.onIntent(WishlistIntent.NameChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Название") },
-                singleLine = true,
+                onValueChange = { onIntent(WishlistIntent.NameChanged(it)) },
+                label = "Название",
             )
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
+            VoyageTextField(
                 value = state.cityDraft,
-                onValueChange = { viewModel.onIntent(WishlistIntent.CityChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Город") },
-                singleLine = true,
+                onValueChange = { onIntent(WishlistIntent.CityChanged(it)) },
+                label = "Город",
             )
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
+            VoyageTextField(
                 value = state.priceDraft,
-                onValueChange = { viewModel.onIntent(WishlistIntent.PriceChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Цена") },
-                singleLine = true,
+                onValueChange = { onIntent(WishlistIntent.PriceChanged(it)) },
+                label = "Цена",
             )
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
+            VoyageTextField(
                 value = state.currencyDraft,
-                onValueChange = { viewModel.onIntent(WishlistIntent.CurrencyChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Валюта") },
-                singleLine = true,
+                onValueChange = { onIntent(WishlistIntent.CurrencyChanged(it)) },
+                label = "Валюта",
             )
             Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = { viewModel.onIntent(WishlistIntent.Add) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isSaving,
-            ) {
-                Text("Добавить")
-            }
+            VoyageButton(
+                text = "Добавить",
+                onClick = { onIntent(WishlistIntent.Add) },
+                isLoading = state.isSaving,
+            )
             Spacer(Modifier.height(8.dp))
-            Button(
-                onClick = { viewModel.onIntent(WishlistIntent.Refresh) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Обновить")
-            }
+            VoyageButton(
+                text = "Обновить",
+                onClick = { onIntent(WishlistIntent.Refresh) },
+                variant = VoyageButtonVariant.Secondary,
+            )
         }
         state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(text = err.title, color = MaterialTheme.colorScheme.error)
-            Text(text = err.message, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err, onRetry = { onIntent(WishlistIntent.Refresh) })
         }
-        Spacer(Modifier.height(16.dp))
-        if (state.isLoading && state.items.isEmpty()) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                items(state.items, key = { it.id }) { item ->
+        Spacer(Modifier.height(20.dp))
+        when {
+            state.isLoading && state.items.isEmpty() -> LoadingBlock(label = "Загружаем…")
+            state.items.isEmpty() -> EmptyState(
+                title = "Список пуст",
+                message = "Добавьте вещи, которые хотите найти в поездке",
+            )
+            else -> {
+                state.items.forEach { item ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -146,12 +128,13 @@ fun WishlistScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
-                        TextButton(
-                            onClick = { viewModel.onIntent(WishlistIntent.Delete(item.id)) },
+                        VoyageButton(
+                            text = "Удалить",
+                            onClick = { onIntent(WishlistIntent.Delete(item.id)) },
                             enabled = !state.isSaving,
-                        ) {
-                            Text("Удалить")
-                        }
+                            variant = VoyageButtonVariant.Ghost,
+                            fillMaxWidth = false,
+                        )
                     }
                     HorizontalDivider()
                 }

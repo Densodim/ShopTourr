@@ -1,24 +1,13 @@
 package com.example.shoptourr.ui.profile
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +18,17 @@ import androidx.compose.ui.unit.dp
 import com.example.shoptourr.domain.model.ThemeMode
 import com.example.shoptourr.presentation.profile.ProfileIntent
 import com.example.shoptourr.presentation.profile.ProfileUiEvent
+import com.example.shoptourr.presentation.profile.ProfileUiState
 import com.example.shoptourr.presentation.profile.ProfileViewModel
+import com.example.shoptourr.ui.components.LoadingBlock
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSurfaceBlock
+import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun ProfileScreen(
@@ -48,128 +47,116 @@ fun ProfileScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-    ) {
-        TextButton(onClick = { viewModel.onIntent(ProfileIntent.Back) }) {
-            Text("Назад")
-        }
-        Text(
-            text = "Профиль",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    ProfileContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+    )
+}
+
+@Composable
+internal fun ProfileContent(
+    state: ProfileUiState,
+    onIntent: (ProfileIntent) -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Профиль", onBack = { onIntent(ProfileIntent.Back) })
         Spacer(Modifier.height(8.dp))
         Text(
             text = state.profile?.email ?: "—",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
         )
         state.profile?.stats?.let { stats ->
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = "Поездки: ${stats.tripsCount} · Страны: ${stats.countriesCount} · Wishlist: ${stats.wishlistCount}",
                 color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.bodyMedium,
             )
         }
         Spacer(Modifier.height(16.dp))
         if (state.isLoading && state.profile == null) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            return
+            LoadingBlock(label = "Загружаем профиль…")
+            return@VoyageScreen
         }
-        OutlinedTextField(
-            value = state.displayNameDraft,
-            onValueChange = { viewModel.onIntent(ProfileIntent.DisplayNameChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Имя") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = { viewModel.onIntent(ProfileIntent.SaveProfile) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving,
-        ) {
-            Text("Сохранить профиль")
+        VoyageSection(title = "Профиль") {
+            VoyageTextField(
+                value = state.displayNameDraft,
+                onValueChange = { onIntent(ProfileIntent.DisplayNameChanged(it)) },
+                label = "Имя",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageButton(
+                text = "Сохранить профиль",
+                onClick = { onIntent(ProfileIntent.SaveProfile) },
+                isLoading = state.isSaving,
+            )
         }
         Spacer(Modifier.height(24.dp))
-        Text(
-            text = "Настройки",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.localeDraft,
-            onValueChange = { viewModel.onIntent(ProfileIntent.LocaleChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Locale") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.currencyDraft,
-            onValueChange = { viewModel.onIntent(ProfileIntent.CurrencyChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Валюта") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        Text("Тема", color = MaterialTheme.colorScheme.onBackground)
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ThemeMode.entries.forEach { theme ->
-                FilterChip(
-                    selected = state.themeDraft == theme,
-                    onClick = { viewModel.onIntent(ProfileIntent.ThemeChanged(theme)) },
-                    label = { Text(theme.name.lowercase()) },
+        VoyageSection(title = "Настройки") {
+            VoyageTextField(
+                value = state.localeDraft,
+                onValueChange = { onIntent(ProfileIntent.LocaleChanged(it)) },
+                label = "Locale",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.currencyDraft,
+                onValueChange = { onIntent(ProfileIntent.CurrencyChanged(it)) },
+                label = "Валюта",
+            )
+            Spacer(Modifier.height(12.dp))
+            Text("Тема", color = MaterialTheme.colorScheme.onBackground)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ThemeMode.entries.forEach { theme ->
+                    FilterChip(
+                        selected = state.themeDraft == theme,
+                        onClick = { onIntent(ProfileIntent.ThemeChanged(theme)) },
+                        label = { Text(theme.name.lowercase()) },
+                    )
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.pushDraft,
+                    onCheckedChange = { onIntent(ProfileIntent.PushChanged(it)) },
+                )
+                Text("Push-уведомления", color = MaterialTheme.colorScheme.onBackground)
+            }
+            VoyageButton(
+                text = "Сохранить настройки",
+                onClick = { onIntent(ProfileIntent.SavePreferences) },
+                isLoading = state.isSaving,
+                variant = VoyageButtonVariant.Secondary,
+            )
+        }
+        Spacer(Modifier.height(24.dp))
+        VoyageSurfaceBlock {
+            Text(
+                text = "Premium: ${state.profile?.premiumPlan?.name ?: "FREE"}",
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            if (state.profile?.isPremium != true) {
+                Spacer(Modifier.height(12.dp))
+                VoyageButton(
+                    text = "Активировать Plus",
+                    onClick = { onIntent(ProfileIntent.ActivatePlus) },
+                    enabled = !state.isSaving,
                 )
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = state.pushDraft,
-                onCheckedChange = { viewModel.onIntent(ProfileIntent.PushChanged(it)) },
-            )
-            Text("Push-уведомления", color = MaterialTheme.colorScheme.onBackground)
-        }
-        Button(
-            onClick = { viewModel.onIntent(ProfileIntent.SavePreferences) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving,
-        ) {
-            Text("Сохранить настройки")
-        }
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = "Premium: ${state.profile?.premiumPlan?.name ?: "FREE"}",
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        if (state.profile?.isPremium != true) {
-            Button(
-                onClick = { viewModel.onIntent(ProfileIntent.ActivatePlus) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isSaving,
-            ) {
-                Text("Активировать Plus")
-            }
-        }
         state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(text = err.title, color = MaterialTheme.colorScheme.error)
-            Text(text = err.message, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
         }
         Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = { viewModel.onIntent(ProfileIntent.Logout) },
-            modifier = Modifier.fillMaxWidth(),
+        VoyageButton(
+            text = "Выйти",
+            onClick = { onIntent(ProfileIntent.Logout) },
             enabled = !state.isSaving,
-        ) {
-            Text("Выйти")
-        }
+            variant = VoyageButtonVariant.Ghost,
+        )
     }
 }

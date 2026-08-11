@@ -1,31 +1,26 @@
 package com.example.shoptourr.ui.trip
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.trip.NewTripIntent
 import com.example.shoptourr.presentation.trip.NewTripUiEvent
+import com.example.shoptourr.presentation.trip.NewTripUiState
 import com.example.shoptourr.presentation.trip.NewTripViewModel
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun NewTripScreen(
@@ -41,108 +36,95 @@ fun NewTripScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-    ) {
-        TextButton(onClick = onBack) {
-            Text("Назад")
-        }
-        Text(
-            text = "Новая поездка",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    NewTripContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+        onBack = onBack,
+    )
+}
+
+@Composable
+internal fun NewTripContent(
+    state: NewTripUiState,
+    onIntent: (NewTripIntent) -> Unit,
+    onBack: () -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Новая поездка", onBack = onBack)
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = state.city,
-            onValueChange = { viewModel.onIntent(NewTripIntent.CityChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Город") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.country,
-            onValueChange = { viewModel.onIntent(NewTripIntent.CountryChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Страна") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.startDate,
-            onValueChange = { viewModel.onIntent(NewTripIntent.StartDateChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Начало (YYYY-MM-DD)") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.endDate,
-            onValueChange = { viewModel.onIntent(NewTripIntent.EndDateChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Конец (YYYY-MM-DD)") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.budgetAmount,
-            onValueChange = { viewModel.onIntent(NewTripIntent.BudgetChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Бюджет") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.budgetCurrency,
-            onValueChange = { viewModel.onIntent(NewTripIntent.CurrencyChanged(it.uppercase())) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Валюта") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.quoteCurrency,
-            onValueChange = { viewModel.onIntent(NewTripIntent.QuoteCurrencyChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Quote FX (RUB…)") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.travelerDraft,
-            onValueChange = { viewModel.onIntent(NewTripIntent.TravelerDraftChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Участник") },
-            singleLine = true,
-        )
-        TextButton(onClick = { viewModel.onIntent(NewTripIntent.AddTraveler) }) {
-            Text("Добавить участника")
+        VoyageSection(title = "Куда") {
+            VoyageTextField(
+                value = state.city,
+                onValueChange = { onIntent(NewTripIntent.CityChanged(it)) },
+                label = "Город",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.country,
+                onValueChange = { onIntent(NewTripIntent.CountryChanged(it)) },
+                label = "Страна",
+            )
         }
-        state.travelers.forEach { traveler ->
-            Text(traveler.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(20.dp))
+        VoyageSection(title = "Даты") {
+            VoyageTextField(
+                value = state.startDate,
+                onValueChange = { onIntent(NewTripIntent.StartDateChanged(it)) },
+                label = "Начало (YYYY-MM-DD)",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.endDate,
+                onValueChange = { onIntent(NewTripIntent.EndDateChanged(it)) },
+                label = "Конец (YYYY-MM-DD)",
+            )
         }
-        state.error?.let { err ->
+        Spacer(Modifier.height(20.dp))
+        VoyageSection(title = "Бюджет") {
+            VoyageTextField(
+                value = state.budgetAmount,
+                onValueChange = { onIntent(NewTripIntent.BudgetChanged(it)) },
+                label = "Бюджет",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.budgetCurrency,
+                onValueChange = { onIntent(NewTripIntent.CurrencyChanged(it.uppercase())) },
+                label = "Валюта",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.quoteCurrency,
+                onValueChange = { onIntent(NewTripIntent.QuoteCurrencyChanged(it)) },
+                label = "Quote FX (RUB…)",
+            )
+        }
+        Spacer(Modifier.height(20.dp))
+        VoyageSection(title = "Участники") {
+            VoyageTextField(
+                value = state.travelerDraft,
+                onValueChange = { onIntent(NewTripIntent.TravelerDraftChanged(it)) },
+                label = "Участник",
+            )
             Spacer(Modifier.height(8.dp))
-            Text(text = err.title, color = MaterialTheme.colorScheme.error)
-            Text(text = err.message, color = MaterialTheme.colorScheme.error)
-        }
-        Spacer(Modifier.height(24.dp))
-        if (state.isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            Button(
-                onClick = { viewModel.onIntent(NewTripIntent.Submit) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Создать")
+            VoyageButton(
+                text = "Добавить участника",
+                onClick = { onIntent(NewTripIntent.AddTraveler) },
+                variant = VoyageButtonVariant.Ghost,
+            )
+            state.travelers.forEach { traveler ->
+                Text(traveler.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        state.error?.let { err ->
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
+        }
+        Spacer(Modifier.height(24.dp))
+        VoyageButton(
+            text = "Создать",
+            onClick = { onIntent(NewTripIntent.Submit) },
+            isLoading = state.isLoading,
+        )
     }
 }

@@ -84,7 +84,7 @@ class AuthViewModelTest {
 
         val state = viewModel.state.value
         assertFalse(state.isLoading)
-        assertEquals("Session Expired", state.error?.title)
+        assertEquals("Сессия истекла", state.error?.title)
         assertEquals(UiErrorAction.Logout, state.error?.action)
         viewModel.onCleared()
     }

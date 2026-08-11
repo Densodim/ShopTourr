@@ -120,7 +120,7 @@ class ProfileViewModelTest {
         val vm = createVm()
         vm.onIntent(ProfileIntent.DisplayNameChanged(" "))
         vm.onIntent(ProfileIntent.SaveProfile)
-        assertEquals("Validation Error", vm.state.value.error?.title)
+        assertEquals("Проверьте поля", vm.state.value.error?.title)
         assertEquals("displayName", vm.state.value.error?.message)
         vm.onCleared()
     }
@@ -135,7 +135,7 @@ class ProfileViewModelTest {
             )
         )
         vm.onIntent(ProfileIntent.Refresh)
-        assertEquals("Session Expired", vm.state.value.error?.title)
+        assertEquals("Сессия истекла", vm.state.value.error?.title)
         vm.onCleared()
     }
 }

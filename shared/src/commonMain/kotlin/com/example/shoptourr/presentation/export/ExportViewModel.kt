@@ -94,8 +94,8 @@ class ExportViewModel(
                     copy(
                         isLoading = false,
                         error = AppError.Validation("premium").toUiError().copy(
-                            title = "Premium Required",
-                            message = "PDF export requires Plus or Pro",
+                            title = "Нужен Premium",
+                            message = "PDF-экспорт доступен на Plus или Pro",
                         ),
                     )
                 }

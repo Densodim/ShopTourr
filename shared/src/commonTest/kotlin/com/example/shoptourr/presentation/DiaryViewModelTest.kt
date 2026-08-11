@@ -60,7 +60,7 @@ class DiaryViewModelTest {
         )
         vm.onIntent(DiaryIntent.TextChanged(""))
         vm.onIntent(DiaryIntent.Add)
-        assertEquals("Validation Error", vm.state.value.error?.title)
+        assertEquals("Проверьте поля", vm.state.value.error?.title)
         assertEquals("text", vm.state.value.error?.message)
         vm.onCleared()
     }

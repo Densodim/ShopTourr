@@ -74,7 +74,7 @@ class MapStatsViewModelTest {
             ),
         )
         vm.onIntent(RouteIntent.Refresh)
-        assertEquals("Session Expired", vm.state.value.error?.title)
+        assertEquals("Сессия истекла", vm.state.value.error?.title)
         vm.onCleared()
     }
 

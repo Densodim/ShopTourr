@@ -74,7 +74,7 @@ class WishlistViewModelTest {
             deleteItem = DeleteWishlistItemUseCase(FakeWishlistRepository()),
         )
         vm.onIntent(WishlistIntent.Add)
-        assertEquals("Validation Error", vm.state.value.error?.title)
+        assertEquals("Проверьте поля", vm.state.value.error?.title)
         assertEquals("name", vm.state.value.error?.message)
         vm.onCleared()
     }

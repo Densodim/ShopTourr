@@ -1,24 +1,13 @@
 package com.example.shoptourr.ui.purchase
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,7 +18,16 @@ import androidx.compose.ui.unit.dp
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.presentation.purchase.AddPurchaseIntent
 import com.example.shoptourr.presentation.purchase.AddPurchaseUiEvent
+import com.example.shoptourr.presentation.purchase.AddPurchaseUiState
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSurfaceBlock
+import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun AddPurchaseScreen(
@@ -45,143 +43,132 @@ fun AddPurchaseScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-    ) {
-        TextButton(onClick = onBack) {
-            Text("Назад")
-        }
-        Text(
-            text = "Покупка",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    AddPurchaseContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+        onBack = onBack,
+    )
+}
+
+@Composable
+internal fun AddPurchaseContent(
+    state: AddPurchaseUiState,
+    onIntent: (AddPurchaseIntent) -> Unit,
+    onBack: () -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Покупка", onBack = onBack)
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = state.name,
-            onValueChange = { viewModel.onIntent(AddPurchaseIntent.NameChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Название") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.amount,
-            onValueChange = { viewModel.onIntent(AddPurchaseIntent.AmountChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Сумма") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.currency,
-            onValueChange = { viewModel.onIntent(AddPurchaseIntent.CurrencyChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Валюта") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        Text("Категория", color = MaterialTheme.colorScheme.onBackground)
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PurchaseCategory.entries.take(3).forEach { category ->
-                FilterChip(
-                    selected = state.category == category,
-                    onClick = { viewModel.onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                    label = { Text(category.name.lowercase()) },
+        VoyageSection(title = "Основное") {
+            VoyageTextField(
+                value = state.name,
+                onValueChange = { onIntent(AddPurchaseIntent.NameChanged(it)) },
+                label = "Название",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.amount,
+                onValueChange = { onIntent(AddPurchaseIntent.AmountChanged(it)) },
+                label = "Сумма",
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.currency,
+                onValueChange = { onIntent(AddPurchaseIntent.CurrencyChanged(it)) },
+                label = "Валюта",
+            )
+            Spacer(Modifier.height(12.dp))
+            Text("Категория", color = MaterialTheme.colorScheme.onBackground)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PurchaseCategory.entries.take(3).forEach { category ->
+                    FilterChip(
+                        selected = state.category == category,
+                        onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
+                        label = { Text(category.name.lowercase()) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PurchaseCategory.entries.drop(3).forEach { category ->
+                    FilterChip(
+                        selected = state.category == category,
+                        onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
+                        label = { Text(category.name.lowercase()) },
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            VoyageTextField(
+                value = state.place,
+                onValueChange = { onIntent(AddPurchaseIntent.PlaceChanged(it)) },
+                label = "Место",
+            )
+        }
+        Spacer(Modifier.height(20.dp))
+        VoyageSection(title = "VAT / Tax Free") {
+            VoyageTextField(
+                value = state.vatRatePercent,
+                onValueChange = { onIntent(AddPurchaseIntent.VatRateChanged(it)) },
+                label = "VAT %",
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.vatIncluded,
+                    onCheckedChange = { onIntent(AddPurchaseIntent.VatIncludedChanged(it)) },
                 )
+                Text("VAT included", color = MaterialTheme.colorScheme.onBackground)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.taxRefundEligible,
+                    onCheckedChange = { onIntent(AddPurchaseIntent.TaxRefundChanged(it)) },
+                )
+                Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PurchaseCategory.entries.drop(3).forEach { category ->
-                FilterChip(
-                    selected = state.category == category,
-                    onClick = { viewModel.onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                    label = { Text(category.name.lowercase()) },
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.place,
-            onValueChange = { viewModel.onIntent(AddPurchaseIntent.PlaceChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Место") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.vatRatePercent,
-            onValueChange = { viewModel.onIntent(AddPurchaseIntent.VatRateChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("VAT %") },
-            singleLine = true,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = state.vatIncluded,
-                onCheckedChange = { viewModel.onIntent(AddPurchaseIntent.VatIncludedChanged(it)) },
+        Spacer(Modifier.height(20.dp))
+        VoyageSection(title = "Чек") {
+            VoyageButton(
+                text = if (state.receiptMediaId != null) "Чек прикреплён" else "Прикрепить чек (демо)",
+                onClick = {
+                    onIntent(
+                        AddPurchaseIntent.AttachReceipt(
+                            contentType = "image/jpeg",
+                            bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()),
+                        ),
+                    )
+                },
+                enabled = !state.isUploadingReceipt && !state.isLoading,
+                isLoading = state.isUploadingReceipt,
+                variant = VoyageButtonVariant.Secondary,
             )
-            Text("VAT included", color = MaterialTheme.colorScheme.onBackground)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = state.taxRefundEligible,
-                onCheckedChange = { viewModel.onIntent(AddPurchaseIntent.TaxRefundChanged(it)) },
-            )
-            Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = {
-                viewModel.onIntent(
-                    AddPurchaseIntent.AttachReceipt(
-                        contentType = "image/jpeg",
-                        bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()),
-                    ),
-                )
-            },
-            enabled = !state.isUploadingReceipt && !state.isLoading,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(if (state.receiptMediaId != null) "Чек прикреплён" else "Прикрепить чек (демо)")
-        }
-        if (state.isUploadingReceipt) {
-            Spacer(Modifier.height(8.dp))
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-        state.ocr?.let { ocr ->
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = "OCR: ${ocr.suggestedName ?: "—"} · conf ${ocr.confidence}",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            TextButton(onClick = { viewModel.onIntent(AddPurchaseIntent.ApplyOcr) }) {
-                Text("Применить OCR")
+            state.ocr?.let { ocr ->
+                Spacer(Modifier.height(12.dp))
+                VoyageSurfaceBlock {
+                    Text(
+                        text = "OCR: ${ocr.suggestedName ?: "—"} · conf ${ocr.confidence}",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    VoyageButton(
+                        text = "Применить OCR",
+                        onClick = { onIntent(AddPurchaseIntent.ApplyOcr) },
+                        variant = VoyageButtonVariant.Ghost,
+                    )
+                }
             }
         }
         state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(text = err.title, color = MaterialTheme.colorScheme.error)
-            Text(text = err.message, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
         }
         Spacer(Modifier.height(24.dp))
-        if (state.isLoading) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            Button(
-                onClick = { viewModel.onIntent(AddPurchaseIntent.Submit) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Сохранить")
-            }
-        }
+        VoyageButton(
+            text = "Сохранить",
+            onClick = { onIntent(AddPurchaseIntent.Submit) },
+            isLoading = state.isLoading,
+        )
     }
 }

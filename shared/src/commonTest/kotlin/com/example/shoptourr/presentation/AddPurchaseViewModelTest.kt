@@ -76,7 +76,7 @@ class AddPurchaseViewModelTest {
 
         val error = viewModel.state.value.error
         assertIs<UiError>(error)
-        assertEquals("Validation Error", error.title)
+        assertEquals("Проверьте поля", error.title)
         assertEquals("name", error.message)
         viewModel.onCleared()
     }
@@ -89,7 +89,7 @@ class AddPurchaseViewModelTest {
         viewModel.onIntent(AddPurchaseIntent.AmountChanged("4.50"))
         viewModel.onIntent(AddPurchaseIntent.Submit)
 
-        assertEquals("Conflict", viewModel.state.value.error?.title)
+        assertEquals("Конфликт", viewModel.state.value.error?.title)
         viewModel.onCleared()
     }
 

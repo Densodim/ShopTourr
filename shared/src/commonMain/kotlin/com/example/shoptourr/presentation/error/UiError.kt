@@ -16,54 +16,54 @@ sealed interface UiErrorAction {
 
 fun AppError.toUiError(): UiError = when (this) {
     AppError.Network -> UiError(
-        title = "No Connection",
-        message = "Check your internet connection",
+        title = "Нет сети",
+        message = "Проверьте подключение к интернету",
         isRetryable = true,
     )
     AppError.Timeout -> UiError(
-        title = "Timeout",
-        message = "Server did not respond",
+        title = "Таймаут",
+        message = "Сервер не ответил вовремя",
         isRetryable = true,
     )
     AppError.Unauthorized -> UiError(
-        title = "Session Expired",
-        message = "Please log in again",
+        title = "Сессия истекла",
+        message = "Войдите в аккаунт снова",
         isRetryable = false,
         action = UiErrorAction.Logout,
     )
     AppError.NotFound -> UiError(
-        title = "Not Found",
-        message = "The requested content was not found",
+        title = "Не найдено",
+        message = "Запрошенные данные отсутствуют",
         isRetryable = false,
     )
     AppError.Conflict -> UiError(
-        title = "Conflict",
-        message = "This change conflicts with server state",
+        title = "Конфликт",
+        message = "Изменение конфликтует с данными на сервере",
         isRetryable = true,
     )
     AppError.DatabaseError -> UiError(
-        title = "Storage Error",
-        message = "Could not save data",
+        title = "Ошибка хранения",
+        message = "Не удалось сохранить данные",
         isRetryable = true,
     )
     is AppError.Server -> UiError(
-        title = "Server Error",
-        message = "Something went wrong. Please try later.",
+        title = "Ошибка сервера",
+        message = "Что-то пошло не так. Попробуйте позже",
         isRetryable = true,
     )
     is AppError.Api -> UiError(
-        title = "Request Failed",
+        title = "Запрос не выполнен",
         message = message ?: "HTTP $code",
         isRetryable = code in 500..599,
     )
     is AppError.Validation -> UiError(
-        title = "Validation Error",
-        message = message ?: "Invalid input",
+        title = "Проверьте поля",
+        message = message ?: "Некорректные данные",
         isRetryable = false,
     )
     is AppError.Unknown -> UiError(
-        title = "Something went wrong",
-        message = origin?.message ?: "An unexpected error occurred",
+        title = "Что-то пошло не так",
+        message = origin?.message ?: "Непредвиденная ошибка",
         isRetryable = true,
     )
 }

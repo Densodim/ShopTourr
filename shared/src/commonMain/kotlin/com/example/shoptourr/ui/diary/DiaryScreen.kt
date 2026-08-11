@@ -4,20 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,7 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.diary.DiaryIntent
 import com.example.shoptourr.presentation.diary.DiaryUiEvent
+import com.example.shoptourr.presentation.diary.DiaryUiState
 import com.example.shoptourr.presentation.diary.DiaryViewModel
+import com.example.shoptourr.ui.components.EmptyState
+import com.example.shoptourr.ui.components.LoadingBlock
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 
 @Composable
 fun DiaryScreen(
@@ -46,64 +48,60 @@ fun DiaryScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp),
-    ) {
-        TextButton(onClick = { viewModel.onIntent(DiaryIntent.Back) }) {
-            Text("Назад")
-        }
-        Text(
-            text = "Дневник",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+    DiaryContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+    )
+}
+
+@Composable
+internal fun DiaryContent(
+    state: DiaryUiState,
+    onIntent: (DiaryIntent) -> Unit,
+) {
+    VoyageScreen {
+        VoyageTopBar(title = "Дневник", onBack = { onIntent(DiaryIntent.Back) })
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = state.moodDraft,
-            onValueChange = { viewModel.onIntent(DiaryIntent.MoodChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Настроение") },
-            singleLine = true,
-        )
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = state.textDraft,
-            onValueChange = { viewModel.onIntent(DiaryIntent.TextChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Запись") },
-            minLines = 3,
-        )
-        Spacer(Modifier.height(8.dp))
-        Button(
-            onClick = { viewModel.onIntent(DiaryIntent.Add) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving,
-        ) {
-            Text("Добавить")
+        VoyageSection(title = "Новая запись") {
+            VoyageTextField(
+                value = state.moodDraft,
+                onValueChange = { onIntent(DiaryIntent.MoodChanged(it)) },
+                label = "Настроение",
+            )
+            Spacer(Modifier.height(8.dp))
+            VoyageTextField(
+                value = state.textDraft,
+                onValueChange = { onIntent(DiaryIntent.TextChanged(it)) },
+                label = "Запись",
+                singleLine = false,
+            )
+            Spacer(Modifier.height(12.dp))
+            VoyageButton(
+                text = "Добавить",
+                onClick = { onIntent(DiaryIntent.Add) },
+                isLoading = state.isSaving,
+            )
         }
         state.error?.let { err ->
-            Spacer(Modifier.height(8.dp))
-            Text(err.title, color = MaterialTheme.colorScheme.error)
-            Text(err.message, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(12.dp))
+            UiErrorBanner(error = err)
         }
-        Spacer(Modifier.height(16.dp))
-        if (state.isLoading && state.days.isEmpty()) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+        Spacer(Modifier.height(20.dp))
+        when {
+            state.isLoading && state.days.isEmpty() -> LoadingBlock(label = "Загружаем…")
+            state.days.isEmpty() -> EmptyState(
+                title = "Пока пусто",
+                message = "Первая запись станет началом главы поездки",
+            )
+            else -> {
                 state.days.forEach { day ->
-                    item(key = "day-${day.date}") {
-                        Text(
-                            text = day.date,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                    }
-                    items(day.entries, key = { it.id }) { entry ->
+                    Text(
+                        text = day.date,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    day.entries.forEach { entry ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -113,15 +111,17 @@ fun DiaryScreen(
                                 Text(entry.mood, color = MaterialTheme.colorScheme.onBackground)
                                 Text(entry.text, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            TextButton(
-                                onClick = { viewModel.onIntent(DiaryIntent.Delete(entry.id)) },
+                            VoyageButton(
+                                text = "Удалить",
+                                onClick = { onIntent(DiaryIntent.Delete(entry.id)) },
                                 enabled = !state.isSaving,
-                            ) {
-                                Text("Удалить")
-                            }
+                                variant = VoyageButtonVariant.Ghost,
+                                fillMaxWidth = false,
+                            )
                         }
                         HorizontalDivider()
                     }
+                    Spacer(Modifier.height(12.dp))
                 }
             }
         }

@@ -66,7 +66,7 @@ class NewTripViewModelTest {
 
         val error = vm.state.value.error
         assertIs<UiError>(error)
-        assertEquals("Validation Error", error.title)
+        assertEquals("Проверьте поля", error.title)
         assertEquals("city", error.message)
         vm.onCleared()
     }
@@ -85,7 +85,7 @@ class NewTripViewModelTest {
         vm.onIntent(NewTripIntent.BudgetChanged("1000.00"))
         vm.onIntent(NewTripIntent.Submit)
 
-        assertEquals("Conflict", vm.state.value.error?.title)
+        assertEquals("Конфликт", vm.state.value.error?.title)
         vm.onCleared()
     }
 }

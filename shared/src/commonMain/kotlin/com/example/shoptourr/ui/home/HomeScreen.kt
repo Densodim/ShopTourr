@@ -1,25 +1,27 @@
 package com.example.shoptourr.ui.home
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.home.HomeIntent
+import com.example.shoptourr.presentation.home.HomeUiState
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.ui.components.EmptyState
+import com.example.shoptourr.ui.components.FullScreenLoading
+import com.example.shoptourr.ui.components.LoadingBlock
+import com.example.shoptourr.ui.components.UiErrorBanner
+import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageEyebrow
+import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 
 @Composable
 fun HomeScreen(
@@ -31,94 +33,114 @@ fun HomeScreen(
     onOpenWishlist: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
-    val snapshot = state.snapshot
+    HomeContent(
+        state = state,
+        onIntent = viewModel::onIntent,
+        onCreateTrip = onCreateTrip,
+        onOpenTrip = onOpenTrip,
+        onAddPurchase = onAddPurchase,
+        onOpenProfile = onOpenProfile,
+        onOpenWishlist = onOpenWishlist,
+    )
+}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-    ) {
+@Composable
+internal fun HomeContent(
+    state: HomeUiState,
+    onIntent: (HomeIntent) -> Unit,
+    onCreateTrip: () -> Unit,
+    onOpenTrip: (tripId: String) -> Unit,
+    onAddPurchase: (tripId: String) -> Unit,
+    onOpenProfile: () -> Unit,
+    onOpenWishlist: () -> Unit,
+) {
+    val snapshot = state.snapshot
+    if (state.isLoading && snapshot == null) {
+        FullScreenLoading()
+        return
+    }
+
+    VoyageScreen {
+        VoyageEyebrow("Voyage")
+        Spacer(Modifier.height(8.dp))
         Text(
-            text = if (snapshot?.userName.isNullOrBlank()) "Voyage" else "Привет, ${snapshot.userName}",
-            style = MaterialTheme.typography.headlineSmall,
+            text = if (snapshot?.userName.isNullOrBlank()) "С возвращением" else "Привет, ${snapshot.userName}",
+            style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        Spacer(Modifier.height(16.dp))
-        if (state.isLoading && snapshot == null) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
+        Spacer(Modifier.height(20.dp))
+
+        VoyageSurfaceBlock {
+            VoyageEyebrow("Сейчас в поездке")
+            Spacer(Modifier.height(8.dp))
             Text(
-                text = "Сейчас в поездке",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = snapshot?.currentTripCity ?: "—",
-                style = MaterialTheme.typography.titleLarge,
+                text = snapshot?.currentTripCity ?: "Нет активной поездки",
+                style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "Предстоящие: ${snapshot?.upcomingCount ?: 0}",
-                color = MaterialTheme.colorScheme.onBackground,
+                text = "Предстоящие · ${snapshot?.upcomingCount ?: 0}   Архив · ${snapshot?.archiveCount ?: 0}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = "Архив: ${snapshot?.archiveCount ?: 0}",
-                color = MaterialTheme.colorScheme.onBackground,
+        }
+
+        state.error?.let { err ->
+            Spacer(Modifier.height(16.dp))
+            UiErrorBanner(
+                error = err,
+                onRetry = { onIntent(HomeIntent.Refresh) },
             )
-            state.error?.let { err ->
-                Spacer(Modifier.height(8.dp))
-                Text(text = err.title, color = MaterialTheme.colorScheme.error)
-                Text(text = err.message, color = MaterialTheme.colorScheme.error)
-            }
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = { viewModel.onIntent(HomeIntent.Refresh) },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Обновить")
-            }
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = onCreateTrip,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Новая поездка")
-            }
-            Spacer(Modifier.height(12.dp))
-            Button(
+        }
+
+        if (snapshot?.currentTripId == null && !state.isLoading) {
+            Spacer(Modifier.height(16.dp))
+            EmptyState(
+                title = "Начните главу",
+                message = "Создайте поездку, чтобы трекать покупки, VAT и маршрут",
+                actionLabel = "Новая поездка",
+                onAction = onCreateTrip,
+            )
+        }
+
+        Spacer(Modifier.height(24.dp))
+        VoyageSection(title = "Действия") {
+            VoyageButton(
+                text = "Обновить",
+                onClick = { onIntent(HomeIntent.Refresh) },
+                isLoading = state.isLoading,
+                variant = VoyageButtonVariant.Secondary,
+            )
+            Spacer(Modifier.height(10.dp))
+            VoyageButton(text = "Новая поездка", onClick = onCreateTrip)
+            Spacer(Modifier.height(10.dp))
+            VoyageButton(
+                text = "Профиль",
                 onClick = onOpenProfile,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Профиль")
-            }
-            Spacer(Modifier.height(12.dp))
-            Button(
+                variant = VoyageButtonVariant.Secondary,
+            )
+            Spacer(Modifier.height(10.dp))
+            VoyageButton(
+                text = "Wishlist",
                 onClick = onOpenWishlist,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("Wishlist")
-            }
+                variant = VoyageButtonVariant.Secondary,
+            )
             val tripId = snapshot?.currentTripId
             if (tripId != null) {
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = { onOpenTrip(tripId) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Открыть поездку")
-                }
-                Spacer(Modifier.height(12.dp))
-                Button(
+                Spacer(Modifier.height(10.dp))
+                VoyageButton(text = "Открыть поездку", onClick = { onOpenTrip(tripId) })
+                Spacer(Modifier.height(10.dp))
+                VoyageButton(
+                    text = "Добавить покупку",
                     onClick = { onAddPurchase(tripId) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Добавить покупку")
-                }
+                    variant = VoyageButtonVariant.Ghost,
+                )
             }
+        }
+
+        if (state.isLoading && snapshot != null) {
+            LoadingBlock(label = "Обновляем…")
         }
     }
 }
