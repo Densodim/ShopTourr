@@ -12,6 +12,11 @@ import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.data.local.createVoyageDatabase
+import com.example.shoptourr.data.settings.AndroidEncryptedSecureStore
+import com.example.shoptourr.data.settings.SecureKeyValueStore
+import com.example.shoptourr.data.settings.SecureTokenStore
+import com.example.shoptourr.data.settings.SettingsTokenStore
+import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
@@ -19,6 +24,7 @@ import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.example.shoptourr.epochMillis
+import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.dsl.module
@@ -45,6 +51,13 @@ private val androidDatabaseModule = module {
     single<DiaryLocalStore> { SqlDelightDiaryLocalStore(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
+    single<SecureKeyValueStore> { AndroidEncryptedSecureStore(androidContext()) }
+    single<TokenStore> {
+        SecureTokenStore(
+            secure = get(),
+            legacy = SettingsTokenStore(get<Settings>()),
+        )
+    }
     single {
         SyncOutboxProcessor(
             outbox = get(),

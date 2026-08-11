@@ -55,6 +55,7 @@ Platform: Keychain/Keystore, Camera, Push, Maps
 | Nav | Navigation-Compose MP / Decompose | Nav-Compose simpler; Decompose better for complex back-stacks |
 | Server state | Repository + Flow (SQLDelight as SoT) | Heavier than “just Ktor”; correct for offline |
 | Client prefs | multiplatform-settings | Tiny; enough for lang/theme/push |
+| Auth tokens | SecureTokenStore (EncryptedSharedPreferences / Keychain) | Never store JWT in plain Settings on device |
 | Net | Ktor + serialization | Idiomatic KMP; less codegen than Retrofit |
 | DI | Koin MP | Lighter than Hilt-on-Android-only |
 | Lists | LazyColumn + keys; paging later | FlashList N/A on CMP |
