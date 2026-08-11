@@ -26,12 +26,14 @@ import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
+import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.epochMillis
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
+import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -105,12 +107,19 @@ val domainModule = module {
     factoryOf(::RefreshHomeUseCase)
     factoryOf(::CreatePurchaseUseCase)
     factoryOf(::CreateTripUseCase)
+    factoryOf(::ObserveTripDetailUseCase)
 }
 
 val presentationModule = module {
     factoryOf(::AuthViewModel)
     factoryOf(::HomeViewModel)
     factoryOf(::NewTripViewModel)
+    factory { params ->
+        TripDetailViewModel(
+            tripId = params.get(),
+            observeTripDetail = get(),
+        )
+    }
     factory { params ->
         AddPurchaseViewModel(
             tripId = params.get(),

@@ -25,4 +25,5 @@ interface TripRepository {
     suspend fun refreshTrips(): Result<Unit>
     suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary>
     fun observeHome(): Flow<HomeSnapshot>
+    fun observeTrip(tripId: String): Flow<TripSummary?>
 }

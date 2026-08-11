@@ -84,6 +84,9 @@ class TripRepositoryImpl(
             TripSummary.toHomeSnapshot(userName = "", trips = trips)
         }
 
+    override fun observeTrip(tripId: String): Flow<TripSummary?> =
+        localStore.observeAll().map { trips -> trips.firstOrNull { it.id == tripId } }
+
     private fun TripSummaryDto.toDomain(): TripSummary =
         TripSummary(
             id = id,
