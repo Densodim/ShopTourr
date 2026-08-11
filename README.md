@@ -27,6 +27,11 @@ Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
 
 - Android tests: `./gradlew :shared:testAndroidHostTest`
 - iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+- Backend (Spring Boot 4, separate project): `gradle -p backend test`
+
+### Backend
+
+See [backend/README.md](./backend/README.md). Stub API: auth + media upload intent + OCR assist on `:8080/api`.
 
 ---
 
