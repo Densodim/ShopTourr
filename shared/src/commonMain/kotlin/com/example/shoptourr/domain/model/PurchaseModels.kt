@@ -19,6 +19,7 @@ data class PurchaseDraft(
     val taxRefundEligible: Boolean = false,
     val purchaseDate: String? = null,
     val purchaseTime: String? = null,
+    val receiptMediaId: String? = null,
 )
 
 data class Purchase(

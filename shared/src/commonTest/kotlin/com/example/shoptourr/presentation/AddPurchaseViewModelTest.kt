@@ -4,6 +4,9 @@ import app.cash.turbine.test
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
+import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
+import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
+import com.example.shoptourr.fake.FakeMediaRepository
 import com.example.shoptourr.fake.FakePurchaseRepository
 import com.example.shoptourr.presentation.purchase.AddPurchaseIntent
 import com.example.shoptourr.presentation.purchase.AddPurchaseUiEvent
@@ -34,58 +37,79 @@ class AddPurchaseViewModelTest {
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
 
+    private fun vm(
+        purchaseRepo: FakePurchaseRepository = FakePurchaseRepository(),
+        mediaRepo: FakeMediaRepository = FakeMediaRepository(),
+    ) = AddPurchaseViewModel(
+        tripId = "lisbon",
+        createPurchase = CreatePurchaseUseCase(purchaseRepo),
+        uploadReceipt = UploadReceiptUseCase(mediaRepo),
+        fetchReceiptOcr = FetchReceiptOcrUseCase(mediaRepo),
+    )
+
     @Test
     fun `successful submit emits created event`() = runTest {
         val repo = FakePurchaseRepository()
-        val vm = AddPurchaseViewModel(
-            tripId = "lisbon",
-            createPurchase = CreatePurchaseUseCase(repo),
-        )
+        val viewModel = vm(purchaseRepo = repo)
 
-        vm.onIntent(AddPurchaseIntent.NameChanged("Pasteis"))
-        vm.onIntent(AddPurchaseIntent.AmountChanged("4.50"))
-        vm.onIntent(AddPurchaseIntent.CategoryChanged(PurchaseCategory.FOOD))
-        vm.onIntent(AddPurchaseIntent.PlaceChanged("Belem"))
+        viewModel.onIntent(AddPurchaseIntent.NameChanged("Pasteis"))
+        viewModel.onIntent(AddPurchaseIntent.AmountChanged("4.50"))
+        viewModel.onIntent(AddPurchaseIntent.CategoryChanged(PurchaseCategory.FOOD))
+        viewModel.onIntent(AddPurchaseIntent.PlaceChanged("Belem"))
 
-        vm.events.test {
-            vm.onIntent(AddPurchaseIntent.Submit)
+        viewModel.events.test {
+            viewModel.onIntent(AddPurchaseIntent.Submit)
             assertIs<AddPurchaseUiEvent.Created>(awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
 
-        assertFalse(vm.state.value.isLoading)
-        assertNull(vm.state.value.error)
+        assertFalse(viewModel.state.value.isLoading)
+        assertNull(viewModel.state.value.error)
         assertEquals(1, repo.createCalls)
-        vm.onCleared()
+        viewModel.onCleared()
     }
 
     @Test
     fun `validation failure maps to UiError`() = runTest {
-        val vm = AddPurchaseViewModel(
-            tripId = "lisbon",
-            createPurchase = CreatePurchaseUseCase(FakePurchaseRepository()),
-        )
-        vm.onIntent(AddPurchaseIntent.Submit)
+        val viewModel = vm()
+        viewModel.onIntent(AddPurchaseIntent.Submit)
 
-        val error = vm.state.value.error
+        val error = viewModel.state.value.error
         assertIs<UiError>(error)
         assertEquals("Validation Error", error.title)
         assertEquals("name", error.message)
-        vm.onCleared()
+        viewModel.onCleared()
     }
 
     @Test
     fun `repository failure maps to UiError`() = runTest {
         val repo = FakePurchaseRepository(createError = AppError.Conflict)
-        val vm = AddPurchaseViewModel(
-            tripId = "lisbon",
-            createPurchase = CreatePurchaseUseCase(repo),
-        )
-        vm.onIntent(AddPurchaseIntent.NameChanged("Pasteis"))
-        vm.onIntent(AddPurchaseIntent.AmountChanged("4.50"))
-        vm.onIntent(AddPurchaseIntent.Submit)
+        val viewModel = vm(purchaseRepo = repo)
+        viewModel.onIntent(AddPurchaseIntent.NameChanged("Pasteis"))
+        viewModel.onIntent(AddPurchaseIntent.AmountChanged("4.50"))
+        viewModel.onIntent(AddPurchaseIntent.Submit)
 
-        assertEquals("Conflict", vm.state.value.error?.title)
-        vm.onCleared()
+        assertEquals("Conflict", viewModel.state.value.error?.title)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `attach receipt uploads and applies ocr`() = runTest {
+        val media = FakeMediaRepository()
+        val viewModel = vm(mediaRepo = media)
+        viewModel.onIntent(
+            AddPurchaseIntent.AttachReceipt(
+                contentType = "image/jpeg",
+                bytes = byteArrayOf(1, 2, 3),
+            ),
+        )
+        assertEquals("media-1", viewModel.state.value.receiptMediaId)
+        assertEquals("Pasteis de Belem", viewModel.state.value.ocr?.suggestedName)
+        viewModel.onIntent(AddPurchaseIntent.ApplyOcr)
+        assertEquals("Pasteis de Belem", viewModel.state.value.name)
+        assertEquals("4.50", viewModel.state.value.amount)
+        assertEquals(1, media.createCalls)
+        assertEquals(1, media.ocrCalls)
+        viewModel.onCleared()
     }
 }

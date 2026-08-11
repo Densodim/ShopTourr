@@ -25,6 +25,7 @@ import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.ExportApi
 import com.example.shoptourr.data.remote.HomeApi
+import com.example.shoptourr.data.remote.MediaApi
 import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.RouteApi
 import com.example.shoptourr.data.remote.StatsApi
@@ -38,6 +39,7 @@ import com.example.shoptourr.data.repository.AlertsRepositoryImpl
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
 import com.example.shoptourr.data.repository.DiaryRepositoryImpl
 import com.example.shoptourr.data.repository.ExportRepositoryImpl
+import com.example.shoptourr.data.repository.MediaRepositoryImpl
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
 import com.example.shoptourr.data.repository.RouteRepositoryImpl
 import com.example.shoptourr.data.repository.StatsRepositoryImpl
@@ -54,6 +56,7 @@ import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
 import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.ExportRepository
+import com.example.shoptourr.domain.repository.MediaRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
 import com.example.shoptourr.domain.repository.RouteRepository
 import com.example.shoptourr.domain.repository.StatsRepository
@@ -68,6 +71,7 @@ import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
@@ -92,9 +96,13 @@ import com.example.shoptourr.domain.usecase.RefreshRouteUseCase
 import com.example.shoptourr.domain.usecase.RefreshStatsUseCase
 import com.example.shoptourr.domain.usecase.RefreshTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
+import com.example.shoptourr.domain.usecase.RegisterUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
 import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
+import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
 import com.example.shoptourr.epochMillis
+import io.ktor.client.HttpClient
+import org.koin.core.qualifier.named
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
@@ -156,6 +164,11 @@ val dataModule = module {
             enableLogging = true,
         )
     }
+    single(named("uploadHttpClient")) {
+        HttpClient(createPlatformHttpEngine()) {
+            expectSuccess = false
+        }
+    }
     single { AuthApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { HomeApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { PurchaseApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
@@ -168,6 +181,13 @@ val dataModule = module {
     single { RouteApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { StatsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { ExportApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single {
+        MediaApi(
+            client = get(),
+            uploadClient = get(named("uploadHttpClient")),
+            baseUrl = get<AppConfig>().apiBaseUrl,
+        )
+    }
     single {
         AuthRepositoryImpl(
             api = get(),
@@ -202,6 +222,7 @@ val dataModule = module {
     singleOf(::RouteRepositoryImpl) { bind<RouteRepository>() }
     singleOf(::StatsRepositoryImpl) { bind<StatsRepository>() }
     singleOf(::ExportRepositoryImpl) { bind<ExportRepository>() }
+    singleOf(::MediaRepositoryImpl) { bind<MediaRepository>() }
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -216,11 +237,14 @@ val dataModule = module {
 
 val domainModule = module {
     factoryOf(::LoginUseCase)
+    factoryOf(::RegisterUseCase)
     factoryOf(::IsLoggedInUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::ObserveHomeUseCase)
     factoryOf(::RefreshHomeUseCase)
     factoryOf(::CreatePurchaseUseCase)
+    factoryOf(::UploadReceiptUseCase)
+    factoryOf(::FetchReceiptOcrUseCase)
     factoryOf(::CreateTripUseCase)
     factoryOf(::ObserveTripDetailUseCase)
     factoryOf(::ObserveProfileUseCase)
@@ -266,6 +290,8 @@ val presentationModule = module {
         AddPurchaseViewModel(
             tripId = params.get(),
             createPurchase = get(),
+            uploadReceipt = get(),
+            fetchReceiptOcr = get(),
         )
     }
     factory { params ->

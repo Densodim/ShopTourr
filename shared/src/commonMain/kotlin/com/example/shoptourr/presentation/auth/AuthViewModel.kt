@@ -3,21 +3,31 @@ package com.example.shoptourr.presentation.auth
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.usecase.LoginUseCase
+import com.example.shoptourr.domain.usecase.RegisterUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
 import com.example.shoptourr.presentation.base.UiState
 import com.example.shoptourr.presentation.error.UiError
+import com.example.shoptourr.presentation.error.UiErrorAction
 import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
+    val isRegisterMode: Boolean = false,
+    val displayName: String = "",
+    val email: String = "",
+    val password: String = "",
     val isLoading: Boolean = false,
     val error: UiError? = null,
     val user: User? = null,
 ) : UiState
 
 sealed interface AuthIntent {
-    data class SubmitLogin(val email: String, val password: String) : AuthIntent
+    data object ToggleMode : AuthIntent
+    data class DisplayNameChanged(val value: String) : AuthIntent
+    data class EmailChanged(val value: String) : AuthIntent
+    data class PasswordChanged(val value: String) : AuthIntent
+    data object Submit : AuthIntent
 }
 
 sealed interface AuthUiEvent : UiEvent {
@@ -27,18 +37,33 @@ sealed interface AuthUiEvent : UiEvent {
 
 class AuthViewModel(
     private val loginUseCase: LoginUseCase,
+    private val registerUseCase: RegisterUseCase,
 ) : BaseViewModel<AuthUiState, AuthUiEvent>(AuthUiState()) {
 
     fun onIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.SubmitLogin -> login(intent.email, intent.password)
+            AuthIntent.ToggleMode ->
+                updateState { copy(isRegisterMode = !isRegisterMode, error = null) }
+            is AuthIntent.DisplayNameChanged ->
+                updateState { copy(displayName = intent.value, error = null) }
+            is AuthIntent.EmailChanged ->
+                updateState { copy(email = intent.value, error = null) }
+            is AuthIntent.PasswordChanged ->
+                updateState { copy(password = intent.value, error = null) }
+            AuthIntent.Submit -> submit()
         }
     }
 
-    private fun login(email: String, password: String) {
+    private fun submit() {
         launch {
             updateState { copy(isLoading = true, error = null) }
-            loginUseCase(email, password)
+            val current = state.value
+            val result = if (current.isRegisterMode) {
+                registerUseCase(current.displayName, current.email, current.password)
+            } else {
+                loginUseCase(current.email, current.password)
+            }
+            result
                 .onSuccess { session ->
                     updateState { copy(isLoading = false, user = session.user, error = null) }
                     emitEvent(AuthUiEvent.NavigateHome)
@@ -46,9 +71,7 @@ class AuthViewModel(
                 .onFailure { throwable ->
                     val uiError = throwable.asAppError().toUiError()
                     updateState { copy(isLoading = false, error = uiError) }
-                    if (uiError.action is com.example.shoptourr.presentation.error.UiErrorAction.Logout) {
-                        emitEvent(AuthUiEvent.Logout)
-                    }
+                    if (uiError.action is UiErrorAction.Logout) emitEvent(AuthUiEvent.Logout)
                 }
         }
     }

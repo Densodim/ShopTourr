@@ -25,7 +25,24 @@ class FakeAuthRepository(
         email: String,
         password: String,
         locale: String,
-    ): Result<AuthSession> = login(email, password)
+    ): Result<AuthSession> {
+        error?.let { return Result.failure(it) }
+        val user = User(
+            id = session?.user?.id ?: "u-1",
+            displayName = displayName,
+            email = email,
+            locale = locale,
+        )
+        val created = AuthSession(
+            accessToken = session?.accessToken ?: "access",
+            refreshToken = session?.refreshToken ?: "refresh",
+            accessExpiresIn = session?.accessExpiresIn ?: 3600,
+            refreshExpiresIn = session?.refreshExpiresIn ?: 86400,
+            user = user,
+        )
+        session = created
+        return Result.success(created)
+    }
 
     override suspend fun refresh(): Result<AuthSession> =
         session?.let { Result.success(it) } ?: Result.failure(AppError.Unauthorized)

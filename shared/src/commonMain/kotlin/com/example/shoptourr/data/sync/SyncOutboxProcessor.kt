@@ -32,6 +32,7 @@ data class CreatePurchasePayload(
     val place: String?,
     val purchaseDate: String?,
     val purchaseTime: String?,
+    val receiptMediaId: String? = null,
 )
 
 @Serializable
@@ -105,6 +106,7 @@ class SyncOutboxProcessor(
                 place = payload.place,
                 purchaseDate = payload.purchaseDate,
                 purchaseTime = payload.purchaseTime,
+                receiptMediaId = payload.receiptMediaId,
             ),
             idempotencyKey = entry.idempotencyKey,
         )

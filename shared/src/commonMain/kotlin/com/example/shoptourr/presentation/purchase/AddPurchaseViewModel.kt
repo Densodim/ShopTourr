@@ -4,7 +4,11 @@ import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.model.PurchaseDraft
+import com.example.shoptourr.domain.model.ReceiptOcrResult
+import com.example.shoptourr.domain.model.ReceiptUploadDraft
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
+import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
+import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
 import com.example.shoptourr.presentation.base.UiState
@@ -22,6 +26,9 @@ data class AddPurchaseUiState(
     val vatIncluded: Boolean = true,
     val vatRatePercent: String = "23",
     val taxRefundEligible: Boolean = false,
+    val receiptMediaId: String? = null,
+    val ocr: ReceiptOcrResult? = null,
+    val isUploadingReceipt: Boolean = false,
     val isLoading: Boolean = false,
     val error: UiError? = null,
 ) : UiState
@@ -35,6 +42,8 @@ sealed interface AddPurchaseIntent {
     data class VatIncludedChanged(val value: Boolean) : AddPurchaseIntent
     data class VatRateChanged(val value: String) : AddPurchaseIntent
     data class TaxRefundChanged(val value: Boolean) : AddPurchaseIntent
+    data class AttachReceipt(val contentType: String, val bytes: ByteArray) : AddPurchaseIntent
+    data object ApplyOcr : AddPurchaseIntent
     data object Submit : AddPurchaseIntent
 }
 
@@ -45,6 +54,8 @@ sealed interface AddPurchaseUiEvent : UiEvent {
 class AddPurchaseViewModel(
     tripId: String,
     private val createPurchase: CreatePurchaseUseCase,
+    private val uploadReceipt: UploadReceiptUseCase,
+    private val fetchReceiptOcr: FetchReceiptOcrUseCase,
 ) : BaseViewModel<AddPurchaseUiState, AddPurchaseUiEvent>(AddPurchaseUiState(tripId = tripId)) {
 
     fun onIntent(intent: AddPurchaseIntent) {
@@ -62,7 +73,49 @@ class AddPurchaseViewModel(
                 updateState { copy(vatRatePercent = intent.value, error = null) }
             is AddPurchaseIntent.TaxRefundChanged ->
                 updateState { copy(taxRefundEligible = intent.value, error = null) }
+            is AddPurchaseIntent.AttachReceipt -> attachReceipt(intent.contentType, intent.bytes)
+            AddPurchaseIntent.ApplyOcr -> applyOcr()
             AddPurchaseIntent.Submit -> submit()
+        }
+    }
+
+    private fun attachReceipt(contentType: String, bytes: ByteArray) {
+        launch {
+            updateState { copy(isUploadingReceipt = true, error = null) }
+            uploadReceipt(ReceiptUploadDraft(contentType = contentType, bytes = bytes))
+                .onSuccess { asset ->
+                    updateState {
+                        copy(
+                            isUploadingReceipt = false,
+                            receiptMediaId = asset.id,
+                            error = null,
+                        )
+                    }
+                    fetchReceiptOcr(asset.id)
+                        .onSuccess { ocr -> updateState { copy(ocr = ocr) } }
+                        .onFailure { /* OCR is optional assist */ }
+                }
+                .onFailure { throwable ->
+                    updateState {
+                        copy(
+                            isUploadingReceipt = false,
+                            error = throwable.asAppError().toUiError(),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun applyOcr() {
+        val ocr = state.value.ocr ?: return
+        updateState {
+            copy(
+                name = ocr.suggestedName ?: name,
+                amount = ocr.suggestedAmount ?: amount,
+                place = ocr.suggestedPlace ?: place,
+                category = ocr.suggestedCategory ?: category,
+                error = null,
+            )
         }
     }
 
@@ -89,6 +142,7 @@ class AddPurchaseViewModel(
                 vatRatePercent = current.vatRatePercent,
                 place = current.place.ifBlank { null },
                 taxRefundEligible = current.taxRefundEligible,
+                receiptMediaId = current.receiptMediaId,
             )
             createPurchase(current.tripId, draft)
                 .onSuccess { purchase ->

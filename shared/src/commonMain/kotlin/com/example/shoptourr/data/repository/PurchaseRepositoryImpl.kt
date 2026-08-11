@@ -58,6 +58,7 @@ class PurchaseRepositoryImpl(
                 place = draft.place,
                 purchaseDate = draft.purchaseDate,
                 purchaseTime = draft.purchaseTime,
+                receiptMediaId = draft.receiptMediaId,
             )
             outbox.enqueue(
                 SyncOutboxEntry(

@@ -138,6 +138,35 @@ fun AddPurchaseScreen(
             )
             Text("Tax Free", color = MaterialTheme.colorScheme.onBackground)
         }
+        Spacer(Modifier.height(12.dp))
+        Button(
+            onClick = {
+                viewModel.onIntent(
+                    AddPurchaseIntent.AttachReceipt(
+                        contentType = "image/jpeg",
+                        bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte()),
+                    ),
+                )
+            },
+            enabled = !state.isUploadingReceipt && !state.isLoading,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(if (state.receiptMediaId != null) "Чек прикреплён" else "Прикрепить чек (демо)")
+        }
+        if (state.isUploadingReceipt) {
+            Spacer(Modifier.height(8.dp))
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        state.ocr?.let { ocr ->
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "OCR: ${ocr.suggestedName ?: "—"} · conf ${ocr.confidence}",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = { viewModel.onIntent(AddPurchaseIntent.ApplyOcr) }) {
+                Text("Применить OCR")
+            }
+        }
         state.error?.let { err ->
             Spacer(Modifier.height(8.dp))
             Text(text = err.title, color = MaterialTheme.colorScheme.error)

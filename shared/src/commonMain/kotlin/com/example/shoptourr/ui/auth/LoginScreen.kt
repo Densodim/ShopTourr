@@ -13,13 +13,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
@@ -35,8 +33,6 @@ fun LoginScreen(
     onLoggedIn: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -69,38 +65,51 @@ fun LoginScreen(
             color = MaterialTheme.colorScheme.primary,
         )
         Spacer(Modifier.height(32.dp))
+        if (state.isRegisterMode) {
+            OutlinedTextField(
+                value = state.displayName,
+                onValueChange = { viewModel.onIntent(AuthIntent.DisplayNameChanged(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Имя") },
+                singleLine = true,
+            )
+            Spacer(Modifier.height(12.dp))
+        }
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
+            value = state.email,
+            onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Email") },
             singleLine = true,
         )
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = state.password,
+            onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Password") },
+            label = { Text("Пароль") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
         )
         state.error?.let { err ->
             Spacer(Modifier.height(8.dp))
-            Text(text = err.title, color = MaterialTheme.colorScheme.error)
-            Text(text = err.message, color = MaterialTheme.colorScheme.error)
+            Text(err.title, color = MaterialTheme.colorScheme.error)
+            Text(err.message, color = MaterialTheme.colorScheme.error)
         }
         Spacer(Modifier.height(24.dp))
         if (state.isLoading) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         } else {
             Button(
-                onClick = {
-                    viewModel.onIntent(AuthIntent.SubmitLogin(email = email, password = password))
-                },
+                onClick = { viewModel.onIntent(AuthIntent.Submit) },
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Войти")
+                Text(if (state.isRegisterMode) "Зарегистрироваться" else "Войти")
+            }
+            TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
+                Text(
+                    if (state.isRegisterMode) "Уже есть аккаунт? Войти" else "Создать аккаунт",
+                )
             }
         }
     }

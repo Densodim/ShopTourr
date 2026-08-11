@@ -1,9 +1,14 @@
 package com.example.shoptourr.data.remote.dto.media
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class MediaPurpose { RECEIPT, AVATAR, DIARY, EXPORT }
 
+@Serializable
 enum class MediaStatus { PENDING_UPLOAD, UPLOADED, PROCESSING, READY, FAILED }
 
+@Serializable
 data class CreateMediaUploadIntentRequest(
     val purpose: MediaPurpose,
     val contentType: String,
@@ -11,6 +16,7 @@ data class CreateMediaUploadIntentRequest(
     val sha256Hex: String? = null,
 )
 
+@Serializable
 data class MediaUploadIntentResponse(
     val mediaId: String,
     val uploadUrl: String,
@@ -19,10 +25,12 @@ data class MediaUploadIntentResponse(
     val status: MediaStatus,
 )
 
+@Serializable
 data class ConfirmMediaUploadRequest(
     val uploaded: Boolean = true,
 )
 
+@Serializable
 data class MediaAssetDto(
     val id: String,
     val purpose: MediaPurpose,
@@ -34,6 +42,7 @@ data class MediaAssetDto(
     val createdAt: String,
 )
 
+@Serializable
 data class ReceiptOcrResultDto(
     val mediaId: String,
     val suggestedName: String? = null,
