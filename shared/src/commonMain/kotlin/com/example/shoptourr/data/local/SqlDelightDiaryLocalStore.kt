@@ -65,6 +65,7 @@ class SqlDelightDiaryLocalStore(
 
     private fun group(entries: List<DiaryEntry>): List<DiaryDayGroup> =
         entries.groupBy { it.entryDate }
-            .toSortedMap(compareByDescending { it })
-            .map { (date, dayEntries) -> DiaryDayGroup(date = date, entries = dayEntries) }
+            .entries
+            .sortedByDescending { it.key }
+            .map { entry -> DiaryDayGroup(date = entry.key, entries = entry.value) }
 }

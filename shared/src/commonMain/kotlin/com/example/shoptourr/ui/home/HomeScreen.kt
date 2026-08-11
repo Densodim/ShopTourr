@@ -68,6 +68,22 @@ internal fun HomeContent(
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
+        if (!state.isOnline) {
+            Spacer(Modifier.height(12.dp))
+            VoyageSurfaceBlock {
+                Text(
+                    text = "Офлайн",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Показываем кэш. Синхронизация продолжится при сети.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         Spacer(Modifier.height(20.dp))
 
         VoyageSurfaceBlock {

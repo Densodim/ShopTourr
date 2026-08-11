@@ -4,9 +4,11 @@ import app.cash.turbine.test
 import com.example.shoptourr.domain.model.AuthSession
 import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.model.User
+import com.example.shoptourr.domain.usecase.ObserveConnectivityUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.fake.FakeAuthRepository
+import com.example.shoptourr.fake.FakeConnectivityMonitor
 import com.example.shoptourr.fake.FakeTripRepository
 import com.example.shoptourr.presentation.home.HomeIntent
 import com.example.shoptourr.presentation.home.HomeViewModel
@@ -14,6 +16,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,9 +44,11 @@ class HomeViewModelTest {
         val auth = FakeAuthRepository(
             session = AuthSession("a", "r", 1, 1, User("u1", "Mila", "m@v.app", "ru"))
         )
+        val connectivity = FakeConnectivityMonitor(initiallyOnline = true)
         val vm = HomeViewModel(
             observeHome = ObserveHomeUseCase(auth, trips),
             refreshHome = RefreshHomeUseCase(trips),
+            observeConnectivity = ObserveConnectivityUseCase(connectivity),
         )
 
         vm.state.test {
@@ -56,6 +61,29 @@ class HomeViewModelTest {
             vm.onIntent(HomeIntent.Refresh)
             val refreshed = awaitItem()
             assertEquals("Oslo", refreshed.snapshot?.currentTripCity)
+            cancelAndIgnoreRemainingEvents()
+        }
+        vm.onCleared()
+    }
+
+    @Test
+    fun `reflects offline connectivity`() = runTest {
+        val trips = FakeTripRepository(HomeSnapshot("Mila", "Lisbon", 1, 0))
+        val auth = FakeAuthRepository(
+            session = AuthSession("a", "r", 1, 1, User("u1", "Mila", "m@v.app", "ru"))
+        )
+        val connectivity = FakeConnectivityMonitor(initiallyOnline = true)
+        val vm = HomeViewModel(
+            observeHome = ObserveHomeUseCase(auth, trips),
+            refreshHome = RefreshHomeUseCase(trips),
+            observeConnectivity = ObserveConnectivityUseCase(connectivity),
+        )
+        vm.state.test {
+            var state = awaitItem()
+            while (state.snapshot == null) state = awaitItem()
+            connectivity.setOnline(false)
+            val offline = awaitItem()
+            assertFalse(offline.isOnline)
             cancelAndIgnoreRemainingEvents()
         }
         vm.onCleared()

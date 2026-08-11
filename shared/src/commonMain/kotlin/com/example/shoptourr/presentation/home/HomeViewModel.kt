@@ -2,6 +2,7 @@ package com.example.shoptourr.presentation.home
 
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.HomeSnapshot
+import com.example.shoptourr.domain.usecase.ObserveConnectivityUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    val isOnline: Boolean = true,
     val snapshot: HomeSnapshot? = null,
     val error: UiError? = null,
 ) : UiState {
@@ -34,9 +36,15 @@ sealed interface HomeUiEvent : UiEvent {
 class HomeViewModel(
     private val observeHome: ObserveHomeUseCase,
     private val refreshHome: RefreshHomeUseCase,
+    private val observeConnectivity: ObserveConnectivityUseCase,
 ) : BaseViewModel<HomeUiState, HomeUiEvent>(HomeUiState()) {
 
     init {
+        launch {
+            observeConnectivity().collectLatest { online ->
+                updateState { copy(isOnline = online) }
+            }
+        }
         launch {
             observeHome().collectLatest { snapshot ->
                 updateState { copy(isLoading = false, snapshot = snapshot, error = null) }

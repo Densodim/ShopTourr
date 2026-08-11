@@ -98,3 +98,5 @@ docs/api/spring/com/shoptourr/api/v1/dto/
 
 Add dependencies: `jakarta.validation-api` (via `spring-boot-starter-validation`), Jackson 3 (Boot 4 default).  
 Configure `BigDecimal` as JSON string globally to match mobile contract.
+
+**Contract freeze:** see [CONTRACT_V1.md](./CONTRACT_V1.md) — use this as the backend bootstrap checklist.

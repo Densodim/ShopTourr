@@ -1,6 +1,7 @@
 package com.example.shoptourr
 
 import androidx.compose.ui.window.ComposeUIViewController
+import com.example.shoptourr.data.connectivity.IosConnectivityMonitor
 import com.example.shoptourr.data.local.DatabaseDriverFactory
 import com.example.shoptourr.data.local.DiaryLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
@@ -16,9 +17,10 @@ import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
+import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.example.shoptourr.epochMillis
-import org.koin.core.context.GlobalContext
 import org.koin.dsl.module
+import org.koin.mp.KoinPlatform.getKoinOrNull
 import platform.UIKit.UIViewController
 
 private val iosDatabaseModule = module {
@@ -29,6 +31,7 @@ private val iosDatabaseModule = module {
     single<WishlistLocalStore> { SqlDelightWishlistLocalStore(get()) }
     single<DiaryLocalStore> { SqlDelightDiaryLocalStore(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
+    single<ConnectivityMonitor> { IosConnectivityMonitor() }
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -42,7 +45,7 @@ private val iosDatabaseModule = module {
 }
 
 fun MainViewController(): UIViewController {
-    if (GlobalContext.getOrNull() == null) {
+    if (getKoinOrNull() == null) {
         initKoin(
             config = AppConfig(),
             extraModules = listOf(iosDatabaseModule),

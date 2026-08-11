@@ -15,7 +15,6 @@ class SyncScheduler(
     private val connectivity: ConnectivityMonitor,
     private val drainSyncOutbox: DrainSyncOutboxUseCase,
 ) {
-    @Volatile
     private var started = false
     private var job: Job? = null
 

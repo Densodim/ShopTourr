@@ -42,8 +42,9 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
 
     private fun group(entries: List<DiaryEntry>): List<DiaryDayGroup> =
         entries.groupBy { it.entryDate }
-            .toSortedMap()
-            .map { (date, dayEntries) -> DiaryDayGroup(date = date, entries = dayEntries) }
+            .entries
+            .sortedBy { it.key }
+            .map { entry -> DiaryDayGroup(date = entry.key, entries = entry.value) }
 }
 
 interface TaxFreeLocalStore {

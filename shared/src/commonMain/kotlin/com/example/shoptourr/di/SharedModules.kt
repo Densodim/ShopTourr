@@ -90,6 +90,7 @@ import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
 import com.example.shoptourr.domain.usecase.ObserveAlertsUseCase
+import com.example.shoptourr.domain.usecase.ObserveConnectivityUseCase
 import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
 import com.example.shoptourr.domain.usecase.ObserveExportJobUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
@@ -275,6 +276,7 @@ val domainModule = module {
             registerPushDevice = get(),
         )
     }
+    factoryOf(::ObserveConnectivityUseCase)
     factoryOf(::IsLoggedInUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::ObserveHomeUseCase)
