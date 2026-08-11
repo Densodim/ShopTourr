@@ -15,6 +15,7 @@ import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.WishlistApi
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.DiaryEntry
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.Purchase
@@ -192,12 +193,25 @@ class SyncOutboxProcessor(
                         SyncMutationType.CREATE_DIARY -> drainCreateDiary(entry)
                     }
                 }
-                if (outcome.isSuccess) {
-                    outbox.markSuccess(entry.id)
-                    success += 1
-                } else {
-                    outbox.markFailure(entry.id, updatedAtEpochMs = clock())
-                    failure += 1
+                when {
+                    outcome.isSuccess -> {
+                        outbox.markSuccess(entry.id)
+                        success += 1
+                    }
+                    outcome.exceptionOrNull() is AppError.Conflict -> {
+                        val reconciled = runCatching { reconcileServerWins(entry) }
+                        if (reconciled.isSuccess) {
+                            outbox.markSuccess(entry.id)
+                            success += 1
+                        } else {
+                            outbox.markFailure(entry.id, updatedAtEpochMs = clock())
+                            failure += 1
+                        }
+                    }
+                    else -> {
+                        outbox.markFailure(entry.id, updatedAtEpochMs = clock())
+                        failure += 1
+                    }
                 }
             }
         skipped = outbox.pending().count { !SyncOutboxPolicy.isDue(it, now) }
@@ -356,6 +370,74 @@ class SyncOutboxProcessor(
                 updatedAt = response.updatedAt,
             ),
         )
+    }
+
+    /**
+     * v1 conflict policy: server wins — refresh entity and replace local, then drop outbox row.
+     */
+    private suspend fun reconcileServerWins(entry: SyncOutboxEntry) {
+        when (entry.type) {
+            SyncMutationType.CREATE_PURCHASE -> {
+                val payload = SyncPayloadCodec.decodePurchase(entry.payloadJson)
+                purchaseLocalStore.getById(payload.localId)?.let {
+                    purchaseLocalStore.upsert(it.copy(pendingSync = false))
+                }
+            }
+            SyncMutationType.UPDATE_PURCHASE,
+            SyncMutationType.DELETE_PURCHASE,
+            -> {
+                val tripId: String
+                val purchaseId: String
+                if (entry.type == SyncMutationType.UPDATE_PURCHASE) {
+                    val payload = SyncPayloadCodec.decodeUpdatePurchase(entry.payloadJson)
+                    tripId = payload.tripId
+                    purchaseId = payload.purchaseId
+                } else {
+                    val payload = SyncPayloadCodec.decodeDeletePurchase(entry.payloadJson)
+                    tripId = payload.tripId
+                    purchaseId = payload.purchaseId
+                }
+                runCatching { purchaseApi.fetchPurchase(tripId, purchaseId) }
+                    .onSuccess { purchaseLocalStore.upsert(it.toDomain(pendingSync = false)) }
+                    .onFailure { error ->
+                        if (error is AppError.NotFound) {
+                            purchaseLocalStore.remove(purchaseId)
+                        } else {
+                            throw error
+                        }
+                    }
+            }
+            SyncMutationType.CREATE_TRIP -> {
+                // Local id is unknown to server; drop pending flag until next home refresh.
+                val payload = SyncPayloadCodec.decodeTrip(entry.payloadJson)
+                tripLocalStore.all().firstOrNull { it.id == payload.localId }?.let {
+                    tripLocalStore.upsert(it)
+                }
+            }
+            SyncMutationType.UPDATE_TRIP,
+            SyncMutationType.DELETE_TRIP,
+            -> {
+                val tripId = if (entry.type == SyncMutationType.UPDATE_TRIP) {
+                    SyncPayloadCodec.decodeUpdateTrip(entry.payloadJson).tripId
+                } else {
+                    SyncPayloadCodec.decodeDeleteTrip(entry.payloadJson).tripId
+                }
+                runCatching { tripApi.fetchTrip(tripId) }
+                    .onSuccess { tripLocalStore.upsert(it.toSummaryDomain()) }
+                    .onFailure { error ->
+                        if (error is AppError.NotFound) {
+                            tripLocalStore.remove(tripId)
+                        } else {
+                            throw error
+                        }
+                    }
+            }
+            SyncMutationType.CREATE_WISHLIST,
+            SyncMutationType.CREATE_DIARY,
+            -> {
+                // No stable server id in payload; accept conflict by clearing the outbox row.
+            }
+        }
     }
 }
 
