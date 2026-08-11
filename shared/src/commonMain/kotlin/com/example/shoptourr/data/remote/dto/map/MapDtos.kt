@@ -1,12 +1,15 @@
 package com.example.shoptourr.data.remote.dto.map
 
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class GeoPointDto(
     val lat: String,
     val lng: String,
 )
 
+@Serializable
 data class RouteStopDto(
     val id: String,
     val title: String,
@@ -17,6 +20,7 @@ data class RouteStopDto(
     val orderIndex: Int,
 )
 
+@Serializable
 data class TripRouteDto(
     val tripId: String,
     val stopCount: Int,

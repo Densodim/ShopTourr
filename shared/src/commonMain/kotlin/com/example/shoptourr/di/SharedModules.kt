@@ -3,13 +3,17 @@ package com.example.shoptourr.di
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
+import com.example.shoptourr.data.local.InMemoryRouteLocalStore
+import com.example.shoptourr.data.local.InMemoryStatsLocalStore
 import com.example.shoptourr.data.local.InMemoryTaxFreeLocalStore
 import com.example.shoptourr.data.local.InMemoryTripLocalStore
 import com.example.shoptourr.data.local.InMemoryWishlistLocalStore
 import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DiaryLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
+import com.example.shoptourr.data.local.RouteLocalStore
 import com.example.shoptourr.data.local.SettingsUserLocalStore
+import com.example.shoptourr.data.local.StatsLocalStore
 import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
@@ -19,6 +23,8 @@ import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.RouteApi
+import com.example.shoptourr.data.remote.StatsApi
 import com.example.shoptourr.data.remote.TaxFreeApi
 import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.UserApi
@@ -29,6 +35,8 @@ import com.example.shoptourr.data.repository.AlertsRepositoryImpl
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
 import com.example.shoptourr.data.repository.DiaryRepositoryImpl
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
+import com.example.shoptourr.data.repository.RouteRepositoryImpl
+import com.example.shoptourr.data.repository.StatsRepositoryImpl
 import com.example.shoptourr.data.repository.TaxFreeRepositoryImpl
 import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.repository.UserRepositoryImpl
@@ -42,6 +50,8 @@ import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
 import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
+import com.example.shoptourr.domain.repository.RouteRepository
+import com.example.shoptourr.domain.repository.StatsRepository
 import com.example.shoptourr.domain.repository.TaxFreeRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.repository.UserRepository
@@ -60,6 +70,8 @@ import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
 import com.example.shoptourr.domain.usecase.ObserveProfileUseCase
+import com.example.shoptourr.domain.usecase.ObserveRouteUseCase
+import com.example.shoptourr.domain.usecase.ObserveStatsUseCase
 import com.example.shoptourr.domain.usecase.ObserveTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.ObserveWishlistUseCase
@@ -68,6 +80,8 @@ import com.example.shoptourr.domain.usecase.RefreshDiaryUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshPreferencesUseCase
 import com.example.shoptourr.domain.usecase.RefreshProfileUseCase
+import com.example.shoptourr.domain.usecase.RefreshRouteUseCase
+import com.example.shoptourr.domain.usecase.RefreshStatsUseCase
 import com.example.shoptourr.domain.usecase.RefreshTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
@@ -77,8 +91,10 @@ import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.map.RouteViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
+import com.example.shoptourr.presentation.stats.StatsViewModel
 import com.example.shoptourr.presentation.taxfree.TaxFreeViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
@@ -109,6 +125,8 @@ val dataModule = module {
     singleOf(::InMemoryDiaryLocalStore) { bind<DiaryLocalStore>() }
     singleOf(::InMemoryTaxFreeLocalStore) { bind<TaxFreeLocalStore>() }
     singleOf(::InMemoryAlertsLocalStore) { bind<AlertsLocalStore>() }
+    singleOf(::InMemoryRouteLocalStore) { bind<RouteLocalStore>() }
+    singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
 
     single {
         createVoyageHttpClient(
@@ -137,6 +155,8 @@ val dataModule = module {
     single { DiaryApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { TaxFreeApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { AlertsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { RouteApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { StatsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single {
         AuthRepositoryImpl(
             api = get(),
@@ -168,6 +188,8 @@ val dataModule = module {
     singleOf(::DiaryRepositoryImpl) { bind<DiaryRepository>() }
     singleOf(::TaxFreeRepositoryImpl) { bind<TaxFreeRepository>() }
     singleOf(::AlertsRepositoryImpl) { bind<AlertsRepository>() }
+    singleOf(::RouteRepositoryImpl) { bind<RouteRepository>() }
+    singleOf(::StatsRepositoryImpl) { bind<StatsRepository>() }
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -207,6 +229,10 @@ val domainModule = module {
     factoryOf(::RefreshTaxFreeUseCase)
     factoryOf(::ObserveAlertsUseCase)
     factoryOf(::RefreshAlertsUseCase)
+    factoryOf(::ObserveRouteUseCase)
+    factoryOf(::RefreshRouteUseCase)
+    factoryOf(::ObserveStatsUseCase)
+    factoryOf(::RefreshStatsUseCase)
 }
 
 val presentationModule = module {
@@ -248,6 +274,20 @@ val presentationModule = module {
             tripId = params.get(),
             observeAlerts = get(),
             refreshAlerts = get(),
+        )
+    }
+    factory { params ->
+        RouteViewModel(
+            tripId = params.get(),
+            observeRoute = get(),
+            refreshRoute = get(),
+        )
+    }
+    factory { params ->
+        StatsViewModel(
+            tripId = params.get(),
+            observeStats = get(),
+            refreshStats = get(),
         )
     }
 }

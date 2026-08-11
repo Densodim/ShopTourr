@@ -2,7 +2,9 @@ package com.example.shoptourr.data.remote.dto.stats
 
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
 import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CategorySpendDto(
     val category: PurchaseCategory,
     val amount: MoneyDto,
@@ -10,12 +12,14 @@ data class CategorySpendDto(
     val purchaseCount: Int,
 )
 
+@Serializable
 data class DailySpendDto(
     val date: String,
     val amount: MoneyDto,
     val purchaseCount: Int,
 )
 
+@Serializable
 data class TripStatsDto(
     val tripId: String,
     val totalSpent: MoneyDto,

@@ -11,8 +11,10 @@ import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.map.RouteViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
+import com.example.shoptourr.presentation.stats.StatsViewModel
 import com.example.shoptourr.presentation.taxfree.TaxFreeViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
@@ -21,8 +23,10 @@ import com.example.shoptourr.ui.alerts.AlertsScreen
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.diary.DiaryScreen
 import com.example.shoptourr.ui.home.HomeScreen
+import com.example.shoptourr.ui.map.RouteScreen
 import com.example.shoptourr.ui.profile.ProfileScreen
 import com.example.shoptourr.ui.purchase.AddPurchaseScreen
+import com.example.shoptourr.ui.stats.StatsScreen
 import com.example.shoptourr.ui.taxfree.TaxFreeScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import com.example.shoptourr.ui.trip.NewTripScreen
@@ -42,6 +46,8 @@ private sealed interface AppDestination {
     data class Diary(val tripId: String) : AppDestination
     data class TaxFree(val tripId: String) : AppDestination
     data class Alerts(val tripId: String) : AppDestination
+    data class Route(val tripId: String) : AppDestination
+    data class Stats(val tripId: String) : AppDestination
 }
 
 @Composable
@@ -110,6 +116,8 @@ fun App() {
                     onOpenDiary = { tripId -> destination = AppDestination.Diary(tripId) },
                     onOpenTaxFree = { tripId -> destination = AppDestination.TaxFree(tripId) },
                     onOpenAlerts = { tripId -> destination = AppDestination.Alerts(tripId) },
+                    onOpenMap = { tripId -> destination = AppDestination.Route(tripId) },
+                    onOpenStats = { tripId -> destination = AppDestination.Stats(tripId) },
                     onBack = { destination = AppDestination.Home },
                 )
             }
@@ -155,6 +163,22 @@ fun App() {
                 val alertsViewModel = koinInject<AlertsViewModel> { parametersOf(dest.tripId) }
                 AlertsScreen(
                     viewModel = alertsViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            is AppDestination.Route -> {
+                val routeViewModel = koinInject<RouteViewModel> { parametersOf(dest.tripId) }
+                RouteScreen(
+                    viewModel = routeViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            is AppDestination.Stats -> {
+                val statsViewModel = koinInject<StatsViewModel> { parametersOf(dest.tripId) }
+                StatsScreen(
+                    viewModel = statsViewModel,
                     onBack = { destination = AppDestination.TripDetail(dest.tripId) },
                     onLoggedOut = { destination = AppDestination.Login },
                 )
