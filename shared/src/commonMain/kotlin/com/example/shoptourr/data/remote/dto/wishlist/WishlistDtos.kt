@@ -1,7 +1,9 @@
 package com.example.shoptourr.data.remote.dto.wishlist
 
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class WishlistItemDto(
     val id: String,
     val name: String,
@@ -12,6 +14,7 @@ data class WishlistItemDto(
     val createdAt: String,
 )
 
+@Serializable
 data class CreateWishlistItemRequest(
     val name: String,
     val city: String,
@@ -20,6 +23,7 @@ data class CreateWishlistItemRequest(
     val note: String? = null,
 )
 
+@Serializable
 data class UpdateWishlistItemRequest(
     val name: String? = null,
     val city: String? = null,
@@ -28,6 +32,7 @@ data class UpdateWishlistItemRequest(
     val note: String? = null,
 )
 
+@Serializable
 data class WishlistResponse(
     val items: List<WishlistItemDto>,
 )

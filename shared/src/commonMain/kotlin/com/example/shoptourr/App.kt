@@ -13,6 +13,7 @@ import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
+import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.home.HomeScreen
 import com.example.shoptourr.ui.profile.ProfileScreen
@@ -20,6 +21,7 @@ import com.example.shoptourr.ui.purchase.AddPurchaseScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import com.example.shoptourr.ui.trip.NewTripScreen
 import com.example.shoptourr.ui.trip.TripDetailScreen
+import com.example.shoptourr.ui.wishlist.WishlistScreen
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
@@ -28,6 +30,7 @@ private sealed interface AppDestination {
     data object Home : AppDestination
     data object NewTrip : AppDestination
     data object Profile : AppDestination
+    data object Wishlist : AppDestination
     data class TripDetail(val tripId: String) : AppDestination
     data class AddPurchase(val tripId: String, val returnToDetail: Boolean = false) : AppDestination
 }
@@ -63,6 +66,7 @@ fun App() {
                         destination = AppDestination.AddPurchase(tripId)
                     },
                     onOpenProfile = { destination = AppDestination.Profile },
+                    onOpenWishlist = { destination = AppDestination.Wishlist },
                 )
             }
             AppDestination.NewTrip -> {
@@ -77,6 +81,14 @@ fun App() {
                 val profileViewModel = koinInject<ProfileViewModel>()
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    onBack = { destination = AppDestination.Home },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            AppDestination.Wishlist -> {
+                val wishlistViewModel = koinInject<WishlistViewModel>()
+                WishlistScreen(
+                    viewModel = wishlistViewModel,
                     onBack = { destination = AppDestination.Home },
                     onLoggedOut = { destination = AppDestination.Login },
                 )

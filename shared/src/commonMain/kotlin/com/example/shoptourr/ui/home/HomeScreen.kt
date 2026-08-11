@@ -28,6 +28,7 @@ fun HomeScreen(
     onOpenTrip: (tripId: String) -> Unit = {},
     onAddPurchase: (tripId: String) -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onOpenWishlist: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snapshot = state.snapshot
@@ -93,6 +94,13 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Профиль")
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = onOpenWishlist,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Wishlist")
             }
             val tripId = snapshot?.currentTripId
             if (tripId != null) {
