@@ -1,13 +1,18 @@
 package com.example.shoptourr.api.user
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class ThemePreference { SYSTEM, LIGHT, DARK }
 
+@Serializable
 data class UserStatsDto(
     val tripsCount: Int,
     val countriesCount: Int,
     val wishlistCount: Int,
 )
 
+@Serializable
 data class UserDto(
     val id: String,
     val displayName: String,
@@ -21,11 +26,13 @@ data class UserDto(
     val stats: UserStatsDto,
 )
 
+@Serializable
 data class UpdateProfileRequest(
     val displayName: String,
     val avatarMediaId: String? = null,
 )
 
+@Serializable
 data class UserPreferencesDto(
     val locale: String,
     val preferredCurrency: String,
@@ -34,6 +41,7 @@ data class UserPreferencesDto(
     val darkMode: Boolean,
 )
 
+@Serializable
 data class UpdatePreferencesRequest(
     val locale: String? = null,
     val preferredCurrency: String? = null,

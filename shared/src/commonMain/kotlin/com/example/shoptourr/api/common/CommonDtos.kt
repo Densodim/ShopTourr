@@ -1,12 +1,8 @@
 package com.example.shoptourr.api.common
 
-/**
- * Shared API models — keep field names/types aligned with
- * docs/api/spring/.../dto (Java records).
- *
- * Amounts are decimal strings on the wire ("96.50").
- * Instants/dates are ISO-8601 strings until kotlinx.datetime is wired.
- */
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class MoneyDto(
     val amount: String,
     val currency: String,
@@ -22,12 +18,14 @@ data class PageResponseDto<T>(
     val last: Boolean,
 )
 
+@Serializable
 data class FieldErrorDto(
     val field: String,
     val code: String,
     val message: String,
 )
 
+@Serializable
 data class ProblemDetailDto(
     val type: String? = null,
     val title: String? = null,
@@ -39,6 +37,7 @@ data class ProblemDetailDto(
     val requestId: String? = null,
 )
 
+@Serializable
 data class ExchangeRateDto(
     val tripCurrency: String,
     val quoteCurrency: String,
@@ -47,6 +46,7 @@ data class ExchangeRateDto(
     val provider: String? = null,
 )
 
+@Serializable
 data class VatBreakdownDto(
     val net: String,
     val vat: String,

@@ -1,16 +1,24 @@
 package com.example.shoptourr.di
 
+import com.example.shoptourr.data.local.InMemoryTripLocalStore
+import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.AuthApi
+import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.createPlatformHttpEngine
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
+import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.usecase.LoginUseCase
+import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
+import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.home.HomeViewModel
 import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -28,6 +36,7 @@ val dataModule = module {
     single<Settings> { Settings() }
     singleOf(::SettingsTokenStore) { bind<TokenStore>() }
     single<SyncOutbox> { InMemorySyncOutbox() }
+    singleOf(::InMemoryTripLocalStore) { bind<TripLocalStore>() }
 
     single {
         createVoyageHttpClient(
@@ -43,15 +52,25 @@ val dataModule = module {
             baseUrl = get<AppConfig>().apiBaseUrl,
         )
     }
+    single {
+        HomeApi(
+            client = get(),
+            baseUrl = get<AppConfig>().apiBaseUrl,
+        )
+    }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
+    singleOf(::TripRepositoryImpl) { bind<TripRepository>() }
 }
 
 val domainModule = module {
     factoryOf(::LoginUseCase)
+    factoryOf(::ObserveHomeUseCase)
+    factoryOf(::RefreshHomeUseCase)
 }
 
 val presentationModule = module {
     factoryOf(::AuthViewModel)
+    factoryOf(::HomeViewModel)
 }
 
 val sharedModules = listOf(dataModule, domainModule, presentationModule)

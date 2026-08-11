@@ -2,9 +2,12 @@ package com.example.shoptourr.api.trip
 
 import com.example.shoptourr.api.common.ExchangeRateDto
 import com.example.shoptourr.api.common.MoneyDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class TripStatus { UPCOMING, ACTIVE, PAST, ARCHIVED }
 
+@Serializable
 data class TravelerDto(
     val id: String,
     val name: String,
@@ -13,12 +16,14 @@ data class TravelerDto(
     val isOwner: Boolean,
 )
 
+@Serializable
 data class CreateTravelerRequest(
     val name: String,
     val colorHex: String,
     val avatarGlyph: String? = null,
 )
 
+@Serializable
 data class TripDto(
     val id: String,
     val city: String,
@@ -42,6 +47,7 @@ data class TripDto(
     val updatedAt: String,
 )
 
+@Serializable
 data class TripSummaryDto(
     val id: String,
     val city: String,
@@ -58,6 +64,7 @@ data class TripSummaryDto(
     val dayCount: Int? = null,
 )
 
+@Serializable
 data class CreateTripRequest(
     val city: String,
     val country: String,
@@ -70,6 +77,7 @@ data class CreateTripRequest(
     val travelers: List<CreateTravelerRequest>? = null,
 )
 
+@Serializable
 data class UpdateTripRequest(
     val city: String? = null,
     val country: String? = null,
@@ -81,6 +89,7 @@ data class UpdateTripRequest(
     val status: TripStatus? = null,
 )
 
+@Serializable
 data class TripListResponse(
     val active: List<TripSummaryDto>,
     val upcoming: List<TripSummaryDto>,
