@@ -1,6 +1,9 @@
 package com.example.shoptourr.ui.map
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
@@ -25,6 +28,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun RouteScreen(
@@ -55,10 +59,10 @@ internal fun RouteContent(
     onIntent: (RouteIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Маршрут", onBack = { onIntent(RouteIntent.Back) })
+        VoyageTopBar(title = t("map_title"), onBack = { onIntent(RouteIntent.Back) })
         Spacer(Modifier.height(12.dp))
         VoyageButton(
-            text = "Обновить",
+            text = t("see_all"),
             onClick = { onIntent(RouteIntent.Refresh) },
             variant = VoyageButtonVariant.Secondary,
             isLoading = state.isLoading && state.route != null,
@@ -69,27 +73,51 @@ internal fun RouteContent(
         }
         Spacer(Modifier.height(16.dp))
         when {
-            state.isLoading && state.route == null -> LoadingBlock(label = "Строим маршрут…")
+            state.isLoading && state.route == null -> LoadingBlock(label = "…")
             state.route == null -> EmptyState(
-                title = "Нет маршрута",
-                message = "Точки появятся после покупок с геометками",
-                actionLabel = "Обновить",
+                title = t("map_title"),
+                message = t("stops"),
+                actionLabel = t("see_all"),
                 onAction = { onIntent(RouteIntent.Refresh) },
             )
             else -> {
-                val route = state.route!!
-                VoyageSurfaceBlock {
-                    Text(
-                        text = "Точек: ${route.stopCount}",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    route.distanceMeters?.let {
-                        Text(text = "Дистанция: ${it}m", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val route = checkNotNull(state.route)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    VoyageSurfaceBlock(modifier = Modifier.weight(1f)) {
+                        Text(
+                            t("stops"),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "${route.stopCount}",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                    VoyageSurfaceBlock(modifier = Modifier.weight(1f)) {
+                        Text(
+                            t("distance"),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = route.distanceMeters?.let { "${it}m" } ?: "—",
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
                     }
                 }
+                Spacer(Modifier.height(16.dp))
+                val caption = route.stops.firstOrNull()?.point?.let { "${it.lat}° · ${it.lng}°" }
+                RouteMapCanvas(stops = route.stops, caption = caption)
                 Spacer(Modifier.height(20.dp))
-                VoyageSection(title = "Остановки") {
+                VoyageSection(title = t("stops")) {
                     route.stops.sortedBy { it.orderIndex }.forEach { stop ->
                         Text(
                             text = "${stop.orderIndex + 1}. ${stop.title}",
@@ -97,9 +125,6 @@ internal fun RouteContent(
                         )
                         stop.place?.let {
                             Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        stop.point?.let {
-                            Text("${it.lat}, ${it.lng}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         stop.amountSpentHere?.let {
                             Text(
