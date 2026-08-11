@@ -1,5 +1,7 @@
 This is a Kotlin Multiplatform project targeting Android, iOS.
 
+**Development mode: TDD** — see [docs/architecture/TDD.md](docs/architecture/TDD.md) and [docs/architecture/SYSTEM_DESIGN.md](docs/architecture/SYSTEM_DESIGN.md).
+
 * [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
