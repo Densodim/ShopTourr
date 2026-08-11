@@ -30,6 +30,7 @@ data class TripSummary(
                 currentTripCity = current?.city,
                 upcomingCount = trips.count { it.status == TripStatus.UPCOMING },
                 archiveCount = trips.count { it.status == TripStatus.PAST || it.status == TripStatus.ARCHIVED },
+                currentTripId = current?.id,
             )
         }
     }

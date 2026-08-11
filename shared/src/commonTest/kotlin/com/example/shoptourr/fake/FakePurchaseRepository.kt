@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
-class FakePurchaseRepository : PurchaseRepository {
+class FakePurchaseRepository(
+    private val createError: Throwable? = null,
+) : PurchaseRepository {
     var createCalls: Int = 0
         private set
     var enqueuedSyncCalls: Int = 0
@@ -18,6 +20,7 @@ class FakePurchaseRepository : PurchaseRepository {
     private val items = MutableStateFlow<List<Purchase>>(emptyList())
 
     override suspend fun create(tripId: String, draft: PurchaseDraft): Result<Purchase> {
+        createError?.let { return Result.failure(it) }
         createCalls += 1
         enqueuedSyncCalls += 1
         val vat = VatCalculator.breakdown(draft.amount, draft.vatRatePercent, draft.vatIncluded)

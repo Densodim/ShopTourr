@@ -65,6 +65,7 @@ class TripSummaryGroupingTest {
         val snapshot = TripSummary.toHomeSnapshot(userName = "Mila", trips = trips)
         assertEquals("Mila", snapshot.userName)
         assertEquals("Lisbon", snapshot.currentTripCity)
+        assertEquals("1", snapshot.currentTripId)
         assertEquals(1, snapshot.upcomingCount)
         assertEquals(2, snapshot.archiveCount)
     }

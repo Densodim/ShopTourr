@@ -6,4 +6,5 @@ data class HomeSnapshot(
     val currentTripCity: String?,
     val upcomingCount: Int,
     val archiveCount: Int,
+    val currentTripId: String? = null,
 )

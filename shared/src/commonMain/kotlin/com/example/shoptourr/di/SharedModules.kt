@@ -30,6 +30,7 @@ import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.epochMillis
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
@@ -110,6 +111,12 @@ val presentationModule = module {
     factoryOf(::AuthViewModel)
     factoryOf(::HomeViewModel)
     factoryOf(::NewTripViewModel)
+    factory { params ->
+        AddPurchaseViewModel(
+            tripId = params.get(),
+            createPurchase = get(),
+        )
+    }
 }
 
 val sharedModules = listOf(dataModule, domainModule, presentationModule)

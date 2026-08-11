@@ -25,6 +25,7 @@ import com.example.shoptourr.presentation.home.HomeViewModel
 fun HomeScreen(
     viewModel: HomeViewModel,
     onCreateTrip: () -> Unit = {},
+    onAddPurchase: (tripId: String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val snapshot = state.snapshot
@@ -83,6 +84,16 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text("Новая поездка")
+            }
+            val tripId = snapshot?.currentTripId
+            if (tripId != null) {
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = { onAddPurchase(tripId) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Добавить покупку")
+                }
             }
         }
     }

@@ -9,17 +9,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.home.HomeScreen
+import com.example.shoptourr.ui.purchase.AddPurchaseScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import com.example.shoptourr.ui.trip.NewTripScreen
 import org.koin.compose.koinInject
+import org.koin.core.parameter.parametersOf
 
 private sealed interface AppDestination {
     data object Login : AppDestination
     data object Home : AppDestination
     data object NewTrip : AppDestination
+    data class AddPurchase(val tripId: String) : AppDestination
 }
 
 @Composable
@@ -33,7 +37,7 @@ fun App() {
             )
         }
 
-        when (destination) {
+        when (val dest = destination) {
             AppDestination.Login -> {
                 val authViewModel = koinInject<AuthViewModel>()
                 LoginScreen(
@@ -46,12 +50,25 @@ fun App() {
                 HomeScreen(
                     viewModel = homeViewModel,
                     onCreateTrip = { destination = AppDestination.NewTrip },
+                    onAddPurchase = { tripId ->
+                        destination = AppDestination.AddPurchase(tripId)
+                    },
                 )
             }
             AppDestination.NewTrip -> {
                 val newTripViewModel = koinInject<NewTripViewModel>()
                 NewTripScreen(
                     viewModel = newTripViewModel,
+                    onCreated = { destination = AppDestination.Home },
+                    onBack = { destination = AppDestination.Home },
+                )
+            }
+            is AppDestination.AddPurchase -> {
+                val addPurchaseViewModel = koinInject<AddPurchaseViewModel> {
+                    parametersOf(dest.tripId)
+                }
+                AddPurchaseScreen(
+                    viewModel = addPurchaseViewModel,
                     onCreated = { destination = AppDestination.Home },
                     onBack = { destination = AppDestination.Home },
                 )

@@ -174,9 +174,9 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 
 | Path | Role |
 |---|---|
-| `shared/.../api/**` | Kotlin DTO mirrors (client contract) |
+| `shared/.../data/remote/dto/**` | Kotlin DTO mirrors (client contract) |
 | `docs/api/spring/**` | Java records for Spring Boot 4 (copy into backend) |
 | `docs/api/API_CONVENTIONS.md` | Wire format, versioning, errors |
 | `.mila-design/` | Visual/UX source of truth (local, not product code) |
 
-When Spring project is ready: copy `docs/api/spring/com/shoptourr/...` → backend `src/main/java`, keep field names in sync with `shared/.../api`.
+When Spring project is ready: copy `docs/api/spring/com/shoptourr/...` → backend `src/main/java`, keep field names in sync with `shared/.../data/remote/dto`.
