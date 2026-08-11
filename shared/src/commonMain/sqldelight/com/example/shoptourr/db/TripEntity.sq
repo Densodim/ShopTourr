@@ -45,3 +45,6 @@ softDelete:
 UPDATE TripEntity
 SET deleted_at_epoch_ms = :deletedAt
 WHERE id = :id;
+
+deleteAll:
+DELETE FROM TripEntity;

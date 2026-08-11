@@ -7,6 +7,7 @@ import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.createPlatformHttpEngine
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
@@ -21,6 +22,7 @@ import com.example.shoptourr.domain.repository.AuthRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
+import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
@@ -57,38 +59,40 @@ val dataModule = module {
             enableLogging = true,
         )
     }
-    single {
-        AuthApi(
-            client = get(),
-            baseUrl = get<AppConfig>().apiBaseUrl,
-        )
-    }
-    single {
-        HomeApi(
-            client = get(),
-            baseUrl = get<AppConfig>().apiBaseUrl,
-        )
-    }
-    single {
-        PurchaseApi(
-            client = get(),
-            baseUrl = get<AppConfig>().apiBaseUrl,
-        )
-    }
+    single { AuthApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { HomeApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { PurchaseApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { TripApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
-    singleOf(::TripRepositoryImpl) { bind<TripRepository>() }
+    single {
+        TripRepositoryImpl(
+            homeApi = get(),
+            tripApi = get(),
+            localStore = get(),
+            outbox = get(),
+            idGenerator = { "t-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
+            clock = { epochMillis() },
+        )
+    } bind TripRepository::class
     single {
         PurchaseRepositoryImpl(
             api = get(),
             localStore = get(),
             outbox = get(),
-            idGenerator = {
-                "p-${epochMillis()}-${Random.nextInt(100000, 999999)}"
-            },
+            idGenerator = { "p-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
             clock = { epochMillis() },
         )
     } bind PurchaseRepository::class
-    singleOf(::SyncOutboxProcessor)
+    single {
+        SyncOutboxProcessor(
+            outbox = get(),
+            purchaseApi = get(),
+            purchaseLocalStore = get(),
+            tripApi = get(),
+            tripLocalStore = get(),
+            clock = { epochMillis() },
+        )
+    }
 }
 
 val domainModule = module {
@@ -96,6 +100,7 @@ val domainModule = module {
     factoryOf(::ObserveHomeUseCase)
     factoryOf(::RefreshHomeUseCase)
     factoryOf(::CreatePurchaseUseCase)
+    factoryOf(::CreateTripUseCase)
 }
 
 val presentationModule = module {
@@ -110,6 +115,7 @@ fun initKoin(
     extraModules: List<Module> = emptyList(),
     appDeclaration: KoinAppDeclaration = {},
 ) = startKoin {
+    allowOverride(true)
     appDeclaration()
     modules(
         module { single { config } },

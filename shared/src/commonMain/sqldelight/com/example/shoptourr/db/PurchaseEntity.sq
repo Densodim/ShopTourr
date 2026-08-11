@@ -1,0 +1,38 @@
+CREATE TABLE PurchaseEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    trip_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    amount TEXT NOT NULL,
+    currency TEXT NOT NULL,
+    vat_net TEXT NOT NULL,
+    vat_amount TEXT NOT NULL,
+    vat_gross TEXT NOT NULL,
+    vat_rate_percent TEXT NOT NULL,
+    vat_included INTEGER NOT NULL,
+    tax_refund_eligible INTEGER NOT NULL,
+    place TEXT,
+    purchase_date TEXT NOT NULL,
+    purchase_time TEXT,
+    pending_sync INTEGER NOT NULL
+);
+
+selectByTrip:
+SELECT * FROM PurchaseEntity
+WHERE trip_id = :tripId
+ORDER BY purchase_date DESC, purchase_time DESC;
+
+selectById:
+SELECT * FROM PurchaseEntity
+WHERE id = :id
+LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO PurchaseEntity(
+    id, trip_id, name, category, amount, currency,
+    vat_net, vat_amount, vat_gross, vat_rate_percent, vat_included,
+    tax_refund_eligible, place, purchase_date, purchase_time, pending_sync
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM PurchaseEntity WHERE id = :id;
