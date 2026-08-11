@@ -61,6 +61,16 @@ val dataModule = module {
             baseUrl = get<AppConfig>().apiBaseUrl,
             engine = createPlatformHttpEngine(),
             tokenProvider = { get<TokenStore>().accessToken() },
+            refreshTokenProvider = { get<TokenStore>().refreshToken() },
+            refreshTokens = {
+                val result = get<AuthRepository>().refresh()
+                result.getOrNull()?.let { session ->
+                    io.ktor.client.plugins.auth.providers.BearerTokens(
+                        accessToken = session.accessToken,
+                        refreshToken = session.refreshToken,
+                    )
+                }
+            },
             enableLogging = true,
         )
     }

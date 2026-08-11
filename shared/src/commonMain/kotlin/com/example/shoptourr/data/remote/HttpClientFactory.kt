@@ -31,6 +31,8 @@ fun createVoyageHttpClient(
     baseUrl: String,
     engine: HttpClientEngine,
     tokenProvider: () -> String?,
+    refreshTokenProvider: () -> String? = { null },
+    refreshTokens: (suspend () -> BearerTokens?)? = null,
     enableLogging: Boolean = false,
 ): HttpClient = HttpClient(engine) {
     expectSuccess = false
@@ -46,7 +48,19 @@ fun createVoyageHttpClient(
     install(Auth) {
         bearer {
             loadTokens {
-                tokenProvider()?.let { BearerTokens(it, "") }
+                val access = tokenProvider() ?: return@loadTokens null
+                BearerTokens(access, refreshTokenProvider().orEmpty())
+            }
+            sendWithoutRequest { request ->
+                val path = request.url.toString()
+                !path.contains("/auth/login") &&
+                    !path.contains("/auth/register") &&
+                    !path.contains("/auth/refresh")
+            }
+            if (refreshTokens != null) {
+                refreshTokens {
+                    refreshTokens()
+                }
             }
         }
     }
