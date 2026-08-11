@@ -9,11 +9,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.home.HomeScreen
+import com.example.shoptourr.ui.profile.ProfileScreen
 import com.example.shoptourr.ui.purchase.AddPurchaseScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import com.example.shoptourr.ui.trip.NewTripScreen
@@ -25,6 +27,7 @@ private sealed interface AppDestination {
     data object Login : AppDestination
     data object Home : AppDestination
     data object NewTrip : AppDestination
+    data object Profile : AppDestination
     data class TripDetail(val tripId: String) : AppDestination
     data class AddPurchase(val tripId: String, val returnToDetail: Boolean = false) : AppDestination
 }
@@ -59,6 +62,7 @@ fun App() {
                     onAddPurchase = { tripId ->
                         destination = AppDestination.AddPurchase(tripId)
                     },
+                    onOpenProfile = { destination = AppDestination.Profile },
                 )
             }
             AppDestination.NewTrip -> {
@@ -67,6 +71,14 @@ fun App() {
                     viewModel = newTripViewModel,
                     onCreated = { destination = AppDestination.Home },
                     onBack = { destination = AppDestination.Home },
+                )
+            }
+            AppDestination.Profile -> {
+                val profileViewModel = koinInject<ProfileViewModel>()
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                    onBack = { destination = AppDestination.Home },
+                    onLoggedOut = { destination = AppDestination.Login },
                 )
             }
             is AppDestination.TripDetail -> {
