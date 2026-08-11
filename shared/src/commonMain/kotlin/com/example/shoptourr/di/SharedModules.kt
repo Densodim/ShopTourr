@@ -1,23 +1,35 @@
 package com.example.shoptourr.di
 
+import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
+import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
+import com.example.shoptourr.data.local.InMemoryTaxFreeLocalStore
 import com.example.shoptourr.data.local.InMemoryTripLocalStore
 import com.example.shoptourr.data.local.InMemoryWishlistLocalStore
+import com.example.shoptourr.data.local.AlertsLocalStore
+import com.example.shoptourr.data.local.DiaryLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.SettingsUserLocalStore
+import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
+import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AuthApi
+import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.TaxFreeApi
 import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.UserApi
 import com.example.shoptourr.data.remote.WishlistApi
 import com.example.shoptourr.data.remote.createPlatformHttpEngine
 import com.example.shoptourr.data.remote.createVoyageHttpClient
+import com.example.shoptourr.data.repository.AlertsRepositoryImpl
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
+import com.example.shoptourr.data.repository.DiaryRepositoryImpl
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
+import com.example.shoptourr.data.repository.TaxFreeRepositoryImpl
 import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.repository.UserRepositoryImpl
 import com.example.shoptourr.data.repository.WishlistRepositoryImpl
@@ -26,34 +38,48 @@ import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
+import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
+import com.example.shoptourr.domain.repository.TaxFreeRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.repository.UserRepository
 import com.example.shoptourr.domain.repository.WishlistRepository
+import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
+import com.example.shoptourr.domain.usecase.ObserveAlertsUseCase
+import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
 import com.example.shoptourr.domain.usecase.ObserveProfileUseCase
+import com.example.shoptourr.domain.usecase.ObserveTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.ObserveWishlistUseCase
+import com.example.shoptourr.domain.usecase.RefreshAlertsUseCase
+import com.example.shoptourr.domain.usecase.RefreshDiaryUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshPreferencesUseCase
 import com.example.shoptourr.domain.usecase.RefreshProfileUseCase
+import com.example.shoptourr.domain.usecase.RefreshTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
 import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
 import com.example.shoptourr.epochMillis
+import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
+import com.example.shoptourr.presentation.taxfree.TaxFreeViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
@@ -80,6 +106,9 @@ val dataModule = module {
     singleOf(::InMemoryTripLocalStore) { bind<TripLocalStore>() }
     singleOf(::InMemoryPurchaseLocalStore) { bind<PurchaseLocalStore>() }
     singleOf(::InMemoryWishlistLocalStore) { bind<WishlistLocalStore>() }
+    singleOf(::InMemoryDiaryLocalStore) { bind<DiaryLocalStore>() }
+    singleOf(::InMemoryTaxFreeLocalStore) { bind<TaxFreeLocalStore>() }
+    singleOf(::InMemoryAlertsLocalStore) { bind<AlertsLocalStore>() }
 
     single {
         createVoyageHttpClient(
@@ -105,6 +134,9 @@ val dataModule = module {
     single { TripApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { UserApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { WishlistApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { DiaryApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { TaxFreeApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { AlertsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single {
         AuthRepositoryImpl(
             api = get(),
@@ -133,6 +165,9 @@ val dataModule = module {
     } bind PurchaseRepository::class
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
     singleOf(::WishlistRepositoryImpl) { bind<WishlistRepository>() }
+    singleOf(::DiaryRepositoryImpl) { bind<DiaryRepository>() }
+    singleOf(::TaxFreeRepositoryImpl) { bind<TaxFreeRepository>() }
+    singleOf(::AlertsRepositoryImpl) { bind<AlertsRepository>() }
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -164,6 +199,14 @@ val domainModule = module {
     factoryOf(::RefreshWishlistUseCase)
     factoryOf(::CreateWishlistItemUseCase)
     factoryOf(::DeleteWishlistItemUseCase)
+    factoryOf(::ObserveDiaryUseCase)
+    factoryOf(::RefreshDiaryUseCase)
+    factoryOf(::CreateDiaryEntryUseCase)
+    factoryOf(::DeleteDiaryEntryUseCase)
+    factoryOf(::ObserveTaxFreeUseCase)
+    factoryOf(::RefreshTaxFreeUseCase)
+    factoryOf(::ObserveAlertsUseCase)
+    factoryOf(::RefreshAlertsUseCase)
 }
 
 val presentationModule = module {
@@ -182,6 +225,29 @@ val presentationModule = module {
         AddPurchaseViewModel(
             tripId = params.get(),
             createPurchase = get(),
+        )
+    }
+    factory { params ->
+        DiaryViewModel(
+            tripId = params.get(),
+            observeDiary = get(),
+            refreshDiary = get(),
+            createEntry = get(),
+            deleteEntry = get(),
+        )
+    }
+    factory { params ->
+        TaxFreeViewModel(
+            tripId = params.get(),
+            observeTaxFree = get(),
+            refreshTaxFree = get(),
+        )
+    }
+    factory { params ->
+        AlertsViewModel(
+            tripId = params.get(),
+            observeAlerts = get(),
+            refreshAlerts = get(),
         )
     }
 }

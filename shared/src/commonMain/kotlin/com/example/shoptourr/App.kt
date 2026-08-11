@@ -7,17 +7,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
+import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
+import com.example.shoptourr.presentation.taxfree.TaxFreeViewModel
 import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
+import com.example.shoptourr.ui.alerts.AlertsScreen
 import com.example.shoptourr.ui.auth.LoginScreen
+import com.example.shoptourr.ui.diary.DiaryScreen
 import com.example.shoptourr.ui.home.HomeScreen
 import com.example.shoptourr.ui.profile.ProfileScreen
 import com.example.shoptourr.ui.purchase.AddPurchaseScreen
+import com.example.shoptourr.ui.taxfree.TaxFreeScreen
 import com.example.shoptourr.ui.theme.VoyageTheme
 import com.example.shoptourr.ui.trip.NewTripScreen
 import com.example.shoptourr.ui.trip.TripDetailScreen
@@ -33,6 +39,9 @@ private sealed interface AppDestination {
     data object Wishlist : AppDestination
     data class TripDetail(val tripId: String) : AppDestination
     data class AddPurchase(val tripId: String, val returnToDetail: Boolean = false) : AppDestination
+    data class Diary(val tripId: String) : AppDestination
+    data class TaxFree(val tripId: String) : AppDestination
+    data class Alerts(val tripId: String) : AppDestination
 }
 
 @Composable
@@ -59,12 +68,8 @@ fun App() {
                 HomeScreen(
                     viewModel = homeViewModel,
                     onCreateTrip = { destination = AppDestination.NewTrip },
-                    onOpenTrip = { tripId ->
-                        destination = AppDestination.TripDetail(tripId)
-                    },
-                    onAddPurchase = { tripId ->
-                        destination = AppDestination.AddPurchase(tripId)
-                    },
+                    onOpenTrip = { tripId -> destination = AppDestination.TripDetail(tripId) },
+                    onAddPurchase = { tripId -> destination = AppDestination.AddPurchase(tripId) },
                     onOpenProfile = { destination = AppDestination.Profile },
                     onOpenWishlist = { destination = AppDestination.Wishlist },
                 )
@@ -102,6 +107,9 @@ fun App() {
                     onAddPurchase = { tripId ->
                         destination = AppDestination.AddPurchase(tripId, returnToDetail = true)
                     },
+                    onOpenDiary = { tripId -> destination = AppDestination.Diary(tripId) },
+                    onOpenTaxFree = { tripId -> destination = AppDestination.TaxFree(tripId) },
+                    onOpenAlerts = { tripId -> destination = AppDestination.Alerts(tripId) },
                     onBack = { destination = AppDestination.Home },
                 )
             }
@@ -125,6 +133,30 @@ fun App() {
                             AppDestination.Home
                         }
                     },
+                )
+            }
+            is AppDestination.Diary -> {
+                val diaryViewModel = koinInject<DiaryViewModel> { parametersOf(dest.tripId) }
+                DiaryScreen(
+                    viewModel = diaryViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            is AppDestination.TaxFree -> {
+                val taxFreeViewModel = koinInject<TaxFreeViewModel> { parametersOf(dest.tripId) }
+                TaxFreeScreen(
+                    viewModel = taxFreeViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
+                )
+            }
+            is AppDestination.Alerts -> {
+                val alertsViewModel = koinInject<AlertsViewModel> { parametersOf(dest.tripId) }
+                AlertsScreen(
+                    viewModel = alertsViewModel,
+                    onBack = { destination = AppDestination.TripDetail(dest.tripId) },
+                    onLoggedOut = { destination = AppDestination.Login },
                 )
             }
         }

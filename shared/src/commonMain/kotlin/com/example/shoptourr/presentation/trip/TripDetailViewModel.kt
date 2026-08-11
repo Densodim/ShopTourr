@@ -18,11 +18,17 @@ data class TripDetailUiState(
 
 sealed interface TripDetailIntent {
     data object AddPurchase : TripDetailIntent
+    data object OpenDiary : TripDetailIntent
+    data object OpenTaxFree : TripDetailIntent
+    data object OpenAlerts : TripDetailIntent
     data object Back : TripDetailIntent
 }
 
 sealed interface TripDetailUiEvent : UiEvent {
     data class NavigateAddPurchase(val tripId: String) : TripDetailUiEvent
+    data class NavigateDiary(val tripId: String) : TripDetailUiEvent
+    data class NavigateTaxFree(val tripId: String) : TripDetailUiEvent
+    data class NavigateAlerts(val tripId: String) : TripDetailUiEvent
     data object NavigateBack : TripDetailUiEvent
 }
 
@@ -54,9 +60,12 @@ class TripDetailViewModel(
     }
 
     fun onIntent(intent: TripDetailIntent) {
+        val tripId = state.value.tripId
         when (intent) {
-            TripDetailIntent.AddPurchase ->
-                emitEvent(TripDetailUiEvent.NavigateAddPurchase(state.value.tripId))
+            TripDetailIntent.AddPurchase -> emitEvent(TripDetailUiEvent.NavigateAddPurchase(tripId))
+            TripDetailIntent.OpenDiary -> emitEvent(TripDetailUiEvent.NavigateDiary(tripId))
+            TripDetailIntent.OpenTaxFree -> emitEvent(TripDetailUiEvent.NavigateTaxFree(tripId))
+            TripDetailIntent.OpenAlerts -> emitEvent(TripDetailUiEvent.NavigateAlerts(tripId))
             TripDetailIntent.Back -> emitEvent(TripDetailUiEvent.NavigateBack)
         }
     }

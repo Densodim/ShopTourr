@@ -31,6 +31,9 @@ import com.example.shoptourr.presentation.trip.TripDetailViewModel
 fun TripDetailScreen(
     viewModel: TripDetailViewModel,
     onAddPurchase: (tripId: String) -> Unit,
+    onOpenDiary: (tripId: String) -> Unit = {},
+    onOpenTaxFree: (tripId: String) -> Unit = {},
+    onOpenAlerts: (tripId: String) -> Unit = {},
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
@@ -39,6 +42,9 @@ fun TripDetailScreen(
         viewModel.events.collect { event ->
             when (event) {
                 is TripDetailUiEvent.NavigateAddPurchase -> onAddPurchase(event.tripId)
+                is TripDetailUiEvent.NavigateDiary -> onOpenDiary(event.tripId)
+                is TripDetailUiEvent.NavigateTaxFree -> onOpenTaxFree(event.tripId)
+                is TripDetailUiEvent.NavigateAlerts -> onOpenAlerts(event.tripId)
                 TripDetailUiEvent.NavigateBack -> onBack()
             }
         }
@@ -101,6 +107,27 @@ fun TripDetailScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Добавить покупку")
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.OpenDiary) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Дневник")
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.OpenTaxFree) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Tax Free")
+        }
+        Spacer(Modifier.height(8.dp))
+        Button(
+            onClick = { viewModel.onIntent(TripDetailIntent.OpenAlerts) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Алерты")
         }
         Spacer(Modifier.height(16.dp))
         Text(

@@ -1,7 +1,9 @@
 package com.example.shoptourr.data.remote.dto.taxfree
 
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class TaxFreeRulesDto(
     val currency: String,
     val minimumPurchase: MoneyDto,
@@ -9,6 +11,7 @@ data class TaxFreeRulesDto(
     val regionLabel: String,
 )
 
+@Serializable
 data class TaxFreeEligibleItemDto(
     val purchaseId: String,
     val name: String,
@@ -17,6 +20,7 @@ data class TaxFreeEligibleItemDto(
     val meetsMinimum: Boolean,
 )
 
+@Serializable
 data class TaxFreeSummaryDto(
     val tripId: String,
     val rules: TaxFreeRulesDto,
