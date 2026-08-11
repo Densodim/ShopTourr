@@ -3,6 +3,7 @@ package com.example.shoptourr.data.remote
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -17,6 +18,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
+import kotlin.random.Random
 import kotlinx.serialization.json.Json
 
 /** Context7-verified: ContentNegotiation + kotlinx.serialization json(). */
@@ -25,6 +27,30 @@ fun voyageJson(): Json = Json {
     isLenient = true
     encodeDefaults = true
     explicitNulls = false
+}
+
+private const val REQUEST_ID_HEADER = "X-Request-Id"
+
+fun newRequestId(): String =
+    buildString(36) {
+        repeat(8) { append(Random.nextInt(0, 16).toString(16)) }
+        append('-')
+        repeat(4) { append(Random.nextInt(0, 16).toString(16)) }
+        append("-4")
+        repeat(3) { append(Random.nextInt(0, 16).toString(16)) }
+        append('-')
+        append(listOf('8', '9', 'a', 'b').random())
+        repeat(3) { append(Random.nextInt(0, 16).toString(16)) }
+        append('-')
+        repeat(12) { append(Random.nextInt(0, 16).toString(16)) }
+    }
+
+private val RequestIdPlugin = createClientPlugin("VoyageRequestId") {
+    onRequest { request, _ ->
+        if (request.headers[REQUEST_ID_HEADER].isNullOrBlank()) {
+            request.headers.append(REQUEST_ID_HEADER, newRequestId())
+        }
+    }
 }
 
 fun createVoyageHttpClient(
@@ -39,6 +65,7 @@ fun createVoyageHttpClient(
     install(ContentNegotiation) {
         json(voyageJson())
     }
+    install(RequestIdPlugin)
     if (enableLogging) {
         install(Logging) {
             logger = Logger.SIMPLE
