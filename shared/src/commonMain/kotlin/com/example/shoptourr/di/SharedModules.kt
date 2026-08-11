@@ -1,22 +1,30 @@
 package com.example.shoptourr.di
 
+import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
 import com.example.shoptourr.data.local.InMemoryTripLocalStore
+import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.HomeApi
+import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.createPlatformHttpEngine
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
+import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
 import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.repository.PurchaseRepository
 import com.example.shoptourr.domain.repository.TripRepository
+import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
+import com.example.shoptourr.epochMillis
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.russhwolf.settings.Settings
@@ -26,7 +34,9 @@ import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.KoinAppDeclaration
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import kotlin.random.Random
 
 data class AppConfig(
     val apiBaseUrl: String = "https://api.shoptourr.com/api",
@@ -37,6 +47,7 @@ val dataModule = module {
     singleOf(::SettingsTokenStore) { bind<TokenStore>() }
     single<SyncOutbox> { InMemorySyncOutbox() }
     singleOf(::InMemoryTripLocalStore) { bind<TripLocalStore>() }
+    singleOf(::InMemoryPurchaseLocalStore) { bind<PurchaseLocalStore>() }
 
     single {
         createVoyageHttpClient(
@@ -58,14 +69,33 @@ val dataModule = module {
             baseUrl = get<AppConfig>().apiBaseUrl,
         )
     }
+    single {
+        PurchaseApi(
+            client = get(),
+            baseUrl = get<AppConfig>().apiBaseUrl,
+        )
+    }
     singleOf(::AuthRepositoryImpl) { bind<AuthRepository>() }
     singleOf(::TripRepositoryImpl) { bind<TripRepository>() }
+    single {
+        PurchaseRepositoryImpl(
+            api = get(),
+            localStore = get(),
+            outbox = get(),
+            idGenerator = {
+                "p-${epochMillis()}-${Random.nextInt(100000, 999999)}"
+            },
+            clock = { epochMillis() },
+        )
+    } bind PurchaseRepository::class
+    singleOf(::SyncOutboxProcessor)
 }
 
 val domainModule = module {
     factoryOf(::LoginUseCase)
     factoryOf(::ObserveHomeUseCase)
     factoryOf(::RefreshHomeUseCase)
+    factoryOf(::CreatePurchaseUseCase)
 }
 
 val presentationModule = module {

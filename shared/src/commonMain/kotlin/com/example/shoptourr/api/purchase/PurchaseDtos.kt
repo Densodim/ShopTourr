@@ -2,17 +2,26 @@ package com.example.shoptourr.api.purchase
 
 import com.example.shoptourr.api.common.MoneyDto
 import com.example.shoptourr.api.common.VatBreakdownDto
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class PurchaseCategory {
-    FOOD, TRANSPORT, SOUVENIRS, HOTEL, CULTURE, OTHER
+    FOOD,
+    TRANSPORT,
+    SOUVENIRS,
+    HOTEL,
+    CULTURE,
+    OTHER,
 }
 
+@Serializable
 data class SplitShareDto(
     val travelerId: String,
     val travelerName: String,
     val share: MoneyDto,
 )
 
+@Serializable
 data class PurchaseDto(
     val id: String,
     val tripId: String,
@@ -34,6 +43,7 @@ data class PurchaseDto(
     val updatedAt: String,
 )
 
+@Serializable
 data class CreatePurchaseRequest(
     val name: String,
     val category: PurchaseCategory,
@@ -48,6 +58,7 @@ data class CreatePurchaseRequest(
     val splitWithTravelerIds: List<String>? = null,
 )
 
+@Serializable
 data class UpdatePurchaseRequest(
     val name: String? = null,
     val category: PurchaseCategory? = null,
@@ -62,6 +73,7 @@ data class UpdatePurchaseRequest(
     val splitWithTravelerIds: List<String>? = null,
 )
 
+@Serializable
 data class PurchaseDayGroupDto(
     val date: String,
     val labelKey: String? = null,
@@ -69,6 +81,7 @@ data class PurchaseDayGroupDto(
     val items: List<PurchaseDto>,
 )
 
+@Serializable
 data class TripPurchasesResponse(
     val spentTotal: MoneyDto,
     val budget: MoneyDto,
