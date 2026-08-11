@@ -1,7 +1,7 @@
-package com.example.shoptourr.api.trip
+package com.example.shoptourr.data.remote.dto.trip
 
-import com.example.shoptourr.api.common.ExchangeRateDto
-import com.example.shoptourr.api.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.ExchangeRateDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
 import kotlinx.serialization.Serializable
 
 @Serializable

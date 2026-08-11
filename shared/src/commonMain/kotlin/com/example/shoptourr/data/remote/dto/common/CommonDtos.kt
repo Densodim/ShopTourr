@@ -1,4 +1,4 @@
-package com.example.shoptourr.api.common
+package com.example.shoptourr.data.remote.dto.common
 
 import kotlinx.serialization.Serializable
 

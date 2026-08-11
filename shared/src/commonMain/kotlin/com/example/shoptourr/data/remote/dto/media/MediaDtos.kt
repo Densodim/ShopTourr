@@ -1,4 +1,4 @@
-package com.example.shoptourr.api.media
+package com.example.shoptourr.data.remote.dto.media
 
 enum class MediaPurpose { RECEIPT, AVATAR, DIARY, EXPORT }
 

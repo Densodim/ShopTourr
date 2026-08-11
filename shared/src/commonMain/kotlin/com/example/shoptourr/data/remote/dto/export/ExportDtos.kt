@@ -1,4 +1,4 @@
-package com.example.shoptourr.api.export
+package com.example.shoptourr.data.remote.dto.export
 
 enum class ExportFormat { PDF, CSV }
 

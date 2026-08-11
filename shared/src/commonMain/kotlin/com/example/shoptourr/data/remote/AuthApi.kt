@@ -1,11 +1,10 @@
 package com.example.shoptourr.data.remote
 
-import com.example.shoptourr.api.auth.AuthTokensResponse
-import com.example.shoptourr.api.auth.LoginRequest
-import com.example.shoptourr.api.auth.LogoutRequest
-import com.example.shoptourr.api.auth.RefreshTokenRequest
-import com.example.shoptourr.api.auth.RegisterRequest
-import com.example.shoptourr.domain.error.AppError
+import com.example.shoptourr.data.remote.dto.auth.AuthTokensResponse
+import com.example.shoptourr.data.remote.dto.auth.LoginRequest
+import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
+import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
+import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -37,7 +36,7 @@ class AuthApi(
             setBody(request)
         }
         if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {
-            throw mapStatus(response.status)
+            throw mapHttpStatus(response.status)
         }
     }
 
@@ -47,15 +46,8 @@ class AuthApi(
             setBody(body)
         }
         if (!response.status.isSuccess()) {
-            throw mapStatus(response.status)
+            throw mapHttpStatus(response.status)
         }
         return response.body()
-    }
-
-    private fun mapStatus(status: HttpStatusCode): AppError = when (status) {
-        HttpStatusCode.Unauthorized -> AppError.Unauthorized
-        HttpStatusCode.NotFound -> AppError.NotFound
-        HttpStatusCode.Conflict -> AppError.Conflict
-        else -> AppError.Unknown("HTTP ${status.value}")
     }
 }

@@ -1,7 +1,7 @@
-package com.example.shoptourr.api.alert
+package com.example.shoptourr.data.remote.dto.alert
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.purchase.PurchaseCategory
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
 
 enum class AlertSeverity { INFO, WARNING, CRITICAL }
 

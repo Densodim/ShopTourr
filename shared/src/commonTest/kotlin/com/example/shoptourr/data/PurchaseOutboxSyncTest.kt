@@ -27,10 +27,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.common.VatBreakdownDto
-import com.example.shoptourr.api.purchase.PurchaseCategory
-import com.example.shoptourr.api.purchase.PurchaseDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.VatBreakdownDto
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseDto
 
 class PurchaseOutboxSyncTest {
 

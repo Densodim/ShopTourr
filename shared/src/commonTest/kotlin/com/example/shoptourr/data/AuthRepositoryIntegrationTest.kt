@@ -1,7 +1,7 @@
 package com.example.shoptourr.data
 
-import com.example.shoptourr.api.auth.AuthTokensResponse
-import com.example.shoptourr.api.auth.AuthUserDto
+import com.example.shoptourr.data.remote.dto.auth.AuthTokensResponse
+import com.example.shoptourr.data.remote.dto.auth.AuthUserDto
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.createVoyageHttpClient
 import com.example.shoptourr.data.repository.AuthRepositoryImpl

@@ -2,12 +2,12 @@ package com.example.shoptourr.data.repository
 
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.sync.CreatePurchasePayload
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxEntry
 import com.example.shoptourr.data.sync.SyncPayloadCodec
-import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseDraft
 import com.example.shoptourr.domain.model.VatCalculator
@@ -69,12 +69,7 @@ class PurchaseRepositoryImpl(
                 )
             )
             purchase
-        }.fold(
-            onSuccess = { Result.success(it) },
-            onFailure = { error ->
-                Result.failure(error as? AppError ?: AppError.Unknown(error.message))
-            },
-        )
+        }.mapHttpAppError()
 
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =
         localStore.observeByTrip(tripId)

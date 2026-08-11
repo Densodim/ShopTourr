@@ -1,7 +1,7 @@
-package com.example.shoptourr.api.stats
+package com.example.shoptourr.data.remote.dto.stats
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.purchase.PurchaseCategory
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
 
 data class CategorySpendDto(
     val category: PurchaseCategory,

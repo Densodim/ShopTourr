@@ -19,13 +19,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.home.HomeResponse
-import com.example.shoptourr.api.trip.TripStatus
-import com.example.shoptourr.api.trip.TripSummaryDto
-import com.example.shoptourr.api.user.ThemePreference
-import com.example.shoptourr.api.user.UserDto
-import com.example.shoptourr.api.user.UserStatsDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.home.HomeResponse
+import com.example.shoptourr.data.remote.dto.trip.TripStatus
+import com.example.shoptourr.data.remote.dto.trip.TripSummaryDto
+import com.example.shoptourr.data.remote.dto.user.ThemePreference
+import com.example.shoptourr.data.remote.dto.user.UserDto
+import com.example.shoptourr.data.remote.dto.user.UserStatsDto
 
 class TripRepositoryIntegrationTest {
 

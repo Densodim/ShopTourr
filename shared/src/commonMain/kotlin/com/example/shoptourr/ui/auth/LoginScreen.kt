@@ -87,7 +87,8 @@ fun LoginScreen(
         )
         state.error?.let { err ->
             Spacer(Modifier.height(8.dp))
-            Text(text = err.message ?: "Error", color = MaterialTheme.colorScheme.error)
+            Text(text = err.title, color = MaterialTheme.colorScheme.error)
+            Text(text = err.message, color = MaterialTheme.colorScheme.error)
         }
         Spacer(Modifier.height(24.dp))
         if (state.isLoading) {

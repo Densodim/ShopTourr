@@ -1,6 +1,6 @@
-package com.example.shoptourr.api.taxfree
+package com.example.shoptourr.data.remote.dto.taxfree
 
-import com.example.shoptourr.api.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
 
 data class TaxFreeRulesDto(
     val currency: String,

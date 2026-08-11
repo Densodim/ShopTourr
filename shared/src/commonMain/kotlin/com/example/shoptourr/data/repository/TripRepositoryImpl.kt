@@ -1,7 +1,7 @@
 package com.example.shoptourr.data.repository
 
-import com.example.shoptourr.api.trip.TripSummaryDto
-import com.example.shoptourr.api.trip.TripStatus as ApiTripStatus
+import com.example.shoptourr.data.remote.dto.trip.TripSummaryDto
+import com.example.shoptourr.data.remote.dto.trip.TripStatus as ApiTripStatus
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.TripApi
@@ -10,7 +10,7 @@ import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxEntry
 import com.example.shoptourr.data.sync.SyncPayloadCodec
-import com.example.shoptourr.domain.error.AppError
+import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.model.Money
@@ -38,7 +38,7 @@ class TripRepositoryImpl(
                 addAll(home.archive.map { it.toDomain() })
             }
             localStore.replaceAll(trips)
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary> =
         runCatching {
@@ -77,7 +77,7 @@ class TripRepositoryImpl(
                 )
             )
             trip
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override fun observeHome(): Flow<HomeSnapshot> =
         localStore.observeAll().map { trips ->
@@ -107,12 +107,4 @@ class TripRepositoryImpl(
         ApiTripStatus.PAST -> TripStatus.PAST
         ApiTripStatus.ARCHIVED -> TripStatus.ARCHIVED
     }
-
-    private fun <T> Result<T>.mapAppError(): Result<T> =
-        fold(
-            onSuccess = { Result.success(it) },
-            onFailure = { error ->
-                Result.failure(error as? AppError ?: AppError.Unknown(error.message))
-            },
-        )
 }

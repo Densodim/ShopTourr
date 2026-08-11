@@ -9,6 +9,7 @@ import com.example.shoptourr.fake.FakeAuthRepository
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthUiEvent
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.error.UiErrorAction
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -75,7 +76,8 @@ class AuthViewModelTest {
 
         val state = vm.state.value
         assertFalse(state.isLoading)
-        assertEquals(AppError.Unauthorized, state.error)
+        assertEquals("Session Expired", state.error?.title)
+        assertEquals(UiErrorAction.Logout, state.error?.action)
         vm.onCleared()
     }
 }

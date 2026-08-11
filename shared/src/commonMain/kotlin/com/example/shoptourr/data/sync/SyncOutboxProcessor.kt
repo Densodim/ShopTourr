@@ -1,9 +1,9 @@
 package com.example.shoptourr.data.sync
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.purchase.CreatePurchaseRequest
-import com.example.shoptourr.api.purchase.PurchaseCategory as ApiPurchaseCategory
-import com.example.shoptourr.api.trip.CreateTripRequest
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.purchase.CreatePurchaseRequest
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory as ApiPurchaseCategory
+import com.example.shoptourr.data.remote.dto.trip.CreateTripRequest
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.remote.PurchaseApi

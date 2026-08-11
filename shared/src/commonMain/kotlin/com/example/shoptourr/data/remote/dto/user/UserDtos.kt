@@ -1,4 +1,4 @@
-package com.example.shoptourr.api.user
+package com.example.shoptourr.data.remote.dto.user
 
 import kotlinx.serialization.Serializable
 

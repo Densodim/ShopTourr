@@ -1,6 +1,6 @@
-package com.example.shoptourr.api.map
+package com.example.shoptourr.data.remote.dto.map
 
-import com.example.shoptourr.api.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
 
 data class GeoPointDto(
     val lat: String,

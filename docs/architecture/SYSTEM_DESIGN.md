@@ -32,14 +32,20 @@
 ```
 UI (Compose screens)
   → Navigation (typed routes)
-    → Presentation (ViewModel + UiState, MVI/UDF)
-      → Domain (use-cases, pure Kotlin)
-        → Data (Repository)
-          ├─ Remote: Ktor Client + kotlinx.serialization (DTOs in api/)
+    → Presentation (ViewModel + UiState/UiError, MVI/UDF)
+      → Domain (use-cases, pure Kotlin, AppError)
+        → Data (Repository implementations)
+          ├─ Remote: Ktor Client + kotlinx.serialization (DTOs in data/remote/dto/)
           ├─ Local:  SQLDelight (relational) + multiplatform-settings (prefs)
           └─ Outbox: pending mutations → sync worker
 Platform: Keychain/Keystore, Camera, Push, Maps
 ```
+
+**Layer rules (KMP skill):**
+- Dependencies point inward only: `presentation → domain ← data`
+- `UiState.error` is always `UiError`, never raw `AppError` / `Throwable`
+- Wire DTOs live under `data/remote/dto/` — not imported by `ui/` or `domain/`
+- UI/App never injects `TokenStore`; session checks go through domain use-cases (`IsLoggedInUseCase`)
 
 ### Concrete choices (trade-offs)
 

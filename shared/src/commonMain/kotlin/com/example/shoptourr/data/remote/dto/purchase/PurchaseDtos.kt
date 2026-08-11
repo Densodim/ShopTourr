@@ -1,7 +1,7 @@
-package com.example.shoptourr.api.purchase
+package com.example.shoptourr.data.remote.dto.purchase
 
-import com.example.shoptourr.api.common.MoneyDto
-import com.example.shoptourr.api.common.VatBreakdownDto
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.VatBreakdownDto
 import kotlinx.serialization.Serializable
 
 @Serializable

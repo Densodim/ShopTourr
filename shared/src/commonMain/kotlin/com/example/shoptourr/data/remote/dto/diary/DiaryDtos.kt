@@ -1,4 +1,4 @@
-package com.example.shoptourr.api.diary
+package com.example.shoptourr.data.remote.dto.diary
 
 data class DiaryEntryDto(
     val id: String,

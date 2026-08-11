@@ -1,16 +1,17 @@
 package com.example.shoptourr.data.repository
 
-import com.example.shoptourr.api.auth.LoginRequest
-import com.example.shoptourr.api.auth.LogoutRequest
-import com.example.shoptourr.api.auth.RefreshTokenRequest
-import com.example.shoptourr.api.auth.RegisterRequest
+import com.example.shoptourr.data.remote.dto.auth.AuthTokensResponse
+import com.example.shoptourr.data.remote.dto.auth.LoginRequest
+import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
+import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
+import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
 import com.example.shoptourr.data.remote.AuthApi
+import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.AuthSession
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.repository.AuthRepository
-import com.example.shoptourr.api.auth.AuthTokensResponse
 
 class AuthRepositoryImpl(
     private val api: AuthApi,
@@ -22,7 +23,7 @@ class AuthRepositoryImpl(
     override suspend fun login(email: String, password: String, deviceName: String?): Result<AuthSession> =
         runCatching {
             api.login(LoginRequest(email = email, password = password, deviceName = deviceName)).toSession()
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override suspend fun register(
         displayName: String,
@@ -39,13 +40,13 @@ class AuthRepositoryImpl(
                     locale = locale,
                 )
             ).toSession()
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override suspend fun refresh(): Result<AuthSession> =
         runCatching {
             val refresh = tokenStore.refreshToken() ?: throw AppError.Unauthorized
             api.refresh(RefreshTokenRequest(refresh)).toSession()
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override suspend fun logout(allSessions: Boolean): Result<Unit> =
         runCatching {
@@ -57,7 +58,7 @@ class AuthRepositoryImpl(
             )
             tokenStore.clear()
             cachedUser = null
-        }.mapAppError()
+        }.mapHttpAppError()
 
     override fun currentUser(): User? = cachedUser
 
@@ -80,12 +81,4 @@ class AuthRepositoryImpl(
             user = domainUser,
         )
     }
-
-    private fun <T> Result<T>.mapAppError(): Result<T> =
-        fold(
-            onSuccess = { Result.success(it) },
-            onFailure = { error ->
-                Result.failure(error as? AppError ?: AppError.Unknown(error.message))
-            },
-        )
 }

@@ -1,16 +1,18 @@
 package com.example.shoptourr.presentation.auth
 
-import com.example.shoptourr.domain.error.AppError
+import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
 import com.example.shoptourr.presentation.base.UiState
+import com.example.shoptourr.presentation.error.UiError
+import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.launch
 
 data class AuthUiState(
     val isLoading: Boolean = false,
-    val error: AppError? = null,
+    val error: UiError? = null,
     val user: User? = null,
 ) : UiState
 
@@ -20,6 +22,7 @@ sealed interface AuthIntent {
 
 sealed interface AuthUiEvent : UiEvent {
     data object NavigateHome : AuthUiEvent
+    data object Logout : AuthUiEvent
 }
 
 class AuthViewModel(
@@ -41,8 +44,11 @@ class AuthViewModel(
                     emitEvent(AuthUiEvent.NavigateHome)
                 }
                 .onFailure { throwable ->
-                    val error = throwable as? AppError ?: AppError.Unknown(throwable.message)
-                    updateState { copy(isLoading = false, error = error) }
+                    val uiError = throwable.asAppError().toUiError()
+                    updateState { copy(isLoading = false, error = uiError) }
+                    if (uiError.action is com.example.shoptourr.presentation.error.UiErrorAction.Logout) {
+                        emitEvent(AuthUiEvent.Logout)
+                    }
                 }
         }
     }
