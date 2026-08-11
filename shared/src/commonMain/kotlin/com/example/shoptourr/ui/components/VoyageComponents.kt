@@ -32,10 +32,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.error.UiError
+import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.theme.VoyageTokens
 
 enum class VoyageButtonVariant { Primary, Secondary, Ghost }
 
@@ -159,7 +162,7 @@ fun VoyageTopBar(
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onBack != null) {
                 TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
-                    Text("← Назад", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("← ${t("back")}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.width(4.dp))
             }
@@ -287,17 +290,27 @@ fun VoyageScreen(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = rememberScrollState()
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .safeContentPadding()
-            .then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier)
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start,
-        content = content,
-    )
+            .background(VoyageTokens.bg)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(VoyageTokens.glow, VoyageTokens.bg, VoyageTokens.glow),
+                ),
+            ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeContentPadding()
+                .then(if (scrollable) Modifier.verticalScroll(scroll) else Modifier)
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start,
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -305,7 +318,12 @@ fun FullScreenLoading() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(VoyageTokens.bg)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(VoyageTokens.glow, VoyageTokens.bg),
+                ),
+            )
             .safeContentPadding(),
         contentAlignment = Alignment.Center,
     ) {
