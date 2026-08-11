@@ -6,6 +6,7 @@ import com.example.shoptourr.domain.repository.AuthRepository
 
 class LoginUseCase(
     private val authRepository: AuthRepository,
+    private val registerPushDevice: RegisterPushDeviceUseCase? = null,
 ) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
         val normalizedEmail = email.trim()
@@ -16,5 +17,10 @@ class LoginUseCase(
             return Result.failure(AppError.Validation("password"))
         }
         return authRepository.login(normalizedEmail, password)
+            .also { result ->
+                if (result.isSuccess) {
+                    registerPushDevice?.invoke()
+                }
+            }
     }
 }

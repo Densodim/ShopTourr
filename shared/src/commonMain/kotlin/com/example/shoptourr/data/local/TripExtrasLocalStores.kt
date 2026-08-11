@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.map
 
 interface DiaryLocalStore {
     fun observe(tripId: String): Flow<List<DiaryDayGroup>>
-    fun replaceDays(tripId: String, days: List<DiaryDayGroup>)
-    fun upsertEntry(entry: DiaryEntry)
-    fun removeEntry(tripId: String, entryId: String)
+    suspend fun replaceDays(tripId: String, days: List<DiaryDayGroup>)
+    suspend fun upsertEntry(entry: DiaryEntry)
+    suspend fun removeEntry(tripId: String, entryId: String)
 }
 
 class InMemoryDiaryLocalStore : DiaryLocalStore {
@@ -22,18 +22,18 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
     override fun observe(tripId: String): Flow<List<DiaryDayGroup>> =
         byTrip.map { it[tripId].orEmpty() }
 
-    override fun replaceDays(tripId: String, days: List<DiaryDayGroup>) {
+    override suspend fun replaceDays(tripId: String, days: List<DiaryDayGroup>) {
         byTrip.value = byTrip.value + (tripId to days)
     }
 
-    override fun upsertEntry(entry: DiaryEntry) {
+    override suspend fun upsertEntry(entry: DiaryEntry) {
         val existing = byTrip.value[entry.tripId].orEmpty()
             .flatMap { it.entries }
             .filterNot { it.id == entry.id } + entry
         byTrip.value = byTrip.value + (entry.tripId to group(existing))
     }
 
-    override fun removeEntry(tripId: String, entryId: String) {
+    override suspend fun removeEntry(tripId: String, entryId: String) {
         val existing = byTrip.value[tripId].orEmpty()
             .flatMap { it.entries }
             .filterNot { it.id == entryId }

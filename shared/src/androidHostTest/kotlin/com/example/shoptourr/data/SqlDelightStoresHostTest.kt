@@ -3,16 +3,20 @@ package com.example.shoptourr.data
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import com.example.shoptourr.data.local.SqlDelightPurchaseLocalStore
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
+import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
+import com.example.shoptourr.data.local.SqlDelightDiaryLocalStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutboxEntry
 import com.example.shoptourr.db.VoyageDatabase
+import com.example.shoptourr.domain.model.DiaryEntry
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.VatCalculator
+import com.example.shoptourr.domain.model.WishlistItem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -107,5 +111,56 @@ class SqlDelightStoresHostTest {
         assertEquals(1, outbox.pending().single().failureCount)
         outbox.markSuccess("o1")
         assertTrue(outbox.pending().isEmpty())
+    }
+
+    @Test
+    fun `wishlist store replace and observe`() = runTest {
+        val store = SqlDelightWishlistLocalStore(database())
+        store.replaceAll(
+            listOf(
+                WishlistItem(
+                    id = "w1",
+                    name = "Tile",
+                    city = "Lisbon",
+                    targetPrice = Money.parse("12.00", "EUR"),
+                    createdAt = "2026-04-12T10:00:00Z",
+                )
+            )
+        )
+        assertEquals("Tile", store.all().single().name)
+        assertEquals("Tile", store.observe().first().single().name)
+        store.remove("w1")
+        assertTrue(store.all().isEmpty())
+    }
+
+    @Test
+    fun `diary store groups by date`() = runTest {
+        val store = SqlDelightDiaryLocalStore(database())
+        store.upsertEntry(
+            DiaryEntry(
+                id = "d1",
+                tripId = "lisbon",
+                entryDate = "2026-04-15",
+                mood = "good",
+                text = "Pasteis",
+                createdAt = "2026-04-15T10:00:00Z",
+                updatedAt = "2026-04-15T10:00:00Z",
+            )
+        )
+        store.upsertEntry(
+            DiaryEntry(
+                id = "d2",
+                tripId = "lisbon",
+                entryDate = "2026-04-16",
+                mood = "ok",
+                text = "Tram",
+                createdAt = "2026-04-16T10:00:00Z",
+                updatedAt = "2026-04-16T10:00:00Z",
+            )
+        )
+        val days = store.observe("lisbon").first()
+        assertEquals(listOf("2026-04-16", "2026-04-15"), days.map { it.date })
+        store.removeEntry("lisbon", "d1")
+        assertEquals(1, store.observe("lisbon").first().single().entries.size)
     }
 }

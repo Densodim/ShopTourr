@@ -1,0 +1,30 @@
+CREATE TABLE WishlistEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    city TEXT NOT NULL,
+    price_amount TEXT NOT NULL,
+    price_currency TEXT NOT NULL,
+    icon_emoji TEXT,
+    note TEXT,
+    created_at TEXT NOT NULL
+);
+
+selectAll:
+SELECT * FROM WishlistEntity
+ORDER BY created_at DESC;
+
+selectById:
+SELECT * FROM WishlistEntity
+WHERE id = :id
+LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO WishlistEntity(
+    id, name, city, price_amount, price_currency, icon_emoji, note, created_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM WishlistEntity WHERE id = :id;
+
+deleteAll:
+DELETE FROM WishlistEntity;

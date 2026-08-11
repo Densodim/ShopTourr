@@ -1,11 +1,14 @@
 package com.example.shoptourr
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
@@ -57,6 +60,12 @@ private sealed interface AppDestination {
 @Preview
 fun App() {
     VoyageTheme {
+        val syncScheduler = koinInject<SyncScheduler>()
+        val appScope = rememberCoroutineScope()
+        LaunchedEffect(Unit) {
+            syncScheduler.start(appScope)
+        }
+
         val isLoggedIn = koinInject<IsLoggedInUseCase>()
         var destination by remember {
             mutableStateOf<AppDestination>(

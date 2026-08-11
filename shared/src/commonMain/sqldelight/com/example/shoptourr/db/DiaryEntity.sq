@@ -1,0 +1,30 @@
+CREATE TABLE DiaryEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    trip_id TEXT NOT NULL,
+    entry_date TEXT NOT NULL,
+    mood TEXT NOT NULL,
+    text TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+selectByTrip:
+SELECT * FROM DiaryEntity
+WHERE trip_id = :tripId
+ORDER BY entry_date DESC, created_at DESC;
+
+selectById:
+SELECT * FROM DiaryEntity
+WHERE id = :id
+LIMIT 1;
+
+upsert:
+INSERT OR REPLACE INTO DiaryEntity(
+    id, trip_id, entry_date, mood, text, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteById:
+DELETE FROM DiaryEntity WHERE id = :id;
+
+deleteByTrip:
+DELETE FROM DiaryEntity WHERE trip_id = :tripId;

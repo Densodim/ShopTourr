@@ -83,6 +83,12 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 | POST | `/trips/{tripId}/exchange-rate/refresh` | — | `ExchangeRateDto` 200 |
 | POST | `/me/premium/activate` | `ActivatePremiumRequest` | `UserDto` 200 |
 
+## Push devices (P2)
+| Method | Path | Request | Response |
+|---|---|---|---|
+| POST | `/me/devices` | `RegisterDeviceRequest` | `DeviceDto` 201 |
+| DELETE | `/me/devices/{deviceId}` | — | 204 |
+
 ## Copy into Spring Boot
 
 ```text

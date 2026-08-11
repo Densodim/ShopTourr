@@ -6,6 +6,7 @@ import com.example.shoptourr.domain.repository.AuthRepository
 
 class RegisterUseCase(
     private val authRepository: AuthRepository,
+    private val registerPushDevice: RegisterPushDeviceUseCase? = null,
 ) {
     suspend operator fun invoke(
         displayName: String,
@@ -21,6 +22,10 @@ class RegisterUseCase(
             email = email.trim(),
             password = password,
             locale = locale,
-        )
+        ).also { result ->
+            if (result.isSuccess) {
+                registerPushDevice?.invoke()
+            }
+        }
     }
 }

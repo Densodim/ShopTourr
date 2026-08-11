@@ -142,7 +142,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Idempotency / tracing:** `Idempotency-Key`, `X-Request-Id` (echo).
 - **Rate limit:** login 10/min/IP; write APIs 120/min/user.
 - **Privacy:** receipt photos private; export jobs expire 24h.
-- **Push:** trip budget alerts (v1.1); prefs flag already in DTO.
+- **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO.
 
 ---
 

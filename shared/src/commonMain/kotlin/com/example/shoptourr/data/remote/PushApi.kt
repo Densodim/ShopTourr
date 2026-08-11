@@ -1,0 +1,34 @@
+package com.example.shoptourr.data.remote
+
+import com.example.shoptourr.data.remote.dto.push.DeviceDto
+import com.example.shoptourr.data.remote.dto.push.RegisterDeviceRequest
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+
+class PushApi(
+    private val client: HttpClient,
+    private val baseUrl: String,
+) {
+    private val root get() = baseUrl.trimEnd('/')
+
+    suspend fun registerDevice(request: RegisterDeviceRequest): DeviceDto {
+        val response: HttpResponse = client.post("$root/me/devices") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
+        return response.body()
+    }
+
+    suspend fun unregisterDevice(deviceId: String) {
+        val response: HttpResponse = client.delete("$root/me/devices/$deviceId")
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
+    }
+}

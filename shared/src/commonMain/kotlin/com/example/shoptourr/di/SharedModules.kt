@@ -1,5 +1,6 @@
 package com.example.shoptourr.di
 
+import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
 import com.example.shoptourr.data.local.InMemoryExportLocalStore
@@ -20,6 +21,7 @@ import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
+import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.DiaryApi
@@ -27,6 +29,7 @@ import com.example.shoptourr.data.remote.ExportApi
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.MediaApi
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.PushApi
 import com.example.shoptourr.data.remote.RouteApi
 import com.example.shoptourr.data.remote.StatsApi
 import com.example.shoptourr.data.remote.TaxFreeApi
@@ -41,6 +44,7 @@ import com.example.shoptourr.data.repository.DiaryRepositoryImpl
 import com.example.shoptourr.data.repository.ExportRepositoryImpl
 import com.example.shoptourr.data.repository.MediaRepositoryImpl
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
+import com.example.shoptourr.data.repository.PushRepositoryImpl
 import com.example.shoptourr.data.repository.RouteRepositoryImpl
 import com.example.shoptourr.data.repository.StatsRepositoryImpl
 import com.example.shoptourr.data.repository.SyncRepositoryImpl
@@ -53,12 +57,16 @@ import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
+import com.example.shoptourr.data.sync.SyncScheduler
+import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
+import com.example.shoptourr.domain.push.PushTokenProvider
 import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.AuthRepository
 import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.ExportRepository
 import com.example.shoptourr.domain.repository.MediaRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
+import com.example.shoptourr.domain.repository.PushRepository
 import com.example.shoptourr.domain.repository.RouteRepository
 import com.example.shoptourr.domain.repository.StatsRepository
 import com.example.shoptourr.domain.repository.SyncRepository
@@ -105,7 +113,9 @@ import com.example.shoptourr.domain.usecase.RefreshStatsUseCase
 import com.example.shoptourr.domain.usecase.RefreshTaxFreeUseCase
 import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
+import com.example.shoptourr.domain.usecase.RegisterPushDeviceUseCase
 import com.example.shoptourr.domain.usecase.RegisterUseCase
+import com.example.shoptourr.domain.usecase.UnregisterPushDeviceUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
 import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
 import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
@@ -154,6 +164,8 @@ val dataModule = module {
     singleOf(::InMemoryRouteLocalStore) { bind<RouteLocalStore>() }
     singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
+    single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
+    single<PushTokenProvider> { createDefaultPushTokenProvider() }
 
     single {
         createVoyageHttpClient(
@@ -190,6 +202,7 @@ val dataModule = module {
     single { RouteApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { StatsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { ExportApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { PushApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single {
         MediaApi(
             client = get(),
@@ -232,6 +245,7 @@ val dataModule = module {
     singleOf(::StatsRepositoryImpl) { bind<StatsRepository>() }
     singleOf(::ExportRepositoryImpl) { bind<ExportRepository>() }
     singleOf(::MediaRepositoryImpl) { bind<MediaRepository>() }
+    singleOf(::PushRepositoryImpl) { bind<PushRepository>() }
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -243,11 +257,24 @@ val dataModule = module {
         )
     }
     singleOf(::SyncRepositoryImpl) { bind<SyncRepository>() }
+    singleOf(::SyncScheduler)
 }
 
 val domainModule = module {
-    factoryOf(::LoginUseCase)
-    factoryOf(::RegisterUseCase)
+    factoryOf(::RegisterPushDeviceUseCase)
+    factoryOf(::UnregisterPushDeviceUseCase)
+    factory {
+        LoginUseCase(
+            authRepository = get(),
+            registerPushDevice = get(),
+        )
+    }
+    factory {
+        RegisterUseCase(
+            authRepository = get(),
+            registerPushDevice = get(),
+        )
+    }
     factoryOf(::IsLoggedInUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::ObserveHomeUseCase)
