@@ -14,10 +14,12 @@ import com.example.shoptourr.data.remote.dto.trip.TripSummaryDto
 import com.example.shoptourr.data.remote.dto.trip.TripStatus as ApiTripStatus
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.sync.CreateTripPayload
+import com.example.shoptourr.data.sync.DeleteTripPayload
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxEntry
 import com.example.shoptourr.data.sync.SyncPayloadCodec
+import com.example.shoptourr.data.sync.UpdateTripPayload
 import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.ExchangeRate
@@ -28,6 +30,7 @@ import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.model.TripInviteStatus
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
+import com.example.shoptourr.domain.model.UpdateTripDraft
 import com.example.shoptourr.domain.repository.TripRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -110,6 +113,60 @@ class TripRepositoryImpl(
                 ),
             )
             trip
+        }.mapHttpAppError()
+
+    override suspend fun updateTrip(tripId: String, draft: UpdateTripDraft): Result<TripSummary> =
+        runCatching {
+            val now = clock()
+            val existing = localStore.all().firstOrNull { it.id == tripId }
+                ?: error("trip not found: $tripId")
+            val updated = existing.copy(
+                city = draft.city ?: existing.city,
+                country = draft.country ?: existing.country,
+                startDate = draft.startDate ?: existing.startDate,
+                endDate = draft.endDate ?: existing.endDate,
+                budget = draft.budget ?: existing.budget,
+                status = draft.status ?: existing.status,
+            )
+            localStore.upsert(updated)
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-trip-upd-$tripId-$now",
+                    type = SyncMutationType.UPDATE_TRIP,
+                    payloadJson = SyncPayloadCodec.encodeUpdateTrip(
+                        UpdateTripPayload(
+                            tripId = tripId,
+                            city = draft.city,
+                            country = draft.country,
+                            countryCode = draft.countryCode,
+                            startDate = draft.startDate,
+                            endDate = draft.endDate,
+                            budgetAmount = draft.budget?.toDecimalString(),
+                            budgetCurrency = draft.budget?.currency,
+                            defaultVatRatePercent = draft.defaultVatRatePercent,
+                            status = draft.status?.name,
+                        ),
+                    ),
+                    idempotencyKey = "trip-upd-$tripId-$now",
+                    createdAtEpochMs = now,
+                ),
+            )
+            updated
+        }.mapHttpAppError()
+
+    override suspend fun deleteTrip(tripId: String): Result<Unit> =
+        runCatching {
+            val now = clock()
+            localStore.remove(tripId)
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-trip-del-$tripId-$now",
+                    type = SyncMutationType.DELETE_TRIP,
+                    payloadJson = SyncPayloadCodec.encodeDeleteTrip(DeleteTripPayload(tripId)),
+                    idempotencyKey = "trip-del-$tripId-$now",
+                    createdAtEpochMs = now,
+                ),
+            )
         }.mapHttpAppError()
 
     override suspend fun addTraveler(tripId: String, draft: CreateTravelerDraft): Result<Traveler> =

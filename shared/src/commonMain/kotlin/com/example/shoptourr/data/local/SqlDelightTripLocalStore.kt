@@ -29,6 +29,12 @@ class SqlDelightTripLocalStore(
         upsertInternal(trip)
     }
 
+    override suspend fun remove(tripId: String) {
+        withContext(Dispatchers.IO) {
+            db.tripEntityQueries.softDelete(deletedAt = epochMillis(), id = tripId)
+        }
+    }
+
     private fun upsertInternal(trip: TripSummary) {
         db.tripEntityQueries.upsert(
             id = trip.id,

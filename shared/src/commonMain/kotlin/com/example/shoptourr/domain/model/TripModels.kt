@@ -82,3 +82,14 @@ data class CreateTripDraft(
     val quoteCurrency: String? = null,
     val travelers: List<CreateTravelerDraft> = emptyList(),
 )
+
+data class UpdateTripDraft(
+    val city: String? = null,
+    val country: String? = null,
+    val countryCode: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val budget: Money? = null,
+    val defaultVatRatePercent: String? = null,
+    val status: TripStatus? = null,
+)

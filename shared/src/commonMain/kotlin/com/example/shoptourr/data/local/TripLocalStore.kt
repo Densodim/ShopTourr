@@ -76,6 +76,7 @@ object TripLocalExtrasCodec {
 interface TripLocalStore {
     suspend fun replaceAll(trips: List<TripSummary>)
     suspend fun upsert(trip: TripSummary)
+    suspend fun remove(tripId: String)
     fun observeAll(): Flow<List<TripSummary>>
     fun all(): List<TripSummary>
 }
@@ -90,6 +91,10 @@ class InMemoryTripLocalStore : TripLocalStore {
     override suspend fun upsert(trip: TripSummary) {
         val without = trips.value.filterNot { it.id == trip.id }
         trips.value = without + trip
+    }
+
+    override suspend fun remove(tripId: String) {
+        trips.value = trips.value.filterNot { it.id == tripId }
     }
 
     override fun observeAll(): Flow<List<TripSummary>> = trips.asStateFlow()

@@ -10,6 +10,7 @@ import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.model.TripInviteStatus
 import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
+import com.example.shoptourr.domain.model.UpdateTripDraft
 import com.example.shoptourr.domain.repository.TripRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,6 +94,26 @@ class FakeTripRepository(
         tripList.update { it + trip }
         home.value = home.value.copy(upcomingCount = home.value.upcomingCount + 1)
         return Result.success(trip)
+    }
+
+    override suspend fun updateTrip(tripId: String, draft: UpdateTripDraft): Result<TripSummary> {
+        val existing = tripList.value.firstOrNull { it.id == tripId }
+            ?: return Result.failure(com.example.shoptourr.domain.error.AppError.NotFound)
+        val updated = existing.copy(
+            city = draft.city ?: existing.city,
+            country = draft.country ?: existing.country,
+            startDate = draft.startDate ?: existing.startDate,
+            endDate = draft.endDate ?: existing.endDate,
+            budget = draft.budget ?: existing.budget,
+            status = draft.status ?: existing.status,
+        )
+        tripList.update { list -> list.map { if (it.id == tripId) updated else it } }
+        return Result.success(updated)
+    }
+
+    override suspend fun deleteTrip(tripId: String): Result<Unit> {
+        tripList.update { list -> list.filterNot { it.id == tripId } }
+        return Result.success(Unit)
     }
 
     override suspend fun addTraveler(tripId: String, draft: CreateTravelerDraft): Result<Traveler> {

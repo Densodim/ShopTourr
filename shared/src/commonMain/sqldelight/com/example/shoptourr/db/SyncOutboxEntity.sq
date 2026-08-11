@@ -14,6 +14,10 @@ SELECT * FROM SyncOutboxEntity
 WHERE status = 'PENDING' OR status = 'FAILED'
 ORDER BY created_at_epoch_ms ASC;
 
+countPending:
+SELECT COUNT(*) FROM SyncOutboxEntity
+WHERE status = 'PENDING' OR status = 'FAILED';
+
 upsert:
 INSERT OR REPLACE INTO SyncOutboxEntity(
     id, type, payload_json, idempotency_key,

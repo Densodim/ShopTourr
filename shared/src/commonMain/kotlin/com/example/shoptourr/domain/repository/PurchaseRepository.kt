@@ -6,5 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface PurchaseRepository {
     suspend fun create(tripId: String, draft: PurchaseDraft): Result<Purchase>
+    suspend fun update(tripId: String, purchaseId: String, draft: PurchaseDraft): Result<Purchase>
+    suspend fun delete(tripId: String, purchaseId: String): Result<Unit>
     fun observeByTrip(tripId: String): Flow<List<Purchase>>
 }

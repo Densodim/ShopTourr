@@ -87,9 +87,53 @@ data class CreateDiaryPayload(
     val text: String,
 )
 
+@Serializable
+data class UpdatePurchasePayload(
+    val purchaseId: String,
+    val tripId: String,
+    val name: String,
+    val category: String,
+    val amount: String,
+    val currency: String,
+    val vatIncluded: Boolean,
+    val vatRatePercent: String,
+    val taxRefundEligible: Boolean,
+    val place: String?,
+    val purchaseDate: String?,
+    val purchaseTime: String?,
+    val receiptMediaId: String? = null,
+    val splitWithTravelerIds: List<String> = emptyList(),
+)
+
+@Serializable
+data class DeletePurchasePayload(
+    val purchaseId: String,
+    val tripId: String,
+)
+
+@Serializable
+data class UpdateTripPayload(
+    val tripId: String,
+    val city: String? = null,
+    val country: String? = null,
+    val countryCode: String? = null,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val budgetAmount: String? = null,
+    val budgetCurrency: String? = null,
+    val defaultVatRatePercent: String? = null,
+    val status: String? = null,
+)
+
+@Serializable
+data class DeleteTripPayload(
+    val tripId: String,
+)
+
 data class DrainResult(
     val successCount: Int,
     val failureCount: Int,
+    val skippedCount: Int = 0,
 )
 
 object SyncPayloadCodec {
@@ -99,10 +143,19 @@ object SyncPayloadCodec {
     fun encodeTrip(payload: CreateTripPayload): String = json.encodeToString(payload)
     fun encodeWishlist(payload: CreateWishlistPayload): String = json.encodeToString(payload)
     fun encodeDiary(payload: CreateDiaryPayload): String = json.encodeToString(payload)
+    fun encodeUpdatePurchase(payload: UpdatePurchasePayload): String = json.encodeToString(payload)
+    fun encodeDeletePurchase(payload: DeletePurchasePayload): String = json.encodeToString(payload)
+    fun encodeUpdateTrip(payload: UpdateTripPayload): String = json.encodeToString(payload)
+    fun encodeDeleteTrip(payload: DeleteTripPayload): String = json.encodeToString(payload)
+
     fun decodePurchase(raw: String): CreatePurchasePayload = json.decodeFromString(raw)
     fun decodeTrip(raw: String): CreateTripPayload = json.decodeFromString(raw)
     fun decodeWishlist(raw: String): CreateWishlistPayload = json.decodeFromString(raw)
     fun decodeDiary(raw: String): CreateDiaryPayload = json.decodeFromString(raw)
+    fun decodeUpdatePurchase(raw: String): UpdatePurchasePayload = json.decodeFromString(raw)
+    fun decodeDeletePurchase(raw: String): DeletePurchasePayload = json.decodeFromString(raw)
+    fun decodeUpdateTrip(raw: String): UpdateTripPayload = json.decodeFromString(raw)
+    fun decodeDeleteTrip(raw: String): DeleteTripPayload = json.decodeFromString(raw)
 }
 
 class SyncOutboxProcessor(
@@ -120,25 +173,35 @@ class SyncOutboxProcessor(
     suspend fun drainOnce(limit: Int = 20): DrainResult {
         var success = 0
         var failure = 0
-        outbox.pending().take(limit).forEach { entry ->
-            val ok = runCatching {
-                when (entry.type) {
-                    SyncMutationType.CREATE_PURCHASE -> drainCreatePurchase(entry)
-                    SyncMutationType.CREATE_TRIP -> drainCreateTrip(entry)
-                    SyncMutationType.CREATE_WISHLIST -> drainCreateWishlist(entry)
-                    SyncMutationType.CREATE_DIARY -> drainCreateDiary(entry)
-                    else -> return@forEach
+        var skipped = 0
+        val now = clock()
+        outbox.pending()
+            .asSequence()
+            .filter { SyncOutboxPolicy.isDue(it, now) }
+            .take(limit)
+            .forEach { entry ->
+                val outcome = runCatching {
+                    when (entry.type) {
+                        SyncMutationType.CREATE_PURCHASE -> drainCreatePurchase(entry)
+                        SyncMutationType.UPDATE_PURCHASE -> drainUpdatePurchase(entry)
+                        SyncMutationType.DELETE_PURCHASE -> drainDeletePurchase(entry)
+                        SyncMutationType.CREATE_TRIP -> drainCreateTrip(entry)
+                        SyncMutationType.UPDATE_TRIP -> drainUpdateTrip(entry)
+                        SyncMutationType.DELETE_TRIP -> drainDeleteTrip(entry)
+                        SyncMutationType.CREATE_WISHLIST -> drainCreateWishlist(entry)
+                        SyncMutationType.CREATE_DIARY -> drainCreateDiary(entry)
+                    }
                 }
-            }.isSuccess
-            if (ok) {
-                outbox.markSuccess(entry.id)
-                success += 1
-            } else {
-                outbox.markFailure(entry.id, updatedAtEpochMs = clock())
-                failure += 1
+                if (outcome.isSuccess) {
+                    outbox.markSuccess(entry.id)
+                    success += 1
+                } else {
+                    outbox.markFailure(entry.id, updatedAtEpochMs = clock())
+                    failure += 1
+                }
             }
-        }
-        return DrainResult(successCount = success, failureCount = failure)
+        skipped = outbox.pending().count { !SyncOutboxPolicy.isDue(it, now) }
+        return DrainResult(successCount = success, failureCount = failure, skippedCount = skipped)
     }
 
     private suspend fun drainCreatePurchase(entry: SyncOutboxEntry) {
@@ -160,27 +223,35 @@ class SyncOutboxProcessor(
             ),
             idempotencyKey = entry.idempotencyKey,
         )
-        val vat = VatCalculator.breakdown(
-            amount = Money.parse(response.amount.amount, response.amount.currency),
-            vatRatePercent = response.vat.vatRatePercent,
-            vatIncluded = response.vat.vatIncluded,
-        )
-        purchaseLocalStore.replaceId(
-            oldId = payload.localId,
-            purchase = Purchase(
-                id = response.id,
-                tripId = response.tripId,
-                name = response.name,
-                category = PurchaseCategory.valueOf(response.category.name),
-                amount = Money.parse(response.amount.amount, response.amount.currency),
-                vat = vat,
-                taxRefundEligible = response.taxRefundEligible,
-                place = response.place,
-                purchaseDate = response.purchaseDate,
-                purchaseTime = response.purchaseTime,
-                pendingSync = false,
+        purchaseLocalStore.replaceId(oldId = payload.localId, purchase = response.toDomain(pendingSync = false))
+    }
+
+    private suspend fun drainUpdatePurchase(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeUpdatePurchase(entry.payloadJson)
+        val response = purchaseApi.updatePurchase(
+            tripId = payload.tripId,
+            purchaseId = payload.purchaseId,
+            request = com.example.shoptourr.data.remote.dto.purchase.UpdatePurchaseRequest(
+                name = payload.name,
+                category = ApiPurchaseCategory.valueOf(payload.category),
+                amount = MoneyDto(payload.amount, payload.currency),
+                vatIncluded = payload.vatIncluded,
+                vatRatePercent = payload.vatRatePercent,
+                taxRefundEligible = payload.taxRefundEligible,
+                place = payload.place,
+                purchaseDate = payload.purchaseDate,
+                purchaseTime = payload.purchaseTime,
+                receiptMediaId = payload.receiptMediaId,
+                splitWithTravelerIds = payload.splitWithTravelerIds,
             ),
         )
+        purchaseLocalStore.upsert(response.toDomain(pendingSync = false))
+    }
+
+    private suspend fun drainDeletePurchase(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeDeletePurchase(entry.payloadJson)
+        purchaseApi.deletePurchase(tripId = payload.tripId, purchaseId = payload.purchaseId)
+        purchaseLocalStore.remove(payload.purchaseId)
     }
 
     private suspend fun drainCreateTrip(entry: SyncOutboxEntry) {
@@ -205,23 +276,35 @@ class SyncOutboxProcessor(
             ),
             idempotencyKey = entry.idempotencyKey,
         )
-        val serverTrip = TripSummary(
-            id = response.id,
-            city = response.city,
-            country = response.country,
-            status = TripStatus.valueOf(response.status.name),
-            startDate = response.startDate,
-            endDate = response.endDate,
-            budget = Money.parse(response.budget.amount, response.budget.currency),
-            spent = Money.parse(response.spent.amount, response.spent.currency),
-            purchaseCount = response.purchaseCount,
-            flagEmoji = response.flagEmoji,
-            datesLabel = response.datesLabel,
-            currentDayNumber = response.currentDayNumber,
-            dayCount = response.dayCount,
-        )
+        val serverTrip = response.toSummaryDomain()
         val replaced = tripLocalStore.all().map { if (it.id == payload.localId) serverTrip else it }
         tripLocalStore.replaceAll(replaced)
+    }
+
+    private suspend fun drainUpdateTrip(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeUpdateTrip(entry.payloadJson)
+        val response = tripApi.updateTrip(
+            tripId = payload.tripId,
+            request = com.example.shoptourr.data.remote.dto.trip.UpdateTripRequest(
+                city = payload.city,
+                country = payload.country,
+                countryCode = payload.countryCode,
+                startDate = payload.startDate,
+                endDate = payload.endDate,
+                budget = payload.budgetAmount?.let { MoneyDto(it, payload.budgetCurrency ?: "EUR") },
+                defaultVatRatePercent = payload.defaultVatRatePercent,
+                status = payload.status?.let {
+                    com.example.shoptourr.data.remote.dto.trip.TripStatus.valueOf(it)
+                },
+            ),
+        )
+        tripLocalStore.upsert(response.toSummaryDomain())
+    }
+
+    private suspend fun drainDeleteTrip(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeDeleteTrip(entry.payloadJson)
+        tripApi.deleteTrip(payload.tripId)
+        tripLocalStore.remove(payload.tripId)
     }
 
     private suspend fun drainCreateWishlist(entry: SyncOutboxEntry) {
@@ -275,3 +358,44 @@ class SyncOutboxProcessor(
         )
     }
 }
+
+private fun com.example.shoptourr.data.remote.dto.purchase.PurchaseDto.toDomain(
+    pendingSync: Boolean,
+): Purchase {
+    val amountMoney = Money.parse(amount.amount, amount.currency)
+    val vatBreakdown = VatCalculator.breakdown(
+        amount = amountMoney,
+        vatRatePercent = vat.vatRatePercent,
+        vatIncluded = vat.vatIncluded,
+    )
+    return Purchase(
+        id = id,
+        tripId = tripId,
+        name = name,
+        category = PurchaseCategory.valueOf(category.name),
+        amount = amountMoney,
+        vat = vatBreakdown,
+        taxRefundEligible = taxRefundEligible,
+        place = place,
+        purchaseDate = purchaseDate,
+        purchaseTime = purchaseTime,
+        pendingSync = pendingSync,
+    )
+}
+
+private fun com.example.shoptourr.data.remote.dto.trip.TripDto.toSummaryDomain(): TripSummary =
+    TripSummary(
+        id = id,
+        city = city,
+        country = country,
+        status = TripStatus.valueOf(status.name),
+        startDate = startDate,
+        endDate = endDate,
+        budget = Money.parse(budget.amount, budget.currency),
+        spent = Money.parse(spent.amount, spent.currency),
+        purchaseCount = purchaseCount,
+        flagEmoji = flagEmoji,
+        datesLabel = datesLabel,
+        currentDayNumber = currentDayNumber,
+        dayCount = dayCount,
+    )

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 interface PurchaseLocalStore {
     suspend fun upsert(purchase: Purchase)
     suspend fun replaceId(oldId: String, purchase: Purchase)
+    suspend fun remove(id: String)
     fun observeByTrip(tripId: String): Flow<List<Purchase>>
     fun getById(id: String): Purchase?
 }
@@ -24,6 +25,10 @@ class InMemoryPurchaseLocalStore : PurchaseLocalStore {
         items.update { current ->
             current - oldId + (purchase.id to purchase)
         }
+    }
+
+    override suspend fun remove(id: String) {
+        items.update { it - id }
     }
 
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =

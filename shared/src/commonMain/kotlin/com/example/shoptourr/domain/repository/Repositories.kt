@@ -8,6 +8,7 @@ import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.model.Traveler
 import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.model.TripSummary
+import com.example.shoptourr.domain.model.UpdateTripDraft
 import com.example.shoptourr.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
@@ -29,6 +30,8 @@ interface TripRepository {
     suspend fun refreshTrips(): Result<Unit>
     suspend fun refreshTrip(tripId: String): Result<TripSummary>
     suspend fun createTrip(draft: CreateTripDraft): Result<TripSummary>
+    suspend fun updateTrip(tripId: String, draft: UpdateTripDraft): Result<TripSummary>
+    suspend fun deleteTrip(tripId: String): Result<Unit>
     suspend fun addTraveler(tripId: String, draft: CreateTravelerDraft): Result<Traveler>
     suspend fun inviteTraveler(tripId: String, email: String): Result<TripInvite>
     suspend fun refreshExchangeRate(tripId: String): Result<ExchangeRate>

@@ -66,6 +66,12 @@ class SqlDelightPurchaseLocalStore(
         }
     }
 
+    override suspend fun remove(id: String) {
+        withContext(Dispatchers.IO) {
+            db.purchaseEntityQueries.deleteById(id)
+        }
+    }
+
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =
         db.purchaseEntityQueries.selectByTrip(tripId)
             .asFlow()

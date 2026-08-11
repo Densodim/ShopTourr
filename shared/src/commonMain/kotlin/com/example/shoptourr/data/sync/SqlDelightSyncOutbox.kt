@@ -1,16 +1,25 @@
 package com.example.shoptourr.data.sync
 
 import com.example.shoptourr.db.VoyageDatabase
+import com.example.shoptourr.domain.error.AppError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 class SqlDelightSyncOutbox(
     private val db: VoyageDatabase,
+    private val maxPending: Int = SyncOutboxPolicy.MAX_PENDING,
+    private val maxFailures: Int = SyncOutboxPolicy.MAX_FAILURES,
 ) : SyncOutbox {
 
     override suspend fun enqueue(entry: SyncOutboxEntry) {
         withContext(Dispatchers.IO) {
+            val existing = db.syncOutboxEntityQueries.selectPending()
+                .executeAsList()
+                .any { it.id == entry.id }
+            if (!existing && pendingCountUnlocked() >= maxPending) {
+                throw AppError.Validation("outbox_full")
+            }
             db.syncOutboxEntityQueries.upsert(
                 id = entry.id,
                 type = entry.type.name,
@@ -25,18 +34,11 @@ class SqlDelightSyncOutbox(
     }
 
     override suspend fun pending(): List<SyncOutboxEntry> = withContext(Dispatchers.IO) {
-        db.syncOutboxEntityQueries.selectPending().executeAsList().map { row ->
-            SyncOutboxEntry(
-                id = row.id,
-                type = SyncMutationType.valueOf(row.type),
-                payloadJson = row.payload_json,
-                idempotencyKey = row.idempotency_key,
-                createdAtEpochMs = row.created_at_epoch_ms,
-                updatedAtEpochMs = row.updated_at_epoch_ms,
-                failureCount = row.failure_count.toInt(),
-                status = SyncOutboxStatus.valueOf(row.status),
-            )
-        }
+        db.syncOutboxEntityQueries.selectPending().executeAsList().map { it.toDomain() }
+    }
+
+    override suspend fun pendingCount(): Int = withContext(Dispatchers.IO) {
+        pendingCountUnlocked()
     }
 
     override suspend fun markSuccess(id: String) {
@@ -46,13 +48,40 @@ class SqlDelightSyncOutbox(
     }
 
     override suspend fun markFailure(id: String, updatedAtEpochMs: Long) = withContext(Dispatchers.IO) {
-        val current = pending().firstOrNull { it.id == id } ?: return@withContext
-        enqueue(
-            current.copy(
-                failureCount = current.failureCount + 1,
-                updatedAtEpochMs = updatedAtEpochMs,
-                status = SyncOutboxStatus.PENDING,
-            )
+        val current = db.syncOutboxEntityQueries.selectPending()
+            .executeAsList()
+            .firstOrNull { it.id == id }
+            ?.toDomain()
+            ?: return@withContext
+        val failures = current.failureCount + 1
+        db.syncOutboxEntityQueries.upsert(
+            id = current.id,
+            type = current.type.name,
+            payload_json = current.payloadJson,
+            idempotency_key = current.idempotencyKey,
+            created_at_epoch_ms = current.createdAtEpochMs,
+            updated_at_epoch_ms = updatedAtEpochMs,
+            failure_count = failures.toLong(),
+            status = if (failures >= maxFailures) {
+                SyncOutboxStatus.FAILED.name
+            } else {
+                SyncOutboxStatus.PENDING.name
+            },
         )
     }
+
+    private fun pendingCountUnlocked(): Int =
+        db.syncOutboxEntityQueries.countPending().executeAsOne().toInt()
+
+    private fun com.example.shoptourr.db.SyncOutboxEntity.toDomain(): SyncOutboxEntry =
+        SyncOutboxEntry(
+            id = id,
+            type = SyncMutationType.valueOf(type),
+            payloadJson = payload_json,
+            idempotencyKey = idempotency_key,
+            createdAtEpochMs = created_at_epoch_ms,
+            updatedAtEpochMs = updated_at_epoch_ms,
+            failureCount = failure_count.toInt(),
+            status = SyncOutboxStatus.valueOf(status),
+        )
 }

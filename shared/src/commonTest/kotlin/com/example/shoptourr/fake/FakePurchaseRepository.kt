@@ -41,6 +41,34 @@ class FakePurchaseRepository(
         return Result.success(purchase)
     }
 
+    override suspend fun update(
+        tripId: String,
+        purchaseId: String,
+        draft: PurchaseDraft,
+    ): Result<Purchase> {
+        val vat = VatCalculator.breakdown(draft.amount, draft.vatRatePercent, draft.vatIncluded)
+        val purchase = Purchase(
+            id = purchaseId,
+            tripId = tripId,
+            name = draft.name,
+            category = draft.category,
+            amount = vat.gross,
+            vat = vat,
+            taxRefundEligible = draft.taxRefundEligible,
+            place = draft.place,
+            purchaseDate = draft.purchaseDate ?: "1970-01-01",
+            purchaseTime = draft.purchaseTime,
+            pendingSync = true,
+        )
+        items.update { list -> list.map { if (it.id == purchaseId) purchase else it } }
+        return Result.success(purchase)
+    }
+
+    override suspend fun delete(tripId: String, purchaseId: String): Result<Unit> {
+        items.update { list -> list.filterNot { it.id == purchaseId } }
+        return Result.success(Unit)
+    }
+
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =
         items.map { list -> list.filter { it.tripId == tripId } }
 }
