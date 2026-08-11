@@ -5,14 +5,19 @@ import com.example.shoptourr.data.local.InMemoryTripLocalStore
 import com.example.shoptourr.data.remote.PurchaseApi
 import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.createVoyageHttpClient
+import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.remote.dto.common.VatBreakdownDto
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
+import com.example.shoptourr.data.remote.dto.purchase.PurchaseDto
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
+import com.example.shoptourr.data.repository.SyncRepositoryImpl
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
-import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutboxProcessor
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.PurchaseCategory as DomainCategory
 import com.example.shoptourr.domain.model.PurchaseDraft
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
+import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -27,10 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.example.shoptourr.data.remote.dto.common.MoneyDto
-import com.example.shoptourr.data.remote.dto.common.VatBreakdownDto
-import com.example.shoptourr.data.remote.dto.purchase.PurchaseCategory
-import com.example.shoptourr.data.remote.dto.purchase.PurchaseDto
 
 class PurchaseOutboxSyncTest {
 
@@ -78,7 +79,18 @@ class PurchaseOutboxSyncTest {
             idGenerator = { "local-1" },
             clock = { 1_700_000_000_000L },
         )
-        val created = CreatePurchaseUseCase(repo)(
+        val processor = SyncOutboxProcessor(
+            outbox = outbox,
+            purchaseApi = PurchaseApi(client, "https://api.test"),
+            purchaseLocalStore = local,
+            tripApi = TripApi(client, "https://api.test"),
+            tripLocalStore = InMemoryTripLocalStore(),
+            clock = { 1_700_000_000_100L },
+        )
+        val created = CreatePurchaseUseCase(
+            purchaseRepository = repo,
+            drainSyncOutbox = DrainSyncOutboxUseCase(SyncRepositoryImpl(processor)),
+        )(
             tripId = "lisbon",
             draft = PurchaseDraft(
                 name = "Pasteis",
@@ -91,24 +103,9 @@ class PurchaseOutboxSyncTest {
         ).getOrThrow()
 
         assertEquals("local-1", created.id)
-        assertEquals(1, local.observeByTrip("lisbon").first().size)
-        assertEquals(1, outbox.pending().size)
-        assertEquals(SyncMutationType.CREATE_PURCHASE, outbox.pending().single().type)
-
-        val processor = SyncOutboxProcessor(
-            outbox = outbox,
-            purchaseApi = PurchaseApi(client, "https://api.test"),
-            purchaseLocalStore = local,
-            tripApi = TripApi(client, "https://api.test"),
-            tripLocalStore = InMemoryTripLocalStore(),
-            clock = { 1_700_000_000_100L },
-        )
-        val drained = processor.drainOnce()
-
-        assertEquals(1, drained.successCount)
-        assertEquals(0, drained.failureCount)
         assertEquals(1, posted)
         assertTrue(outbox.pending().isEmpty())
         assertEquals("server-1", local.observeByTrip("lisbon").first().single().id)
+        assertEquals(false, local.observeByTrip("lisbon").first().single().pendingSync)
     }
 }

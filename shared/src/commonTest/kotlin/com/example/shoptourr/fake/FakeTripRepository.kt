@@ -35,6 +35,8 @@ class FakeTripRepository(
     var refreshError: Throwable? = null
     var createCalls: Int = 0
         private set
+    var refreshCalls: Int = 0
+        private set
     var inviteCalls: Int = 0
         private set
     var fxRefreshCalls: Int = 0
@@ -49,6 +51,7 @@ class FakeTripRepository(
     }
 
     override suspend fun refreshTrips(): Result<Unit> {
+        refreshCalls += 1
         refreshError?.let { return Result.failure(it) }
         queuedRefresh?.let {
             home.value = it

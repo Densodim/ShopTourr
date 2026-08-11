@@ -7,6 +7,7 @@ import com.example.shoptourr.domain.repository.PurchaseRepository
 
 class CreatePurchaseUseCase(
     private val purchaseRepository: PurchaseRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(tripId: String, draft: PurchaseDraft): Result<Purchase> {
         if (draft.name.trim().isEmpty()) {
@@ -19,5 +20,10 @@ class CreatePurchaseUseCase(
             return Result.failure(AppError.Validation("tripId"))
         }
         return purchaseRepository.create(tripId, draft.copy(name = draft.name.trim()))
+            .also { result ->
+                if (result.isSuccess) {
+                    drainSyncOutbox?.invoke()
+                }
+            }
     }
 }

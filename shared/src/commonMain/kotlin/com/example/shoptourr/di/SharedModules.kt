@@ -43,6 +43,7 @@ import com.example.shoptourr.data.repository.MediaRepositoryImpl
 import com.example.shoptourr.data.repository.PurchaseRepositoryImpl
 import com.example.shoptourr.data.repository.RouteRepositoryImpl
 import com.example.shoptourr.data.repository.StatsRepositoryImpl
+import com.example.shoptourr.data.repository.SyncRepositoryImpl
 import com.example.shoptourr.data.repository.TaxFreeRepositoryImpl
 import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.repository.UserRepositoryImpl
@@ -60,6 +61,7 @@ import com.example.shoptourr.domain.repository.MediaRepository
 import com.example.shoptourr.domain.repository.PurchaseRepository
 import com.example.shoptourr.domain.repository.RouteRepository
 import com.example.shoptourr.domain.repository.StatsRepository
+import com.example.shoptourr.domain.repository.SyncRepository
 import com.example.shoptourr.domain.repository.TaxFreeRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.repository.UserRepository
@@ -73,6 +75,7 @@ import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
 import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
 import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
@@ -239,6 +242,7 @@ val dataModule = module {
             clock = { epochMillis() },
         )
     }
+    singleOf(::SyncRepositoryImpl) { bind<SyncRepository>() }
 }
 
 val domainModule = module {
@@ -247,11 +251,27 @@ val domainModule = module {
     factoryOf(::IsLoggedInUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::ObserveHomeUseCase)
-    factoryOf(::RefreshHomeUseCase)
-    factoryOf(::CreatePurchaseUseCase)
+    factoryOf(::DrainSyncOutboxUseCase)
+    factory {
+        RefreshHomeUseCase(
+            tripRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
+    factory {
+        CreatePurchaseUseCase(
+            purchaseRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::UploadReceiptUseCase)
     factoryOf(::FetchReceiptOcrUseCase)
-    factoryOf(::CreateTripUseCase)
+    factory {
+        CreateTripUseCase(
+            tripRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::ObserveTripDetailUseCase)
     factoryOf(::ObserveProfileUseCase)
     factoryOf(::ObservePreferencesUseCase)

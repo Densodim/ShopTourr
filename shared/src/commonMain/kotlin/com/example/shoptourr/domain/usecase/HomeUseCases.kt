@@ -22,6 +22,10 @@ class ObserveHomeUseCase(
 
 class RefreshHomeUseCase(
     private val tripRepository: TripRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
-    suspend operator fun invoke(): Result<Unit> = tripRepository.refreshTrips()
+    suspend operator fun invoke(): Result<Unit> {
+        drainSyncOutbox?.invoke()
+        return tripRepository.refreshTrips()
+    }
 }

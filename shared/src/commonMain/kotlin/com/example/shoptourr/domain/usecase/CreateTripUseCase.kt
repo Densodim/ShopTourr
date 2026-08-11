@@ -7,6 +7,7 @@ import com.example.shoptourr.domain.repository.TripRepository
 
 class CreateTripUseCase(
     private val tripRepository: TripRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(draft: CreateTripDraft): Result<TripSummary> {
         if (draft.city.trim().isEmpty()) return Result.failure(AppError.Validation("city"))
@@ -18,6 +19,10 @@ class CreateTripUseCase(
                 city = draft.city.trim(),
                 country = draft.country.trim(),
             )
-        )
+        ).also { result ->
+            if (result.isSuccess) {
+                drainSyncOutbox?.invoke()
+            }
+        }
     }
 }
