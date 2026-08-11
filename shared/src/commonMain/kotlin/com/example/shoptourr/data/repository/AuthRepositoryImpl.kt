@@ -5,6 +5,7 @@ import com.example.shoptourr.data.remote.dto.auth.LoginRequest
 import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
 import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
+import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.settings.TokenStore
@@ -16,6 +17,7 @@ import com.example.shoptourr.domain.repository.AuthRepository
 class AuthRepositoryImpl(
     private val api: AuthApi,
     private val tokenStore: TokenStore,
+    private val userLocalStore: UserLocalStore? = null,
 ) : AuthRepository {
 
     private var cachedUser: User? = null
@@ -57,6 +59,7 @@ class AuthRepositoryImpl(
                 )
             )
             tokenStore.clear()
+            userLocalStore?.clear()
             cachedUser = null
         }.mapHttpAppError()
 
