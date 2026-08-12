@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 interface AppBuildInfo {
     val platform: ClientPlatform
     val buildNumber: Int
+    /** When true, certificate pinning may enforce (if pins are configured). */
+    val isReleaseBuild: Boolean get() = false
 }
 
 interface ClientRemoteConfigRepository {

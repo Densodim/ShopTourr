@@ -20,6 +20,7 @@ import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import com.example.shoptourr.observability.NoOpObservability
 import com.example.shoptourr.observability.Observability
+import com.example.shoptourr.security.CertificatePinConfig
 import kotlin.random.Random
 import kotlinx.serialization.json.Json
 
@@ -121,4 +122,7 @@ private fun HttpClientConfig<*>.applyCommonTimeouts() {
 }
 
 /** Context7: expect/actual httpClient with OkHttp (Android) / Darwin (iOS). */
-expect fun createPlatformHttpEngine(): HttpClientEngine
+expect fun createPlatformHttpEngine(
+    pinConfig: CertificatePinConfig = CertificatePinConfig.Empty,
+    enforcePinning: Boolean = false,
+): HttpClientEngine

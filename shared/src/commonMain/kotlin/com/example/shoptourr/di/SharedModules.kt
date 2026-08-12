@@ -36,6 +36,8 @@ import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.observability.NoOpObservability
 import com.example.shoptourr.observability.Observability
+import com.example.shoptourr.security.CertificatePinPolicy
+import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AuthApi
@@ -195,9 +197,17 @@ val dataModule = module {
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
 
     single {
+        val pinConfig = VoyageCertificatePins.configured
+        val enforcePinning = CertificatePinPolicy.shouldEnforce(
+            isReleaseBuild = get<AppBuildInfo>().isReleaseBuild,
+            config = pinConfig,
+        )
         createVoyageHttpClient(
             baseUrl = get<AppConfig>().apiBaseUrl,
-            engine = createPlatformHttpEngine(),
+            engine = createPlatformHttpEngine(
+                pinConfig = pinConfig,
+                enforcePinning = enforcePinning,
+            ),
             tokenProvider = { get<TokenStore>().accessToken() },
             refreshTokenProvider = { get<TokenStore>().refreshToken() },
             refreshTokens = {
@@ -214,7 +224,17 @@ val dataModule = module {
         )
     }
     single(named("uploadHttpClient")) {
-        HttpClient(createPlatformHttpEngine()) {
+        val pinConfig = VoyageCertificatePins.configured
+        val enforcePinning = CertificatePinPolicy.shouldEnforce(
+            isReleaseBuild = get<AppBuildInfo>().isReleaseBuild,
+            config = pinConfig,
+        )
+        HttpClient(
+            createPlatformHttpEngine(
+                pinConfig = pinConfig,
+                enforcePinning = enforcePinning,
+            ),
+        ) {
             expectSuccess = false
         }
     }
