@@ -25,6 +25,7 @@ import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.map.VoyageMapHost
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
@@ -115,7 +116,7 @@ internal fun RouteContent(
                 }
                 Spacer(Modifier.height(16.dp))
                 val caption = route.stops.firstOrNull()?.point?.let { "${it.lat}° · ${it.lng}°" }
-                RouteMapCanvas(stops = route.stops, caption = caption)
+                VoyageMapHost(stops = route.stops, caption = caption)
                 Spacer(Modifier.height(20.dp))
                 VoyageSection(title = t("stops")) {
                     route.stops.sortedBy { it.orderIndex }.forEach { stop ->

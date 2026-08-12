@@ -1,5 +1,7 @@
 package com.example.shoptourr.data.repository
 
+import com.example.shoptourr.data.media.PresignedPutMediaUploader
+import com.example.shoptourr.data.media.ResumableMediaUploader
 import com.example.shoptourr.data.remote.MediaApi
 import com.example.shoptourr.data.remote.dto.media.CreateMediaUploadIntentRequest
 import com.example.shoptourr.data.remote.dto.media.MediaAssetDto
@@ -20,6 +22,9 @@ import com.example.shoptourr.domain.repository.MediaRepository
 class MediaRepositoryImpl(
     private val api: MediaApi,
     private val idempotencyKey: () -> String,
+    private val uploader: ResumableMediaUploader = PresignedPutMediaUploader { url, bytes, headers ->
+        api.uploadBytes(uploadUrl = url, bytes = bytes, requiredHeaders = headers)
+    },
 ) : MediaRepository {
     override suspend fun createReceiptUploadIntent(draft: ReceiptUploadDraft): Result<MediaUploadIntent> =
         runCatching {
@@ -35,13 +40,7 @@ class MediaRepositoryImpl(
         }.mapHttpAppError()
 
     override suspend fun uploadBytes(intent: MediaUploadIntent, bytes: ByteArray): Result<Unit> =
-        runCatching {
-            api.uploadBytes(
-                uploadUrl = intent.uploadUrl,
-                bytes = bytes,
-                requiredHeaders = intent.requiredHeaders,
-            )
-        }.mapHttpAppError()
+        uploader.upload(intent = intent, bytes = bytes).mapHttpAppError()
 
     override suspend fun confirmUpload(mediaId: String): Result<MediaAsset> =
         runCatching { api.confirm(mediaId).toDomain() }.mapHttpAppError()
