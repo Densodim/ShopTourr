@@ -155,7 +155,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Wired (client) |
 | A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
 | Analytics | PostHog or Firebase Analytics; offline event queue in SQLDelight | Planned |
-| Crash / observability | Sentry Kotlin MP + `X-Request-Id` breadcrumb | Chosen, not wired |
+| Crash / observability | `Observability` facade + HTTP `request_id` breadcrumbs; swap `NoOp` → Sentry MP when DSN set | Facade wired |
 | Certificate pinning | Ktor `HttpClient` public-key pins for `api.shoptourr.com` (release builds) | Planned |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
 | E2E | Maestro flows: auth → add purchase → offline sync | Planned |

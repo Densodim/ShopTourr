@@ -18,6 +18,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
+import com.example.shoptourr.observability.NoOpObservability
+import com.example.shoptourr.observability.Observability
 import kotlin.random.Random
 import kotlinx.serialization.json.Json
 
@@ -45,11 +47,25 @@ fun newRequestId(): String =
         repeat(12) { append(Random.nextInt(0, 16).toString(16)) }
     }
 
-private val RequestIdPlugin = createClientPlugin("VoyageRequestId") {
+private fun requestIdPlugin(observability: Observability) = createClientPlugin("VoyageRequestId") {
     onRequest { request, _ ->
-        if (request.headers[REQUEST_ID_HEADER].isNullOrBlank()) {
-            request.headers.append(REQUEST_ID_HEADER, newRequestId())
+        val existing = request.headers[REQUEST_ID_HEADER]
+        val requestId = if (existing.isNullOrBlank()) {
+            val generated = newRequestId()
+            request.headers.append(REQUEST_ID_HEADER, generated)
+            generated
+        } else {
+            existing
         }
+        observability.addBreadcrumb(
+            message = "http.request",
+            category = "http",
+            data = mapOf(
+                "request_id" to requestId,
+                "method" to request.method.value,
+                "url" to request.url.buildString(),
+            ),
+        )
     }
 }
 
@@ -60,12 +76,13 @@ fun createVoyageHttpClient(
     refreshTokenProvider: () -> String? = { null },
     refreshTokens: (suspend () -> BearerTokens?)? = null,
     enableLogging: Boolean = false,
+    observability: Observability = NoOpObservability,
 ): HttpClient = HttpClient(engine) {
     expectSuccess = false
     install(ContentNegotiation) {
         json(voyageJson())
     }
-    install(RequestIdPlugin)
+    install(requestIdPlugin(observability))
     if (enableLogging) {
         install(Logging) {
             logger = Logger.SIMPLE

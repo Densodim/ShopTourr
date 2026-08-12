@@ -34,6 +34,8 @@ import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
+import com.example.shoptourr.observability.NoOpObservability
+import com.example.shoptourr.observability.Observability
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AuthApi
@@ -185,6 +187,7 @@ val dataModule = module {
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
     singleOf(::InMemoryClientRemoteConfigStore) { bind<ClientRemoteConfigStore>() }
     single { PendingDeepLinkStore() }
+    single<Observability> { NoOpObservability }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
@@ -207,6 +210,7 @@ val dataModule = module {
                 }
             },
             enableLogging = true,
+            observability = get(),
         )
     }
     single(named("uploadHttpClient")) {
