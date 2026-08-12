@@ -154,7 +154,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Wired (client) |
 | Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Wired (client) |
 | A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
-| Analytics | `Analytics` facade + `QueuedAnalytics` offline buffer; swap NoOp → PostHog/Firebase + SQLDelight queue | Facade wired |
+| Analytics | `Analytics` + `QueuedAnalytics` + SQLDelight `AnalyticsEventEntity` queue; NoOp sink until PostHog/Firebase | Facade + SQL queue |
 | Crash / observability | `Observability` facade + HTTP `request_id` breadcrumbs; swap `NoOp` → Sentry MP when DSN set | Facade wired |
 | Certificate pinning | `CertificatePinPolicy` + OkHttp `CertificatePinner` (Android); empty pins → fail-open; iOS TrustKit later | Facade wired |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |

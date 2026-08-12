@@ -8,7 +8,7 @@ import kotlinx.coroutines.test.runTest
 class AnalyticsTest {
 
     @Test
-    fun `recording track stores name and properties`() {
+    fun `recording track stores name and properties`() = runTest {
         val analytics = RecordingAnalytics()
         analytics.track("purchase_created", mapOf("trip_id" to "t1"))
         assertEquals(1, analytics.events.size)
@@ -17,7 +17,7 @@ class AnalyticsTest {
     }
 
     @Test
-    fun `noop does not throw`() {
+    fun `noop does not throw`() = runTest {
         NoOpAnalytics.track("screen_view")
         NoOpAnalytics.identify("user-1")
         assertTrue(true)
@@ -32,6 +32,7 @@ class AnalyticsTest {
             sink = sink,
             isOnline = { online },
             clock = { 1_700_000_000_000L },
+            idGenerator = { "evt-1" },
         )
 
         analytics.track("home_opened", mapOf("tab" to "home"))
@@ -54,6 +55,7 @@ class AnalyticsTest {
             sink = sink,
             isOnline = { true },
             clock = { 42L },
+            idGenerator = { "evt-fail" },
         )
         analytics.track("export_tapped")
         analytics.flush()
@@ -72,5 +74,11 @@ class AnalyticsTest {
         analytics.identify("u-9")
         analytics.flush()
         assertEquals("u-9", sink.lastUserId)
+    }
+
+    @Test
+    fun `properties round-trip through json helpers`() {
+        val encoded = encodeAnalyticsProperties(mapOf("a" to "1", "b" to "two"))
+        assertEquals(mapOf("a" to "1", "b" to "two"), decodeAnalyticsProperties(encoded))
     }
 }

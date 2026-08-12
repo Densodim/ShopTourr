@@ -1,6 +1,12 @@
 package com.example.shoptourr
 
 import android.app.Application
+import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsEventQueue
+import com.example.shoptourr.analytics.AnalyticsSink
+import com.example.shoptourr.analytics.NoOpAnalyticsSink
+import com.example.shoptourr.analytics.QueuedAnalytics
+import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
 import com.example.shoptourr.data.connectivity.AndroidConnectivityMonitor
 import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DatabaseDriverFactory
@@ -67,6 +73,17 @@ private val androidDatabaseModule = module {
     single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
     single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
+    single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
+    single<AnalyticsSink> { NoOpAnalyticsSink }
+    single<Analytics> {
+        QueuedAnalytics(
+            queue = get(),
+            sink = get(),
+            // ConnectivityMonitor is Flow-only; treat flush as online until StateFlow snapshot exists.
+            isOnline = { true },
+            clock = { System.currentTimeMillis() },
+        )
+    }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
     single<SecureKeyValueStore> { AndroidEncryptedSecureStore(androidContext()) }
     single<TokenStore> {

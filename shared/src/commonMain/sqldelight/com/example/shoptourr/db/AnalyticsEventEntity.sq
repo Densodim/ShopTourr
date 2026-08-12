@@ -1,0 +1,26 @@
+CREATE TABLE AnalyticsEventEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    properties_json TEXT NOT NULL,
+    timestamp_epoch_ms INTEGER NOT NULL
+);
+
+selectPending:
+SELECT * FROM AnalyticsEventEntity
+ORDER BY timestamp_epoch_ms ASC;
+
+selectOldestIds:
+SELECT id FROM AnalyticsEventEntity
+ORDER BY timestamp_epoch_ms ASC
+LIMIT :limit;
+
+countPending:
+SELECT COUNT(*) FROM AnalyticsEventEntity;
+
+insert:
+INSERT OR REPLACE INTO AnalyticsEventEntity(
+    id, name, properties_json, timestamp_epoch_ms
+) VALUES (?, ?, ?, ?);
+
+deleteById:
+DELETE FROM AnalyticsEventEntity WHERE id = :id;

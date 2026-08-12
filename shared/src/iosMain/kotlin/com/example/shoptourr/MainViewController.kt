@@ -1,6 +1,12 @@
 package com.example.shoptourr
 
 import androidx.compose.ui.window.ComposeUIViewController
+import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsEventQueue
+import com.example.shoptourr.analytics.AnalyticsSink
+import com.example.shoptourr.analytics.NoOpAnalyticsSink
+import com.example.shoptourr.analytics.QueuedAnalytics
+import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
 import com.example.shoptourr.data.connectivity.IosConnectivityMonitor
 import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DatabaseDriverFactory
@@ -33,6 +39,7 @@ import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.russhwolf.settings.Settings
+import kotlinx.datetime.Clock
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform.getKoinOrNull
 import platform.UIKit.UIViewController
@@ -50,6 +57,16 @@ private val iosDatabaseModule = module {
     single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
     single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
+    single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
+    single<AnalyticsSink> { NoOpAnalyticsSink }
+    single<Analytics> {
+        QueuedAnalytics(
+            queue = get(),
+            sink = get(),
+            isOnline = { true },
+            clock = { Clock.System.now().toEpochMilliseconds() },
+        )
+    }
     single<ConnectivityMonitor> { IosConnectivityMonitor() }
     single<SecureKeyValueStore> { IosKeychainSecureStore() }
     single<TokenStore> {
