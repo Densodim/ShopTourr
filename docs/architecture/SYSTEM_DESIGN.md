@@ -160,7 +160,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
 | E2E | Maestro flows: auth → add purchase → offline sync | Planned |
 | A11y | Compose semantics + TalkBack/VoiceOver smoke in Maestro | Planned |
-| CI/CD | GitHub Actions: unit + androidHostTest; Fastlane/ASC later | Planned |
+| CI/CD | GitHub Actions `ci.yml`: `:shared:testAndroidHostTest` on push/PR; Fastlane/ASC later | Wired (unit) |
 | App size | Budget 40 MB install; monitor ABI splits | Planned |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
 
