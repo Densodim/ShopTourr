@@ -1,6 +1,7 @@
 package com.example.shoptourr.data.remote
 
 import com.example.shoptourr.data.remote.dto.user.ActivatePremiumRequest
+import com.example.shoptourr.data.remote.dto.user.ClientRemoteConfigDto
 import com.example.shoptourr.data.remote.dto.user.UpdatePreferencesRequest
 import com.example.shoptourr.data.remote.dto.user.UpdateProfileRequest
 import com.example.shoptourr.data.remote.dto.user.UserDto
@@ -57,6 +58,12 @@ class UserApi(
             contentType(ContentType.Application.Json)
             setBody(request)
         }
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
+        return response.body()
+    }
+
+    suspend fun fetchAppConfig(): ClientRemoteConfigDto {
+        val response: HttpResponse = client.get("$root/me/app-config")
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
         return response.body()
     }

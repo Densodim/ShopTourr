@@ -70,4 +70,21 @@ public final class UserDtos {
             Boolean pushNotificationsEnabled,
             Boolean darkMode
     ) {}
+
+    public record FeatureFlagsDto(
+            boolean exportPdf,
+            boolean ocrAssist,
+            boolean nativeMaps
+    ) {}
+
+    /** GET /me/app-config — force update thresholds + feature flags. */
+    public record ClientRemoteConfigDto(
+            int minAndroidBuild,
+            int minIosBuild,
+            Integer softMinAndroidBuild,
+            Integer softMinIosBuild,
+            FeatureFlagsDto flags,
+            String storeUrlAndroid,
+            String storeUrlIos
+    ) {}
 }

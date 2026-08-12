@@ -58,3 +58,21 @@ data class UpdatePreferencesRequest(
     val pushNotificationsEnabled: Boolean? = null,
     val darkMode: Boolean? = null,
 )
+
+@Serializable
+data class FeatureFlagsDto(
+    val exportPdf: Boolean = true,
+    val ocrAssist: Boolean = true,
+    val nativeMaps: Boolean = false,
+)
+
+@Serializable
+data class ClientRemoteConfigDto(
+    val minAndroidBuild: Int,
+    val minIosBuild: Int,
+    val softMinAndroidBuild: Int? = null,
+    val softMinIosBuild: Int? = null,
+    val flags: FeatureFlagsDto = FeatureFlagsDto(),
+    val storeUrlAndroid: String? = null,
+    val storeUrlIos: String? = null,
+)

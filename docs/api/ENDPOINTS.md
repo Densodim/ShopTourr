@@ -18,6 +18,7 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 | PATCH | `/me` | `UpdateProfileRequest` | `UserDto` |
 | GET | `/me/preferences` | — | `UserPreferencesDto` |
 | PATCH | `/me/preferences` | `UpdatePreferencesRequest` | `UserPreferencesDto` |
+| GET | `/me/app-config` | — | `ClientRemoteConfigDto` |
 
 ## Home
 | Method | Path | Response |
