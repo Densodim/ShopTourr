@@ -4,7 +4,17 @@ import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.hash.createDefaultContentChecksum
 import com.example.shoptourr.data.media.FileKitReceiptImageCompressor
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
+import com.example.shoptourr.data.local.InMemoryClientRemoteConfigStore
+import com.example.shoptourr.data.local.ClientRemoteConfigStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
+import com.example.shoptourr.data.platform.createDefaultAppBuildInfo
+import com.example.shoptourr.data.repository.ClientRemoteConfigRepositoryImpl
+import com.example.shoptourr.domain.repository.AppBuildInfo
+import com.example.shoptourr.domain.repository.ClientRemoteConfigRepository
+import com.example.shoptourr.domain.usecase.EvaluateForceUpdateUseCase
+import com.example.shoptourr.domain.usecase.ObserveFeatureFlagUseCase
+import com.example.shoptourr.domain.usecase.RefreshClientRemoteConfigUseCase
+import com.example.shoptourr.presentation.forceupdate.ForceUpdateViewModel
 import com.example.shoptourr.data.local.InMemoryExportLocalStore
 import com.example.shoptourr.data.local.InMemoryPurchaseLocalStore
 import com.example.shoptourr.data.local.InMemoryRouteLocalStore
@@ -172,8 +182,10 @@ val dataModule = module {
     singleOf(::InMemoryRouteLocalStore) { bind<RouteLocalStore>() }
     singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
+    singleOf(::InMemoryClientRemoteConfigStore) { bind<ClientRemoteConfigStore>() }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
+    single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
 
@@ -247,6 +259,12 @@ val dataModule = module {
         )
     } bind PurchaseRepository::class
     singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
+    single {
+        ClientRemoteConfigRepositoryImpl(
+            api = get(),
+            localStore = get(),
+        )
+    } bind ClientRemoteConfigRepository::class
     single {
         WishlistRepositoryImpl(
             api = get(),
@@ -387,11 +405,15 @@ val domainModule = module {
     factoryOf(::RefreshExchangeRateUseCase)
     factoryOf(::ActivatePremiumUseCase)
     factoryOf(::ObservePremiumUseCase)
+    factoryOf(::RefreshClientRemoteConfigUseCase)
+    factoryOf(::EvaluateForceUpdateUseCase)
+    factoryOf(::ObserveFeatureFlagUseCase)
 }
 
 val presentationModule = module {
     factoryOf(::AuthViewModel)
     factoryOf(::ForgotPasswordViewModel)
+    factoryOf(::ForceUpdateViewModel)
     factoryOf(::HomeViewModel)
     factoryOf(::NewTripViewModel)
     factoryOf(::ProfileViewModel)

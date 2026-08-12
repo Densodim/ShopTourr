@@ -32,6 +32,9 @@ import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
+import com.example.shoptourr.data.platform.StaticAppBuildInfo
+import com.example.shoptourr.domain.model.ClientPlatform
+import com.example.shoptourr.domain.repository.AppBuildInfo
 import com.example.shoptourr.domain.push.PushTokenProvider
 import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
@@ -73,4 +76,12 @@ private val androidDatabaseModule = module {
         )
     }
     single<PushTokenProvider> { FcmPushTokenProvider(androidContext()) }
+    single<AppBuildInfo> {
+        val context = androidContext()
+        val buildNumber = runCatching {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0).versionCode.toLong()
+        }.getOrElse { 1L }.toInt().coerceAtLeast(1)
+        StaticAppBuildInfo(ClientPlatform.ANDROID, buildNumber)
+    }
 }

@@ -151,8 +151,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 
 | Block | Decision (v1) | Status |
 |---|---|---|
-| Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Planned |
-| Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Planned |
+| Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Wired (client) |
+| Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Wired (client) |
 | A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
 | Analytics | PostHog or Firebase Analytics; offline event queue in SQLDelight | Planned |
 | Crash / observability | Sentry Kotlin MP + `X-Request-Id` breadcrumb | Chosen, not wired |
