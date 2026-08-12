@@ -36,6 +36,8 @@ import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.observability.NoOpObservability
 import com.example.shoptourr.observability.Observability
+import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.NoOpAnalytics
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
@@ -190,6 +192,7 @@ val dataModule = module {
     singleOf(::InMemoryClientRemoteConfigStore) { bind<ClientRemoteConfigStore>() }
     single { PendingDeepLinkStore() }
     single<Observability> { NoOpObservability }
+    single<Analytics> { NoOpAnalytics }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
