@@ -110,8 +110,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 
 | Screen | Primary endpoints |
 |---|---|
-| Welcome / SignUp / SignIn | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` |
-| Home | `GET /home` (aggregate) |
+| Welcome / SignUp / SignIn / Forgot | `POST /auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/refresh`, `/auth/logout` |
+| Home (tab) | `GET /home` (aggregate) |
 | Trip list / detail | `GET/POST /trips`, `GET/PATCH /trips/{id}` |
 | New trip | `POST /trips` |
 | Add purchase | `POST /trips/{id}/purchases` + media intent |
@@ -121,8 +121,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Alerts | `GET /trips/{id}/alerts` |
 | Tax Free | `GET /trips/{id}/tax-free` |
 | Export | `POST /trips/{id}/exports` → poll job |
-| Wishlist | `GET/POST/DELETE /wishlist` |
-| Profile / Settings | `GET/PATCH /me`, `GET/PATCH /me/preferences` |
+| Wishlist (tab) | `GET/POST/DELETE /wishlist` |
+| Profile (tab) / Settings / Privacy / About / Support | `GET/PATCH /me`, `GET/PATCH /me/preferences` |
 
 ---
 
@@ -144,6 +144,25 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Rate limit:** login 10/min/IP; write APIs 120/min/user.
 - **Privacy:** receipt photos private; export jobs expire 24h.
 - **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO.
+- **Deep links:** `voyage://trips/{id}/alerts|tax-free|route` → `VoyageDeepLinkParser` (wire from FCM/APNs payload).
+- **Media upload:** `ResumableMediaUploader` (v1 pre-signed PUT; tus/multipart resume later).
+
+### 6.1 Standard blocks (mobile-system-design ch.10) — decisions
+
+| Block | Decision (v1) | Status |
+|---|---|---|
+| Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Planned |
+| Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Planned |
+| A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
+| Analytics | PostHog or Firebase Analytics; offline event queue in SQLDelight | Planned |
+| Crash / observability | Sentry Kotlin MP + `X-Request-Id` breadcrumb | Chosen, not wired |
+| Certificate pinning | Ktor `HttpClient` public-key pins for `api.shoptourr.com` (release builds) | Planned |
+| Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
+| E2E | Maestro flows: auth → add purchase → offline sync | Planned |
+| A11y | Compose semantics + TalkBack/VoiceOver smoke in Maestro | Planned |
+| CI/CD | GitHub Actions: unit + androidHostTest; Fastlane/ASC later | Planned |
+| App size | Budget 40 MB install; monitor ABI splits | Planned |
+| Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
 
 ---
 
@@ -154,7 +173,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | **P0** | Auth, trips CRUD, purchases CRUD, home aggregate, prefs, basic stats |
 | **P1** | Diary, wishlist, tax-free summary, alerts, media upload |
 | **P2** | Map/route, export PDF/CSV, OCR assist, push |
-| **P3** | Shared trips (real accounts), FX live refresh, Premium |
+| **P2.1** | TabBar + Settings, forgot password, privacy/about/support, deep-link parse, upload resume hook |
+| **P3** | Shared trips (real accounts), FX live refresh, Premium, native maps SDK, force-update + flags |
 
 ---
 
@@ -168,6 +188,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | FX provider down | trip create fails | Cached ECB/CBR rates + manual override |
 | Export blocking request thread | timeouts | Always async job + pre-signed download |
 | JWT theft | account takeover | Short access TTL, refresh rotation, device revoke |
+| Missing force-update | broken clients after API break | Block below `minBuild` from `/me/app-config` |
 
 ---
 
@@ -179,5 +200,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | `docs/api/spring/**` | Java records for Spring Boot 4 (copy into backend) |
 | `docs/api/API_CONVENTIONS.md` | Wire format, versioning, errors |
 | `.mila-design/` | Visual/UX source of truth (local, not product code) |
+| `shared/.../ui/navigation/MainShellVoyageScreen` | TabBar shell (Home / Wishlist / Profile) |
+| `shared/.../navigation/VoyageDeepLinkParser` | Push / universal-link parse |
 
 When Spring project is ready: copy `docs/api/spring/com/shoptourr/...` → backend `src/main/java`, keep field names in sync with `shared/.../data/remote/dto`.
