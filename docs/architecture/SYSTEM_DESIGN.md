@@ -144,7 +144,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Rate limit:** login 10/min/IP; write APIs 120/min/user.
 - **Privacy:** receipt photos private; export jobs expire 24h.
 - **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO.
-- **Deep links:** `voyage://trips/{id}/alerts|tax-free|route` → `VoyageDeepLinkParser` (wire from FCM/APNs payload).
+- **Deep links:** FCM data / `voyage://` VIEW intents → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens.
 - **Media upload:** `ResumableMediaUploader` (v1 pre-signed PUT; tus/multipart resume later).
 
 ### 6.1 Standard blocks (mobile-system-design ch.10) — decisions

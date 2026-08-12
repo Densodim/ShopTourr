@@ -33,6 +33,7 @@ import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
+import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AuthApi
@@ -183,6 +184,7 @@ val dataModule = module {
     singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
     singleOf(::InMemoryClientRemoteConfigStore) { bind<ClientRemoteConfigStore>() }
+    single { PendingDeepLinkStore() }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
