@@ -161,7 +161,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | E2E | Maestro flows under `maestro/flows/`: auth → trip → purchase (+ tab a11y); local device gate | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs; TalkBack smoke via Maestro tab flow | Partial |
 | CI/CD | GitHub Actions `ci.yml`: `:shared:testAndroidHostTest` on push/PR; Fastlane/ASC later | Wired (unit) |
-| App size | Budget 40 MB install; monitor ABI splits | Planned |
+| App size | Budget 40 MiB (`AppSizeBudget` + `scripts/check-app-size.sh`); ABI splits + release minify/shrink | Wired |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
 
 ---
