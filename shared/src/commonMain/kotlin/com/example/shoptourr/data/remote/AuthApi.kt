@@ -1,6 +1,7 @@
 package com.example.shoptourr.data.remote
 
 import com.example.shoptourr.data.remote.dto.auth.AuthTokensResponse
+import com.example.shoptourr.data.remote.dto.auth.ForgotPasswordRequest
 import com.example.shoptourr.data.remote.dto.auth.LoginRequest
 import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
@@ -26,6 +27,16 @@ class AuthApi(
 
     suspend fun register(request: RegisterRequest): AuthTokensResponse =
         post("$root/auth/register", request)
+
+    suspend fun forgotPassword(request: ForgotPasswordRequest) {
+        val response: HttpResponse = client.post("$root/auth/forgot-password") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {
+            throw mapHttpStatus(response.status)
+        }
+    }
 
     suspend fun refresh(request: RefreshTokenRequest): AuthTokensResponse =
         post("$root/auth/refresh", request)

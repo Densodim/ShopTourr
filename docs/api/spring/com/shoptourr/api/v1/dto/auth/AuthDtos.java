@@ -40,6 +40,10 @@ public final class AuthDtos {
             boolean allSessions
     ) {}
 
+    public record ForgotPasswordRequest(
+            @NotBlank @Email String email
+    ) {}
+
     public record AuthTokensResponse(
             String accessToken,
             /** Seconds until access expiry. */

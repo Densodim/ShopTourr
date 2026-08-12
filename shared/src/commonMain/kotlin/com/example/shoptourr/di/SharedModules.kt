@@ -120,6 +120,7 @@ import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
 import com.example.shoptourr.domain.usecase.RegisterPushDeviceUseCase
 import com.example.shoptourr.domain.usecase.RegisterUseCase
+import com.example.shoptourr.domain.usecase.RequestPasswordResetUseCase
 import com.example.shoptourr.domain.usecase.UnregisterPushDeviceUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
 import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
@@ -130,6 +131,7 @@ import kotlinx.datetime.Instant
 import org.koin.core.qualifier.named
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.auth.ForgotPasswordViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
@@ -311,6 +313,7 @@ val domainModule = module {
             registerPushDevice = get(),
         )
     }
+    factoryOf(::RequestPasswordResetUseCase)
     factoryOf(::ObserveConnectivityUseCase)
     factoryOf(::IsLoggedInUseCase)
     factoryOf(::LogoutUseCase)
@@ -388,6 +391,7 @@ val domainModule = module {
 
 val presentationModule = module {
     factoryOf(::AuthViewModel)
+    factoryOf(::ForgotPasswordViewModel)
     factoryOf(::HomeViewModel)
     factoryOf(::NewTripViewModel)
     factoryOf(::ProfileViewModel)

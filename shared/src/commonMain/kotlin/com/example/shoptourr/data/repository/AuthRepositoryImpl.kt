@@ -1,6 +1,7 @@
 package com.example.shoptourr.data.repository
 
 import com.example.shoptourr.data.remote.dto.auth.AuthTokensResponse
+import com.example.shoptourr.data.remote.dto.auth.ForgotPasswordRequest
 import com.example.shoptourr.data.remote.dto.auth.LoginRequest
 import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
@@ -42,6 +43,11 @@ class AuthRepositoryImpl(
                     locale = locale,
                 )
             ).toSession()
+        }.mapHttpAppError()
+
+    override suspend fun requestPasswordReset(email: String): Result<Unit> =
+        runCatching {
+            api.forgotPassword(ForgotPasswordRequest(email = email))
         }.mapHttpAppError()
 
     override suspend fun refresh(): Result<AuthSession> =

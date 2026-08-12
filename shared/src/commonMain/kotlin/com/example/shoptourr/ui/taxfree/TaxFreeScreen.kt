@@ -25,6 +25,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun TaxFreeScreen(
@@ -55,7 +56,7 @@ internal fun TaxFreeContent(
     onIntent: (TaxFreeIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Tax Free", onBack = { onIntent(TaxFreeIntent.Back) })
+        VoyageTopBar(title = t("taxfree"), onBack = { onIntent(TaxFreeIntent.Back) })
         Spacer(Modifier.height(12.dp))
         VoyageButton(
             text = "Обновить",
@@ -107,6 +108,22 @@ internal fun TaxFreeContent(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    }
+                }
+                Spacer(Modifier.height(20.dp))
+                VoyageButton(
+                    text = t("taxfree_form"),
+                    onClick = { onIntent(TaxFreeIntent.OpenForm) },
+                    variant = VoyageButtonVariant.Secondary,
+                )
+                if (state.formHintVisible) {
+                    Spacer(Modifier.height(12.dp))
+                    VoyageSurfaceBlock {
+                        Text(
+                            text = t("taxfree_form_hint"),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
                     }
                 }
             }

@@ -17,11 +17,13 @@ data class TaxFreeUiState(
     val tripId: String,
     val isLoading: Boolean = true,
     val summary: TaxFreeSummary? = null,
+    val formHintVisible: Boolean = false,
     val error: UiError? = null,
 ) : UiState
 
 sealed interface TaxFreeIntent {
     data object Refresh : TaxFreeIntent
+    data object OpenForm : TaxFreeIntent
     data object Back : TaxFreeIntent
 }
 
@@ -48,6 +50,7 @@ class TaxFreeViewModel(
     fun onIntent(intent: TaxFreeIntent) {
         when (intent) {
             TaxFreeIntent.Refresh -> refresh()
+            TaxFreeIntent.OpenForm -> updateState { copy(formHintVisible = true) }
             TaxFreeIntent.Back -> emitEvent(TaxFreeUiEvent.NavigateBack)
         }
     }

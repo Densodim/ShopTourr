@@ -29,6 +29,11 @@ data class LogoutRequest(
 )
 
 @Serializable
+data class ForgotPasswordRequest(
+    val email: String,
+)
+
+@Serializable
 data class AuthUserDto(
     val id: String,
     val displayName: String,

@@ -27,6 +27,7 @@ import com.example.shoptourr.ui.i18n.t
 fun LoginScreen(
     viewModel: AuthViewModel,
     onLoggedIn: () -> Unit,
+    onForgotPassword: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -39,6 +40,7 @@ fun LoginScreen(
     LoginContent(
         state = state,
         onIntent = viewModel::onIntent,
+        onForgotPassword = onForgotPassword,
     )
 }
 
@@ -46,6 +48,7 @@ fun LoginScreen(
 internal fun LoginContent(
     state: AuthUiState,
     onIntent: (AuthIntent) -> Unit,
+    onForgotPassword: () -> Unit = {},
 ) {
     VoyageScreen {
         VoyageEyebrow("Voyage")
@@ -88,6 +91,15 @@ internal fun LoginContent(
             label = t("password"),
             isPassword = true,
         )
+        if (!state.isRegisterMode) {
+            Spacer(Modifier.height(8.dp))
+            VoyageButton(
+                text = t("forgot_password"),
+                onClick = onForgotPassword,
+                variant = VoyageButtonVariant.Ghost,
+                enabled = !state.isLoading,
+            )
+        }
         state.error?.let { err ->
             Spacer(Modifier.height(12.dp))
             UiErrorBanner(error = err)
@@ -108,6 +120,12 @@ internal fun LoginContent(
             onClick = { onIntent(AuthIntent.ToggleMode) },
             variant = VoyageButtonVariant.Ghost,
             enabled = !state.isLoading,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = t("legal"),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
