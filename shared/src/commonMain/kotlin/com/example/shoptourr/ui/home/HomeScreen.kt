@@ -30,8 +30,6 @@ fun HomeScreen(
     onCreateTrip: () -> Unit = {},
     onOpenTrip: (tripId: String) -> Unit = {},
     onAddPurchase: (tripId: String) -> Unit = {},
-    onOpenProfile: () -> Unit = {},
-    onOpenWishlist: () -> Unit = {},
     onOpenMap: (tripId: String) -> Unit = {},
     onOpenStats: (tripId: String) -> Unit = {},
 ) {
@@ -42,8 +40,6 @@ fun HomeScreen(
         onCreateTrip = onCreateTrip,
         onOpenTrip = onOpenTrip,
         onAddPurchase = onAddPurchase,
-        onOpenProfile = onOpenProfile,
-        onOpenWishlist = onOpenWishlist,
         onOpenMap = onOpenMap,
         onOpenStats = onOpenStats,
     )
@@ -56,8 +52,6 @@ internal fun HomeContent(
     onCreateTrip: () -> Unit,
     onOpenTrip: (tripId: String) -> Unit,
     onAddPurchase: (tripId: String) -> Unit,
-    onOpenProfile: () -> Unit,
-    onOpenWishlist: () -> Unit,
     onOpenMap: (tripId: String) -> Unit,
     onOpenStats: (tripId: String) -> Unit,
 ) {
@@ -132,7 +126,7 @@ internal fun HomeContent(
         }
 
         Spacer(Modifier.height(24.dp))
-        VoyageSection(title = t("tab_home")) {
+        VoyageSection(title = t("tab_trips")) {
             VoyageButton(
                 text = t("see_all"),
                 onClick = { onIntent(HomeIntent.Refresh) },
@@ -141,18 +135,6 @@ internal fun HomeContent(
             )
             Spacer(Modifier.height(10.dp))
             VoyageButton(text = t("new_trip"), onClick = onCreateTrip)
-            Spacer(Modifier.height(10.dp))
-            VoyageButton(
-                text = t("profile"),
-                onClick = onOpenProfile,
-                variant = VoyageButtonVariant.Secondary,
-            )
-            Spacer(Modifier.height(10.dp))
-            VoyageButton(
-                text = t("wishlist"),
-                onClick = onOpenWishlist,
-                variant = VoyageButtonVariant.Secondary,
-            )
             val tripId = snapshot?.currentTripId
             if (tripId != null) {
                 Spacer(Modifier.height(10.dp))

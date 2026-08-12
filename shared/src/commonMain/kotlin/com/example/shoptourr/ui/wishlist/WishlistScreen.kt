@@ -30,19 +30,20 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun WishlistScreen(
     viewModel: WishlistViewModel,
-    onBack: () -> Unit,
     onLoggedOut: () -> Unit,
+    onBack: (() -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                WishlistUiEvent.NavigateBack -> onBack()
+                WishlistUiEvent.NavigateBack -> onBack?.invoke()
                 WishlistUiEvent.Logout -> onLoggedOut()
             }
         }
@@ -51,6 +52,7 @@ fun WishlistScreen(
     WishlistContent(
         state = state,
         onIntent = viewModel::onIntent,
+        showBack = onBack != null,
     )
 }
 
@@ -58,43 +60,53 @@ fun WishlistScreen(
 internal fun WishlistContent(
     state: WishlistUiState,
     onIntent: (WishlistIntent) -> Unit,
+    showBack: Boolean = true,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Wishlist", onBack = { onIntent(WishlistIntent.Back) })
+        VoyageTopBar(
+            title = t("wishlist"),
+            onBack = if (showBack) {{ onIntent(WishlistIntent.Back) }} else null,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = t("wishlist_sub"),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
         Spacer(Modifier.height(12.dp))
-        VoyageSection(title = "Добавить") {
+        VoyageSection(title = t("add")) {
             VoyageTextField(
                 value = state.nameDraft,
                 onValueChange = { onIntent(WishlistIntent.NameChanged(it)) },
-                label = "Название",
+                label = t("item_name"),
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.cityDraft,
                 onValueChange = { onIntent(WishlistIntent.CityChanged(it)) },
-                label = "Город",
+                label = t("city"),
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.priceDraft,
                 onValueChange = { onIntent(WishlistIntent.PriceChanged(it)) },
-                label = "Цена",
+                label = t("amount"),
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.currencyDraft,
                 onValueChange = { onIntent(WishlistIntent.CurrencyChanged(it)) },
-                label = "Валюта",
+                label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
             VoyageButton(
-                text = "Добавить",
+                text = t("add"),
                 onClick = { onIntent(WishlistIntent.Add) },
                 isLoading = state.isSaving,
             )
             Spacer(Modifier.height(8.dp))
             VoyageButton(
-                text = "Обновить",
+                text = t("see_all"),
                 onClick = { onIntent(WishlistIntent.Refresh) },
                 variant = VoyageButtonVariant.Secondary,
             )
@@ -105,10 +117,10 @@ internal fun WishlistContent(
         }
         Spacer(Modifier.height(20.dp))
         when {
-            state.isLoading && state.items.isEmpty() -> LoadingBlock(label = "Загружаем…")
+            state.isLoading && state.items.isEmpty() -> LoadingBlock(label = "…")
             state.items.isEmpty() -> EmptyState(
-                title = "Список пуст",
-                message = "Добавьте вещи, которые хотите найти в поездке",
+                title = t("wishlist"),
+                message = t("empty_wish"),
             )
             else -> {
                 state.items.forEach { item ->

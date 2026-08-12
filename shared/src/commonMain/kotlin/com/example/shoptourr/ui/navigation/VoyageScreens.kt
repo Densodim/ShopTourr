@@ -1,13 +1,24 @@
 package com.example.shoptourr.ui.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthViewModel
+import com.example.shoptourr.presentation.auth.ForgotPasswordViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
@@ -20,16 +31,23 @@ import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.example.shoptourr.ui.alerts.AlertsScreen
+import com.example.shoptourr.ui.auth.ForgotPasswordScreen
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.auth.WelcomeScreen
+import com.example.shoptourr.ui.components.VoyageTabBar
 import com.example.shoptourr.ui.diary.DiaryScreen
 import com.example.shoptourr.ui.export.ExportScreen
 import com.example.shoptourr.ui.home.HomeScreen
+import com.example.shoptourr.ui.legal.AboutScreen
+import com.example.shoptourr.ui.legal.PrivacyScreen
+import com.example.shoptourr.ui.legal.SupportScreen
 import com.example.shoptourr.ui.map.RouteScreen
 import com.example.shoptourr.ui.profile.ProfileScreen
 import com.example.shoptourr.ui.purchase.AddPurchaseScreen
+import com.example.shoptourr.ui.settings.SettingsScreen
 import com.example.shoptourr.ui.stats.StatsScreen
 import com.example.shoptourr.ui.taxfree.TaxFreeScreen
+import com.example.shoptourr.ui.theme.VoyageTokens
 import com.example.shoptourr.ui.trip.NewTripScreen
 import com.example.shoptourr.ui.trip.TripDetailScreen
 import com.example.shoptourr.ui.wishlist.WishlistScreen
@@ -57,26 +75,81 @@ data class LoginVoyageScreen(val registerMode: Boolean = false) : Screen {
         }
         LoginScreen(
             viewModel = viewModel,
-            onLoggedIn = { navigator.replaceAll(HomeVoyageScreen) },
+            onLoggedIn = { navigator.replaceAll(MainShellVoyageScreen) },
+            onForgotPassword = { navigator.push(ForgotPasswordVoyageScreen) },
         )
     }
 }
 
-object HomeVoyageScreen : Screen {
+object ForgotPasswordVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<HomeViewModel>()
-        HomeScreen(
+        val viewModel = koinInject<ForgotPasswordViewModel>()
+        ForgotPasswordScreen(
             viewModel = viewModel,
-            onCreateTrip = { navigator.push(NewTripVoyageScreen) },
-            onOpenTrip = { tripId -> navigator.push(TripDetailVoyageScreen(tripId)) },
-            onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
-            onOpenProfile = { navigator.push(ProfileVoyageScreen) },
-            onOpenWishlist = { navigator.push(WishlistVoyageScreen) },
-            onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
-            onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
+            onBack = { navigator.pop() },
         )
+    }
+}
+
+object MainShellVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        var tab by rememberSaveable { mutableStateOf(VoyageTab.Home.name) }
+        val current = VoyageTab.entries.firstOrNull { it.name == tab } ?: VoyageTab.Home
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(VoyageTokens.bg),
+        ) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                val homeViewModel = koinInject<HomeViewModel>()
+                val wishlistViewModel = koinInject<WishlistViewModel>()
+                val profileViewModel = koinInject<ProfileViewModel>()
+                when (current) {
+                    VoyageTab.Home -> {
+                        HomeScreen(
+                            viewModel = homeViewModel,
+                            onCreateTrip = { navigator.push(NewTripVoyageScreen) },
+                            onOpenTrip = { tripId -> navigator.push(TripDetailVoyageScreen(tripId)) },
+                            onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
+                            onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
+                            onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
+                        )
+                    }
+                    VoyageTab.Wishlist -> {
+                        WishlistScreen(
+                            viewModel = wishlistViewModel,
+                            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+                        )
+                    }
+                    VoyageTab.Profile -> {
+                        ProfileScreen(
+                            viewModel = profileViewModel,
+                            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+                            onOpenSettings = { navigator.push(SettingsVoyageScreen) },
+                            onOpenSupport = { navigator.push(SupportVoyageScreen) },
+                            onEditProfile = { navigator.push(EditProfileVoyageScreen) },
+                        )
+                    }
+                }
+            }
+            VoyageTabBar(
+                current = current,
+                onChange = { tab = it.name },
+            )
+        }
+    }
+}
+
+/** @deprecated Prefer [MainShellVoyageScreen]; kept for deep-link restore compatibility. */
+object HomeVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        MainShellVoyageScreen.Content()
     }
 }
 
@@ -93,6 +166,61 @@ object NewTripVoyageScreen : Screen {
     }
 }
 
+object SettingsVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val viewModel = koinInject<ProfileViewModel>()
+        SettingsScreen(
+            viewModel = viewModel,
+            onBack = { navigator.pop() },
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+            onOpenPrivacy = { navigator.push(PrivacyVoyageScreen) },
+            onOpenAbout = { navigator.push(AboutVoyageScreen) },
+            onOpenSupport = { navigator.push(SupportVoyageScreen) },
+            onEditProfile = { navigator.push(EditProfileVoyageScreen) },
+        )
+    }
+}
+
+object EditProfileVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val viewModel = koinInject<ProfileViewModel>()
+        ProfileScreen(
+            viewModel = viewModel,
+            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+            onBack = { navigator.pop() },
+            editMode = true,
+        )
+    }
+}
+
+object PrivacyVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        PrivacyScreen(onBack = { navigator.pop() })
+    }
+}
+
+object AboutVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        AboutScreen(onBack = { navigator.pop() })
+    }
+}
+
+object SupportVoyageScreen : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        SupportScreen(onBack = { navigator.pop() })
+    }
+}
+
 object ProfileVoyageScreen : Screen {
     @Composable
     override fun Content() {
@@ -102,6 +230,9 @@ object ProfileVoyageScreen : Screen {
             viewModel = viewModel,
             onBack = { navigator.pop() },
             onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+            onOpenSettings = { navigator.push(SettingsVoyageScreen) },
+            onOpenSupport = { navigator.push(SupportVoyageScreen) },
+            onEditProfile = { navigator.push(EditProfileVoyageScreen) },
         )
     }
 }
