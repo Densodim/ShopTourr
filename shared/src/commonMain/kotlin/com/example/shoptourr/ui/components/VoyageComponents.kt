@@ -33,6 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -123,11 +126,22 @@ fun VoyageTextField(
     singleLine: Boolean = true,
     isPassword: Boolean = false,
     enabled: Boolean = true,
+    testTag: String? = null,
 ) {
+    val tagged = if (testTag != null) {
+        modifier
+            .fillMaxWidth()
+            .testTag(testTag)
+            .semantics { contentDescription = label }
+    } else {
+        modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = label }
+    }
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = tagged,
         label = { Text(label) },
         singleLine = singleLine,
         enabled = enabled,

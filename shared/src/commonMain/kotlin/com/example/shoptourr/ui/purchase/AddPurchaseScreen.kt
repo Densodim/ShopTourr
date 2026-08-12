@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.domain.model.PurchaseCategory
 import com.example.shoptourr.presentation.purchase.AddPurchaseIntent
@@ -31,6 +32,7 @@ import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -92,12 +94,14 @@ internal fun AddPurchaseContent(
                 value = state.name,
                 onValueChange = { onIntent(AddPurchaseIntent.NameChanged(it)) },
                 label = t("item_name"),
+                testTag = VoyageTestTags.ADD_PURCHASE_NAME,
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.amount,
                 onValueChange = { onIntent(AddPurchaseIntent.AmountChanged(it)) },
                 label = t("amount"),
+                testTag = VoyageTestTags.ADD_PURCHASE_AMOUNT,
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
@@ -240,6 +244,7 @@ internal fun AddPurchaseContent(
             text = t("save"),
             onClick = { onIntent(AddPurchaseIntent.Submit) },
             isLoading = state.isLoading,
+            modifier = Modifier.testTag(VoyageTestTags.ADD_PURCHASE_SUBMIT),
         )
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.home.HomeIntent
 import com.example.shoptourr.presentation.home.HomeUiState
@@ -23,6 +24,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun HomeScreen(
@@ -62,7 +64,10 @@ internal fun HomeContent(
     }
 
     VoyageScreen {
-        VoyageEyebrow("Voyage")
+        VoyageEyebrow(
+            text = "Voyage",
+            modifier = Modifier.testTag(VoyageTestTags.HOME_ROOT),
+        )
         Spacer(Modifier.height(8.dp))
         Text(
             text = if (snapshot?.userName.isNullOrBlank()) {
@@ -75,7 +80,7 @@ internal fun HomeContent(
         )
         if (!state.isOnline) {
             Spacer(Modifier.height(12.dp))
-            VoyageSurfaceBlock {
+            VoyageSurfaceBlock(modifier = Modifier.testTag(VoyageTestTags.HOME_OFFLINE_BANNER)) {
                 Text(
                     text = "Офлайн",
                     style = MaterialTheme.typography.titleMedium,
@@ -134,7 +139,11 @@ internal fun HomeContent(
                 variant = VoyageButtonVariant.Secondary,
             )
             Spacer(Modifier.height(10.dp))
-            VoyageButton(text = t("new_trip"), onClick = onCreateTrip)
+            VoyageButton(
+                text = t("new_trip"),
+                onClick = onCreateTrip,
+                modifier = Modifier.testTag(VoyageTestTags.HOME_NEW_TRIP),
+            )
             val tripId = snapshot?.currentTripId
             if (tripId != null) {
                 Spacer(Modifier.height(10.dp))
@@ -144,6 +153,7 @@ internal fun HomeContent(
                     text = t("add"),
                     onClick = { onAddPurchase(tripId) },
                     variant = VoyageButtonVariant.Ghost,
+                    modifier = Modifier.testTag(VoyageTestTags.HOME_ADD_PURCHASE),
                 )
                 Spacer(Modifier.height(10.dp))
                 VoyageButton(

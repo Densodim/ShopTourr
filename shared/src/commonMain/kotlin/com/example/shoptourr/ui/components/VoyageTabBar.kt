@@ -17,9 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.ui.i18n.t
 import com.example.shoptourr.ui.navigation.VoyageTab
+import com.example.shoptourr.ui.testing.VoyageTestTags
 import com.example.shoptourr.ui.theme.VoyageTokens
 
 @Composable
@@ -40,10 +44,13 @@ fun VoyageTabBar(
     ) {
         VoyageTab.entries.forEach { tab ->
             val selected = tab == current
+            val label = tabLabel(tab)
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .clip(MaterialTheme.shapes.medium)
+                    .testTag(tabTestTag(tab))
+                    .semantics { contentDescription = label }
                     .clickable { onChange(tab) }
                     .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -55,7 +62,7 @@ fun VoyageTabBar(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = tabLabel(tab),
+                    text = label,
                     color = if (selected) VoyageTokens.ink else VoyageTokens.muted,
                     style = MaterialTheme.typography.labelSmall,
                 )
@@ -75,4 +82,10 @@ private fun tabGlyph(tab: VoyageTab): String = when (tab) {
     VoyageTab.Home -> "⌂"
     VoyageTab.Wishlist -> "♡"
     VoyageTab.Profile -> "◉"
+}
+
+private fun tabTestTag(tab: VoyageTab): String = when (tab) {
+    VoyageTab.Home -> VoyageTestTags.TAB_HOME
+    VoyageTab.Wishlist -> VoyageTestTags.TAB_WISHLIST
+    VoyageTab.Profile -> VoyageTestTags.TAB_PROFILE
 }

@@ -1,0 +1,20 @@
+appId: com.example.shoptourr
+name: Offline banner a11y smoke
+tags:
+  - smoke
+  - a11y
+  - offline
+---
+# Requires a logged-in session with airplane mode / network off after login.
+# Run after auth_login.yaml with network disabled, or inject offline state.
+- launchApp
+- assertVisible:
+    id: tab_home
+- assertVisible:
+    id: tab_wishlist
+- assertVisible:
+    id: tab_profile
+- tapOn:
+    id: tab_profile
+- tapOn:
+    id: tab_home

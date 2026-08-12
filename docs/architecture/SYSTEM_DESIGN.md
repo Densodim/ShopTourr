@@ -158,8 +158,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Crash / observability | `Observability` facade + HTTP `request_id` breadcrumbs; swap `NoOp` → Sentry MP when DSN set | Facade wired |
 | Certificate pinning | `CertificatePinPolicy` + OkHttp `CertificatePinner` (Android); empty pins → fail-open; iOS TrustKit later | Facade wired |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
-| E2E | Maestro flows: auth → add purchase → offline sync | Planned |
-| A11y | Compose semantics + TalkBack/VoiceOver smoke in Maestro | Planned |
+| E2E | Maestro flows under `maestro/flows/`: auth → trip → purchase (+ tab a11y); local device gate | Wired (flows) |
+| A11y | Compose `testTag` + `contentDescription` on fields/tabs; TalkBack smoke via Maestro tab flow | Partial |
 | CI/CD | GitHub Actions `ci.yml`: `:shared:testAndroidHostTest` on push/PR; Fastlane/ASC later | Wired (unit) |
 | App size | Budget 40 MB install; monitor ABI splits | Planned |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |

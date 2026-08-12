@@ -1,0 +1,24 @@
+appId: com.example.shoptourr
+name: Auth login smoke
+tags:
+  - smoke
+  - auth
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: welcome_sign_in
+- tapOn:
+    id: welcome_sign_in
+- tapOn:
+    id: login_email
+- inputText: ${MAESTRO_EMAIL}
+- tapOn:
+    id: login_password
+- inputText: ${MAESTRO_PASSWORD}
+- tapOn:
+    id: login_submit
+- extendedWaitUntil:
+    visible:
+      id: home_root
+    timeout: 20000

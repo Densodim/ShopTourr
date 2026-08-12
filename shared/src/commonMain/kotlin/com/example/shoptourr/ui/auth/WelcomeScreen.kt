@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.ui.components.VoyageButton
@@ -13,6 +14,7 @@ import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun WelcomeScreen(
@@ -44,12 +46,17 @@ fun WelcomeScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(40.dp))
-        VoyageButton(text = t("create_account"), onClick = onSignUp)
+        VoyageButton(
+            text = t("create_account"),
+            onClick = onSignUp,
+            modifier = Modifier.testTag(VoyageTestTags.WELCOME_SIGN_UP),
+        )
         Spacer(Modifier.height(12.dp))
         VoyageButton(
             text = t("have_account"),
             onClick = onSignIn,
             variant = VoyageButtonVariant.Secondary,
+            modifier = Modifier.testTag(VoyageTestTags.WELCOME_SIGN_IN),
         )
     }
 }

@@ -1,0 +1,46 @@
+appId: com.example.shoptourr
+name: Auth → trip → purchase smoke
+tags:
+  - smoke
+  - purchase
+---
+- runFlow: auth_login.yaml
+- tapOn:
+    id: home_new_trip
+- tapOn:
+    id: new_trip_city
+- inputText: Lisbon
+- tapOn:
+    id: new_trip_country
+- inputText: Portugal
+- tapOn:
+    id: new_trip_start
+- inputText: "2026-08-01"
+- tapOn:
+    id: new_trip_end
+- inputText: "2026-08-07"
+- tapOn:
+    id: new_trip_budget
+- inputText: "1200"
+- tapOn:
+    id: new_trip_submit
+- extendedWaitUntil:
+    visible:
+      id: home_root
+    timeout: 20000
+- tapOn:
+    id: home_add_purchase
+- tapOn:
+    id: add_purchase_name
+- inputText: Pasteis
+- tapOn:
+    id: add_purchase_amount
+- inputText: "4.50"
+- tapOn:
+    id: add_purchase_submit
+- extendedWaitUntil:
+    visible:
+      id: home_root
+    timeout: 20000
+- assertVisible:
+    id: home_root

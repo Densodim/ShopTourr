@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.trip.NewTripIntent
 import com.example.shoptourr.presentation.trip.NewTripUiEvent
@@ -21,6 +22,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun NewTripScreen(
@@ -57,12 +59,14 @@ internal fun NewTripContent(
                 value = state.city,
                 onValueChange = { onIntent(NewTripIntent.CityChanged(it)) },
                 label = "Город",
+                testTag = VoyageTestTags.NEW_TRIP_CITY,
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.country,
                 onValueChange = { onIntent(NewTripIntent.CountryChanged(it)) },
                 label = "Страна",
+                testTag = VoyageTestTags.NEW_TRIP_COUNTRY,
             )
         }
         Spacer(Modifier.height(20.dp))
@@ -71,12 +75,14 @@ internal fun NewTripContent(
                 value = state.startDate,
                 onValueChange = { onIntent(NewTripIntent.StartDateChanged(it)) },
                 label = "Начало (YYYY-MM-DD)",
+                testTag = VoyageTestTags.NEW_TRIP_START,
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
                 value = state.endDate,
                 onValueChange = { onIntent(NewTripIntent.EndDateChanged(it)) },
                 label = "Конец (YYYY-MM-DD)",
+                testTag = VoyageTestTags.NEW_TRIP_END,
             )
         }
         Spacer(Modifier.height(20.dp))
@@ -85,6 +91,7 @@ internal fun NewTripContent(
                 value = state.budgetAmount,
                 onValueChange = { onIntent(NewTripIntent.BudgetChanged(it)) },
                 label = "Бюджет",
+                testTag = VoyageTestTags.NEW_TRIP_BUDGET,
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
@@ -125,6 +132,7 @@ internal fun NewTripContent(
             text = "Создать",
             onClick = { onIntent(NewTripIntent.Submit) },
             isLoading = state.isLoading,
+            modifier = Modifier.testTag(VoyageTestTags.NEW_TRIP_SUBMIT),
         )
     }
 }

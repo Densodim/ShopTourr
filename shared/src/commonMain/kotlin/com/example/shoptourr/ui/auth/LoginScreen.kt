@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.auth.AuthIntent
@@ -22,6 +23,7 @@ import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun LoginScreen(
@@ -83,6 +85,7 @@ internal fun LoginContent(
             value = state.email,
             onValueChange = { onIntent(AuthIntent.EmailChanged(it)) },
             label = t("email"),
+            testTag = VoyageTestTags.LOGIN_EMAIL,
         )
         Spacer(Modifier.height(12.dp))
         VoyageTextField(
@@ -90,6 +93,7 @@ internal fun LoginContent(
             onValueChange = { onIntent(AuthIntent.PasswordChanged(it)) },
             label = t("password"),
             isPassword = true,
+            testTag = VoyageTestTags.LOGIN_PASSWORD,
         )
         if (!state.isRegisterMode) {
             Spacer(Modifier.height(8.dp))
@@ -109,6 +113,7 @@ internal fun LoginContent(
             text = if (state.isRegisterMode) t("sign_up") else t("sign_in"),
             onClick = { onIntent(AuthIntent.Submit) },
             isLoading = state.isLoading,
+            modifier = Modifier.testTag(VoyageTestTags.LOGIN_SUBMIT),
         )
         Spacer(Modifier.height(8.dp))
         VoyageButton(

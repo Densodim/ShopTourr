@@ -15,6 +15,7 @@ import com.example.shoptourr.ui.i18n.VoyageLocaleProvider
 import com.example.shoptourr.ui.navigation.MainShellVoyageScreen
 import com.example.shoptourr.ui.navigation.WelcomeVoyageScreen
 import com.example.shoptourr.ui.navigation.applyDeepLink
+import com.example.shoptourr.ui.testing.VoyageTestTagRoot
 import com.example.shoptourr.ui.theme.VoyageTheme
 import org.koin.compose.koinInject
 
@@ -22,6 +23,7 @@ import org.koin.compose.koinInject
 @Preview
 fun App() {
     VoyageTheme {
+        VoyageTestTagRoot {
         val syncScheduler = koinInject<SyncScheduler>()
         val forceUpdateViewModel = koinInject<ForceUpdateViewModel>()
         val pendingDeepLinks = koinInject<PendingDeepLinkStore>()
@@ -47,6 +49,7 @@ fun App() {
                     SlideTransition(navigator)
                 }
             }
+        }
         }
     }
 }
