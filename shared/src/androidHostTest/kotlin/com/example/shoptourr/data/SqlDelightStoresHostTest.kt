@@ -8,6 +8,7 @@ import com.example.shoptourr.data.local.SqlDelightPurchaseLocalStore
 import com.example.shoptourr.data.local.SqlDelightRouteLocalStore
 import com.example.shoptourr.data.local.SqlDelightStatsLocalStore
 import com.example.shoptourr.data.local.SqlDelightTaxFreeLocalStore
+import com.example.shoptourr.data.local.SqlDelightLocalCacheInventory
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
 import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
@@ -245,5 +246,99 @@ class SqlDelightStoresHostTest {
         assertEquals(0, route.observe("lisbon").first()!!.stopCount)
         assertEquals("10.00", stats.observe("lisbon").first()!!.totalSpent.toDecimalString())
         assertEquals(ExportJobStatus.QUEUED, export.observe("lisbon").first()!!.status)
+    }
+
+    @Test
+    fun `clearAll wipes trips purchases wishlist and outbox`() = runTest {
+        val db = database()
+        val trips = SqlDelightTripLocalStore(db)
+        val purchases = SqlDelightPurchaseLocalStore(db)
+        val wishlist = SqlDelightWishlistLocalStore(db)
+        val outbox = SqlDelightSyncOutbox(db)
+        val vat = VatCalculator.breakdown(Money.parse("4.50", "EUR"), "23", true)
+
+        trips.replaceAll(
+            listOf(
+                TripSummary(
+                    id = "1",
+                    city = "Lisbon",
+                    country = "Portugal",
+                    status = TripStatus.ACTIVE,
+                    startDate = "2026-04-12",
+                    endDate = "2026-04-19",
+                    budget = Money.parse("1200.00", "EUR"),
+                    spent = Money.parse("100.00", "EUR"),
+                    purchaseCount = 1,
+                    dayCount = 7,
+                ),
+            ),
+        )
+        purchases.upsert(
+            Purchase(
+                id = "p1",
+                tripId = "1",
+                name = "Pasteis",
+                category = PurchaseCategory.FOOD,
+                amount = vat.gross,
+                vat = vat,
+                taxRefundEligible = false,
+                place = "Belem",
+                purchaseDate = "2026-04-15",
+                purchaseTime = "10:24",
+                pendingSync = true,
+            ),
+        )
+        wishlist.upsert(
+            WishlistItem(
+                id = "w1",
+                name = "Tile",
+                city = "Lisbon",
+                targetPrice = Money.parse("20.00", "EUR"),
+                createdAt = "2026-04-15T00:00:00Z",
+            ),
+        )
+        outbox.enqueue(
+            SyncOutboxEntry(
+                id = "o1",
+                type = SyncMutationType.CREATE_PURCHASE,
+                payloadJson = "{}",
+                idempotencyKey = "k1",
+                createdAtEpochMs = 1L,
+            ),
+        )
+
+        trips.clearAll()
+        purchases.clearAll()
+        wishlist.clearAll()
+        outbox.clearAll()
+
+        assertTrue(trips.all().isEmpty())
+        assertTrue(purchases.observeByTrip("1").first().isEmpty())
+        assertTrue(wishlist.all().isEmpty())
+        assertTrue(outbox.pending().isEmpty())
+    }
+
+    @Test
+    fun `trip cache inventory evicts by trip id`() = runTest {
+        val db = database()
+        val taxFree = SqlDelightTaxFreeLocalStore(db, clock = { 1_000L })
+        taxFree.save(
+            TaxFreeSummary(
+                tripId = "old",
+                rules = TaxFreeRules(
+                    currency = "EUR",
+                    minimumPurchase = Money.parse("50.00", "EUR"),
+                    estimatedRefundRate = "0.13",
+                    regionLabel = "EU",
+                ),
+                eligibleCount = 0,
+                eligibleTotal = Money.parse("0.00", "EUR"),
+                estimatedRefundTotal = Money.parse("10.00", "EUR"),
+                items = emptyList(),
+            ),
+        )
+        val inventory = SqlDelightLocalCacheInventory(db)
+        inventory.evictTripCache(setOf("old"))
+        assertTrue(inventory.tripCacheRecords().isEmpty())
     }
 }

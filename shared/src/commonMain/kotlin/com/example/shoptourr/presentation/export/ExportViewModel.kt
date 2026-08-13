@@ -1,12 +1,13 @@
 package com.example.shoptourr.presentation.export
 
-import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateExportDraft
 import com.example.shoptourr.domain.model.ExportFormat
 import com.example.shoptourr.domain.model.ExportJob
+import com.example.shoptourr.domain.model.FeatureFlag
 import com.example.shoptourr.domain.usecase.CreateExportUseCase
 import com.example.shoptourr.domain.usecase.ObserveExportJobUseCase
+import com.example.shoptourr.domain.usecase.ObserveFeatureFlagUseCase
 import com.example.shoptourr.domain.usecase.ObservePremiumUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -26,6 +27,7 @@ data class ExportUiState(
     val isLoading: Boolean = false,
     val isPolling: Boolean = false,
     val isPremium: Boolean = false,
+    val pdfEnabled: Boolean = true,
     val format: ExportFormat = ExportFormat.PDF,
     val includeTaxFree: Boolean = true,
     val includeDiary: Boolean = false,
@@ -52,6 +54,7 @@ class ExportViewModel(
     private val createExport: CreateExportUseCase,
     private val refreshExportJob: RefreshExportJobUseCase,
     private val observePremium: ObservePremiumUseCase,
+    private val observeFeatureFlag: ObserveFeatureFlagUseCase? = null,
     private val pollIntervalMs: Long = 1_000L,
 ) : BaseViewModel<ExportUiState, ExportUiEvent>(ExportUiState(tripId = tripId)) {
 
@@ -63,6 +66,18 @@ class ExportViewModel(
             observePremium().collectLatest { premium ->
                 isPremium = premium
                 updateState { copy(isPremium = premium) }
+            }
+        }
+        observeFeatureFlag?.let { flags ->
+            launch {
+                flags(FeatureFlag.EXPORT_PDF).collectLatest { enabled ->
+                    updateState {
+                        copy(
+                            pdfEnabled = enabled,
+                            format = if (!enabled && format == ExportFormat.PDF) ExportFormat.CSV else format,
+                        )
+                    }
+                }
             }
         }
         launch {
@@ -89,13 +104,14 @@ class ExportViewModel(
 
     private fun create() {
         launch {
-            if (state.value.format == ExportFormat.PDF && !isPremium) {
+            if (state.value.format == ExportFormat.PDF && (!isPremium || !state.value.pdfEnabled)) {
                 updateState {
                     copy(
                         isLoading = false,
-                        error = AppError.Validation("premium").toUiError().copy(
-                            title = "Нужен Premium",
-                            message = "PDF-экспорт доступен на Plus или Pro",
+                        error = UiError(
+                            titleKey = "error_premium_title",
+                            messageKey = "error_premium_message",
+                            isRetryable = false,
                         ),
                     )
                 }

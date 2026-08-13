@@ -61,4 +61,31 @@ class AuthRepositoryIntegrationTest {
         assertEquals("access-token", tokenStore.accessToken())
         assertEquals("refresh-token", tokenStore.refreshToken())
     }
+
+    @Test
+    fun `logout clears tokens even when api fails`() = runTest {
+        val engine = MockEngine { request ->
+            require(request.url.encodedPath.endsWith("/auth/logout"))
+            respond(
+                content = ByteReadChannel("""{"title":"down"}"""),
+                status = HttpStatusCode.InternalServerError,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val client = createVoyageHttpClient(
+            baseUrl = "https://api.test",
+            engine = engine,
+            tokenProvider = { "access-token" },
+        )
+        val tokenStore = SettingsTokenStore(MapSettings())
+        tokenStore.saveTokens("access-token", "refresh-token")
+        val repo = AuthRepositoryImpl(AuthApi(client, "https://api.test"), tokenStore)
+
+        val result = repo.logout()
+
+        assertTrue(result.isFailure)
+        assertEquals(null, tokenStore.accessToken())
+        assertEquals(null, tokenStore.refreshToken())
+        assertTrue(!repo.isLoggedIn())
+    }
 }

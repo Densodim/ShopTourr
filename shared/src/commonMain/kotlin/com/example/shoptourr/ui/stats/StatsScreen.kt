@@ -25,6 +25,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun StatsScreen(
@@ -55,10 +56,10 @@ internal fun StatsContent(
     onIntent: (StatsIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Статистика", onBack = { onIntent(StatsIntent.Back) })
+        VoyageTopBar(title = t("stats"), onBack = { onIntent(StatsIntent.Back) })
         Spacer(Modifier.height(12.dp))
         VoyageButton(
-            text = "Обновить",
+            text = t("see_all"),
             onClick = { onIntent(StatsIntent.Refresh) },
             variant = VoyageButtonVariant.Secondary,
             isLoading = state.isLoading && state.stats != null,
@@ -71,9 +72,9 @@ internal fun StatsContent(
         when {
             state.isLoading && state.stats == null -> LoadingBlock(label = "Считаем…")
             state.stats == null -> EmptyState(
-                title = "Нет статистики",
-                message = "Появятся после покупок в поездке",
-                actionLabel = "Обновить",
+                title = t("stats"),
+                message = t("purchases"),
+                actionLabel = t("see_all"),
                 onAction = { onIntent(StatsIntent.Refresh) },
             )
             else -> {
@@ -105,7 +106,7 @@ internal fun StatsContent(
                     }
                 }
                 Spacer(Modifier.height(20.dp))
-                VoyageSection(title = "По категориям") {
+                VoyageSection(title = t("by_category")) {
                     stats.byCategory.forEach { item ->
                         Text(
                             "${item.category.name.lowercase()}: ${item.amount.toDecimalString()} (${item.share})",
@@ -115,7 +116,7 @@ internal fun StatsContent(
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                VoyageSection(title = "По дням") {
+                VoyageSection(title = t("by_day")) {
                     stats.byDay.forEach { day ->
                         Text(
                             "${day.date}: ${day.amount.toDecimalString()} · ${day.purchaseCount}",

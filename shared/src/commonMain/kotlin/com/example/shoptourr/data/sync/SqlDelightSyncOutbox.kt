@@ -70,6 +70,12 @@ class SqlDelightSyncOutbox(
         )
     }
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.syncOutboxEntityQueries.deleteAll()
+        }
+    }
+
     private fun pendingCountUnlocked(): Int =
         db.syncOutboxEntityQueries.countPending().executeAsOne().toInt()
 

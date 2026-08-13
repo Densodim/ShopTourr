@@ -23,6 +23,8 @@ import com.example.shoptourr.data.local.SqlDelightStatsLocalStore
 import com.example.shoptourr.data.local.SqlDelightTaxFreeLocalStore
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
 import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
+import com.example.shoptourr.data.local.SqlDelightLocalCacheInventory
+import com.example.shoptourr.data.local.LocalCacheInventory
 import com.example.shoptourr.data.local.StatsLocalStore
 import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
@@ -37,15 +39,22 @@ import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
+import com.example.shoptourr.data.platform.StaticAppBuildInfo
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
+import com.example.shoptourr.domain.model.ClientPlatform
+import com.example.shoptourr.domain.repository.AppBuildInfo
 import com.russhwolf.settings.Settings
-import kotlinx.datetime.Clock
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.Platform
+import com.example.shoptourr.epochMillis
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform.getKoinOrNull
+import platform.Foundation.NSBundle
 import platform.UIKit.UIViewController
 
 private val iosDatabaseModule = module {
-    single { DatabaseDriverFactory() }
+    single<SecureKeyValueStore> { IosKeychainSecureStore() }
+    single { DatabaseDriverFactory(get()) }
     single { createVoyageDatabase(get()) }
     single<TripLocalStore> { SqlDelightTripLocalStore(get()) }
     single<PurchaseLocalStore> { SqlDelightPurchaseLocalStore(get()) }
@@ -56,6 +65,7 @@ private val iosDatabaseModule = module {
     single<RouteLocalStore> { SqlDelightRouteLocalStore(get()) }
     single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
     single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
+    single<LocalCacheInventory> { SqlDelightLocalCacheInventory(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
     single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
     single<AnalyticsSink> { NoOpAnalyticsSink }
@@ -64,15 +74,24 @@ private val iosDatabaseModule = module {
             queue = get(),
             sink = get(),
             isOnline = { true },
-            clock = { Clock.System.now().toEpochMilliseconds() },
+            clock = { epochMillis() },
         )
     }
     single<ConnectivityMonitor> { IosConnectivityMonitor() }
-    single<SecureKeyValueStore> { IosKeychainSecureStore() }
     single<TokenStore> {
         SecureTokenStore(
             secure = get(),
             legacy = SettingsTokenStore(get<Settings>()),
+        )
+    }
+    single<AppBuildInfo> {
+        val raw = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
+        val buildNumber = raw?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+        @OptIn(ExperimentalNativeApi::class)
+        StaticAppBuildInfo(
+            platform = ClientPlatform.IOS,
+            buildNumber = buildNumber,
+            isReleaseBuild = !Platform.isDebugBinary,
         )
     }
 }

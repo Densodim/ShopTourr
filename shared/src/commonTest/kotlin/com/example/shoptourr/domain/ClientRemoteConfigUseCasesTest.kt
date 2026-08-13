@@ -73,9 +73,13 @@ class ObserveFeatureFlagUseCaseTest {
     }
 
     @Test
-    fun `defaults to false when config missing`() = runTest {
+    fun `defaults to FeatureFlags when config missing`() = runTest {
         val repo = FakeClientRemoteConfigRepository(config = null)
         ObserveFeatureFlagUseCase(repo).invoke(FeatureFlag.OCR_ASSIST).test {
+            assertTrue(awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+        ObserveFeatureFlagUseCase(repo).invoke(FeatureFlag.NATIVE_MAPS).test {
             assertFalse(awaitItem())
             cancelAndIgnoreRemainingEvents()
         }

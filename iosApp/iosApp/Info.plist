@@ -8,5 +8,27 @@
 	<string>Voyage needs camera access to photograph receipts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Voyage needs photo library access to attach receipt images.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.example.shoptourr</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>voyage</string>
+			</array>
+		</dict>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.example.shoptourr.sync</string>
+	</array>
 </dict>
 </plist>

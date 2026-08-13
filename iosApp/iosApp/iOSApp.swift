@@ -1,9 +1,12 @@
 import SwiftUI
 import UIKit
 import UserNotifications
+import BackgroundTasks
 import Shared
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    static let syncTaskId = "com.example.shoptourr.sync"
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
@@ -15,6 +18,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                 application.registerForRemoteNotifications()
             }
         }
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.syncTaskId, using: nil) { task in
+            Self.handleSync(task: task)
+        }
+        Self.scheduleSync()
         return true
     }
 
@@ -32,6 +39,22 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         DevicePushTokenHolder.shared.update(token: nil)
     }
+
+    static func handleSync(task: BGTask) {
+        scheduleSync()
+        IosBackgroundSyncKt.drainOutboxFromBackground { success in
+            task.setTaskCompleted(success: success.boolValue)
+        }
+        task.expirationHandler = {
+            task.setTaskCompleted(success: false)
+        }
+    }
+
+    static func scheduleSync() {
+        let request = BGAppRefreshTaskRequest(identifier: syncTaskId)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+        try? BGTaskScheduler.shared.submit(request)
+    }
 }
 
 @main
@@ -41,6 +64,9 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onOpenURL { url in
+                    DeepLinkIntakeKt.offerPendingDeepLinkUri(uri: url.absoluteString)
+                }
         }
     }
 }

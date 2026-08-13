@@ -17,6 +17,7 @@ import com.example.shoptourr.data.remote.dto.taxfree.TaxFreeRulesDto
 import com.example.shoptourr.data.remote.dto.taxfree.TaxFreeSummaryDto
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.sync.CreateDiaryPayload
+import com.example.shoptourr.data.sync.DeleteDiaryPayload
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxEntry
@@ -93,8 +94,19 @@ class DiaryRepositoryImpl(
 
     override suspend fun delete(tripId: String, entryId: String): Result<Unit> =
         runCatching {
-            api.delete(tripId, entryId)
+            val now = clock()
             localStore.removeEntry(tripId, entryId)
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-del-diary-$entryId-$now",
+                    type = SyncMutationType.DELETE_DIARY,
+                    payloadJson = SyncPayloadCodec.encodeDeleteDiary(
+                        DeleteDiaryPayload(tripId = tripId, entryId = entryId),
+                    ),
+                    idempotencyKey = "del-diary-$entryId-$now",
+                    createdAtEpochMs = now,
+                ),
+            )
         }.mapHttpAppError()
 }
 

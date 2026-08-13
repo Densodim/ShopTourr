@@ -8,6 +8,7 @@ import com.example.shoptourr.domain.usecase.AddTravelerUseCase
 import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
+import com.example.shoptourr.domain.usecase.RefreshPurchasesUseCase
 import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
@@ -65,6 +66,7 @@ class TripDetailViewModel(
     private val addTraveler: AddTravelerUseCase,
     private val inviteTraveler: InviteTravelerUseCase,
     private val refreshExchangeRate: RefreshExchangeRateUseCase,
+    private val refreshPurchases: RefreshPurchasesUseCase? = null,
 ) : BaseViewModel<TripDetailUiState, TripDetailUiEvent>(TripDetailUiState(tripId = tripId)) {
 
     init {
@@ -76,8 +78,8 @@ class TripDetailViewModel(
                         detail = detail,
                         error = if (detail == null) {
                             UiError(
-                                title = "Not Found",
-                                message = "Trip was not found",
+                                titleKey = "error_not_found_title",
+                                messageKey = "error_not_found_message",
                                 isRetryable = false,
                             )
                         } else {
@@ -116,7 +118,10 @@ class TripDetailViewModel(
         launch {
             updateState { copy(isLoading = true, error = null) }
             refreshTrip(state.value.tripId)
-                .onSuccess { updateState { copy(isLoading = false) } }
+                .onSuccess {
+                    refreshPurchases?.invoke(state.value.tripId)
+                    updateState { copy(isLoading = false) }
+                }
                 .onFailure { handleFailure(it) }
         }
     }

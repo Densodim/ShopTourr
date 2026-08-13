@@ -52,6 +52,18 @@ object CertificatePinPolicy {
         isReleaseBuild && config.hasPins
 }
 
+object CertificatePinMatcher {
+    fun pinsForHost(hostname: String, config: CertificatePinConfig): List<PublicKeyPin> {
+        for (host in config.hosts) {
+            if (hostname.equals(host.host, ignoreCase = true)) return host.pins
+            if (host.includeSubdomains && hostname.endsWith(".${host.host}", ignoreCase = true)) {
+                return host.pins
+            }
+        }
+        return emptyList()
+    }
+}
+
 /** Default config until real SPKI hashes are checked in (empty → pinning off). */
 object VoyageCertificatePins {
     val configured: CertificatePinConfig = CertificatePinConfig.Empty

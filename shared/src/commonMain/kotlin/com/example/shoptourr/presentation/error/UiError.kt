@@ -1,13 +1,22 @@
 package com.example.shoptourr.presentation.error
 
 import com.example.shoptourr.domain.error.AppError
+import com.example.shoptourr.i18n.AppLocale
+import com.example.shoptourr.i18n.VoyageI18n
 
 data class UiError(
-    val title: String,
-    val message: String,
+    val titleKey: String,
+    val messageKey: String,
     val isRetryable: Boolean,
     val action: UiErrorAction? = null,
-)
+    val messageOverride: String? = null,
+) {
+    val title: String get() = VoyageI18n.t(AppLocale.RU, titleKey)
+    val message: String get() = messageOverride ?: VoyageI18n.t(AppLocale.RU, messageKey)
+
+    fun title(locale: AppLocale): String = VoyageI18n.t(locale, titleKey)
+    fun message(locale: AppLocale): String = messageOverride ?: VoyageI18n.t(locale, messageKey)
+}
 
 sealed interface UiErrorAction {
     data object Logout : UiErrorAction
@@ -16,54 +25,57 @@ sealed interface UiErrorAction {
 
 fun AppError.toUiError(): UiError = when (this) {
     AppError.Network -> UiError(
-        title = "Нет сети",
-        message = "Проверьте подключение к интернету",
+        titleKey = "error_network_title",
+        messageKey = "error_network_message",
         isRetryable = true,
     )
     AppError.Timeout -> UiError(
-        title = "Таймаут",
-        message = "Сервер не ответил вовремя",
+        titleKey = "error_timeout_title",
+        messageKey = "error_timeout_message",
         isRetryable = true,
     )
     AppError.Unauthorized -> UiError(
-        title = "Сессия истекла",
-        message = "Войдите в аккаунт снова",
+        titleKey = "error_unauthorized_title",
+        messageKey = "error_unauthorized_message",
         isRetryable = false,
         action = UiErrorAction.Logout,
     )
     AppError.NotFound -> UiError(
-        title = "Не найдено",
-        message = "Запрошенные данные отсутствуют",
+        titleKey = "error_not_found_title",
+        messageKey = "error_not_found_message",
         isRetryable = false,
     )
     AppError.Conflict -> UiError(
-        title = "Конфликт",
-        message = "Изменение конфликтует с данными на сервере",
+        titleKey = "error_conflict_title",
+        messageKey = "error_conflict_message",
         isRetryable = true,
     )
     AppError.DatabaseError -> UiError(
-        title = "Ошибка хранения",
-        message = "Не удалось сохранить данные",
+        titleKey = "error_storage_title",
+        messageKey = "error_storage_message",
         isRetryable = true,
     )
     is AppError.Server -> UiError(
-        title = "Ошибка сервера",
-        message = "Что-то пошло не так. Попробуйте позже",
+        titleKey = "error_server_title",
+        messageKey = "error_server_message",
         isRetryable = true,
     )
     is AppError.Api -> UiError(
-        title = "Запрос не выполнен",
-        message = message ?: "HTTP $code",
+        titleKey = "error_api_title",
+        messageKey = "error_api_message",
+        messageOverride = message ?: "HTTP $code",
         isRetryable = code in 500..599,
     )
     is AppError.Validation -> UiError(
-        title = "Проверьте поля",
-        message = message ?: "Некорректные данные",
+        titleKey = "error_validation_title",
+        messageKey = "error_validation_message",
+        messageOverride = message,
         isRetryable = false,
     )
     is AppError.Unknown -> UiError(
-        title = "Что-то пошло не так",
-        message = origin?.message ?: "Непредвиденная ошибка",
+        titleKey = "error_unknown_title",
+        messageKey = "error_unknown_message",
+        messageOverride = origin?.message,
         isRetryable = true,
     )
 }

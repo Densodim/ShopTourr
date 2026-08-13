@@ -1,7 +1,9 @@
 package com.example.shoptourr.presentation.map
 
 import com.example.shoptourr.domain.error.asAppError
+import com.example.shoptourr.domain.model.FeatureFlag
 import com.example.shoptourr.domain.model.TripRoute
+import com.example.shoptourr.domain.usecase.ObserveFeatureFlagUseCase
 import com.example.shoptourr.domain.usecase.ObserveRouteUseCase
 import com.example.shoptourr.domain.usecase.RefreshRouteUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 data class RouteUiState(
     val tripId: String,
     val isLoading: Boolean = true,
+    val nativeMapsEnabled: Boolean = false,
     val route: TripRoute? = null,
     val error: UiError? = null,
 ) : UiState
@@ -34,9 +37,17 @@ class RouteViewModel(
     tripId: String,
     private val observeRoute: ObserveRouteUseCase,
     private val refreshRoute: RefreshRouteUseCase,
+    private val observeFeatureFlag: ObserveFeatureFlagUseCase? = null,
 ) : BaseViewModel<RouteUiState, RouteUiEvent>(RouteUiState(tripId = tripId)) {
 
     init {
+        observeFeatureFlag?.let { flags ->
+            launch {
+                flags(FeatureFlag.NATIVE_MAPS).collectLatest { enabled ->
+                    updateState { copy(nativeMapsEnabled = enabled) }
+                }
+            }
+        }
         launch {
             observeRoute(state.value.tripId).collectLatest { route ->
                 updateState { copy(route = route, isLoading = false) }

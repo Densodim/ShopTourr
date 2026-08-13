@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 interface RouteLocalStore {
     fun observe(tripId: String): Flow<TripRoute?>
     suspend fun save(route: TripRoute)
+    suspend fun clearAll()
 }
 
 class InMemoryRouteLocalStore : RouteLocalStore {
@@ -19,11 +20,16 @@ class InMemoryRouteLocalStore : RouteLocalStore {
     override suspend fun save(route: TripRoute) {
         byTrip.value = byTrip.value + (route.tripId to route)
     }
+
+    override suspend fun clearAll() {
+        byTrip.value = emptyMap()
+    }
 }
 
 interface StatsLocalStore {
     fun observe(tripId: String): Flow<TripStats?>
     suspend fun save(stats: TripStats)
+    suspend fun clearAll()
 }
 
 class InMemoryStatsLocalStore : StatsLocalStore {
@@ -33,5 +39,9 @@ class InMemoryStatsLocalStore : StatsLocalStore {
 
     override suspend fun save(stats: TripStats) {
         byTrip.value = byTrip.value + (stats.tripId to stats)
+    }
+
+    override suspend fun clearAll() {
+        byTrip.value = emptyMap()
     }
 }

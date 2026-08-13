@@ -15,6 +15,7 @@ interface DiaryLocalStore {
     suspend fun upsertEntry(entry: DiaryEntry)
     suspend fun replaceId(oldId: String, entry: DiaryEntry)
     suspend fun removeEntry(tripId: String, entryId: String)
+    suspend fun clearAll()
 }
 
 class InMemoryDiaryLocalStore : DiaryLocalStore {
@@ -48,6 +49,10 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
         byTrip.value = byTrip.value + (tripId to group(existing))
     }
 
+    override suspend fun clearAll() {
+        byTrip.value = emptyMap()
+    }
+
     private fun group(entries: List<DiaryEntry>): List<DiaryDayGroup> =
         entries.groupBy { it.entryDate }
             .entries
@@ -58,6 +63,7 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
 interface TaxFreeLocalStore {
     fun observe(tripId: String): Flow<TaxFreeSummary?>
     suspend fun save(summary: TaxFreeSummary)
+    suspend fun clearAll()
 }
 
 class InMemoryTaxFreeLocalStore : TaxFreeLocalStore {
@@ -69,11 +75,16 @@ class InMemoryTaxFreeLocalStore : TaxFreeLocalStore {
     override suspend fun save(summary: TaxFreeSummary) {
         byTrip.value = byTrip.value + (summary.tripId to summary)
     }
+
+    override suspend fun clearAll() {
+        byTrip.value = emptyMap()
+    }
 }
 
 interface AlertsLocalStore {
     fun observe(tripId: String): Flow<List<BudgetAlert>>
     suspend fun replaceAll(tripId: String, alerts: List<BudgetAlert>)
+    suspend fun clearAll()
 }
 
 class InMemoryAlertsLocalStore : AlertsLocalStore {
@@ -84,5 +95,9 @@ class InMemoryAlertsLocalStore : AlertsLocalStore {
 
     override suspend fun replaceAll(tripId: String, alerts: List<BudgetAlert>) {
         byTrip.value = byTrip.value + (tripId to alerts)
+    }
+
+    override suspend fun clearAll() {
+        byTrip.value = emptyMap()
     }
 }

@@ -2,6 +2,7 @@ package com.example.shoptourr.data.repository
 
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.remote.PurchaseApi
+import com.example.shoptourr.data.remote.dto.purchase.toDomainPurchase
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.sync.CreatePurchasePayload
 import com.example.shoptourr.data.sync.DeletePurchasePayload
@@ -12,6 +13,7 @@ import com.example.shoptourr.data.sync.SyncPayloadCodec
 import com.example.shoptourr.data.sync.UpdatePurchasePayload
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseDraft
+import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.VatCalculator
 import com.example.shoptourr.domain.repository.PurchaseRepository
 import kotlinx.coroutines.flow.Flow
@@ -148,4 +150,23 @@ class PurchaseRepositoryImpl(
 
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =
         localStore.observeByTrip(tripId)
+
+    override suspend fun refreshPage(
+        tripId: String,
+        request: PurchasePageRequest,
+    ): Result<List<Purchase>> =
+        runCatching {
+            val response = api.fetchPurchases(
+                tripId = tripId,
+                page = request.page,
+                size = request.size,
+                afterDate = request.afterDate,
+                afterId = request.afterId,
+            )
+            val purchases = response.days.flatMap { day -> day.items }.map { dto ->
+                dto.toDomainPurchase(pendingSync = false)
+            }
+            purchases.forEach { localStore.upsert(it) }
+            purchases
+        }.mapHttpAppError()
 }

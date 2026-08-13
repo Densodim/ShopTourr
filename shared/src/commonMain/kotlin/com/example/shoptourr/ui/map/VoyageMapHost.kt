@@ -11,7 +11,12 @@ import com.example.shoptourr.domain.model.RouteStop
 fun VoyageMapHost(
     stops: List<RouteStop>,
     caption: String? = null,
+    nativeMapsEnabled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    RouteMapCanvas(stops = stops, caption = caption, modifier = modifier)
+    RouteMapCanvas(
+        stops = stops,
+        caption = if (nativeMapsEnabled) caption else caption,
+        modifier = modifier,
+    )
 }

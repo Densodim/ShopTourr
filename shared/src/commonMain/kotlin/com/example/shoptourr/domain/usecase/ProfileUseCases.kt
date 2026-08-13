@@ -6,6 +6,7 @@ import com.example.shoptourr.domain.model.UpdateProfileDraft
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.model.UserProfile
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.repository.LocalSessionStore
 import com.example.shoptourr.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -65,7 +66,11 @@ class UpdatePreferencesUseCase(
 
 class LogoutUseCase(
     private val authRepository: AuthRepository,
+    private val localSessionStore: LocalSessionStore? = null,
 ) {
-    suspend operator fun invoke(allSessions: Boolean = false): Result<Unit> =
+    suspend operator fun invoke(allSessions: Boolean = false): Result<Unit> {
         authRepository.logout(allSessions)
+        localSessionStore?.clearUserData()
+        return Result.success(Unit)
+    }
 }

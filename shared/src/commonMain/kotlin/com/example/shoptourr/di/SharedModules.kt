@@ -4,13 +4,15 @@ import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.hash.createDefaultContentChecksum
 import com.example.shoptourr.data.media.FileKitReceiptImageCompressor
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
-import com.example.shoptourr.data.local.InMemoryClientRemoteConfigStore
 import com.example.shoptourr.data.local.ClientRemoteConfigStore
+import com.example.shoptourr.data.local.CompositeLocalSessionStore
 import com.example.shoptourr.data.local.InMemoryDiaryLocalStore
+import com.example.shoptourr.data.platform.ClientReleasePolicy
 import com.example.shoptourr.data.platform.createDefaultAppBuildInfo
 import com.example.shoptourr.data.repository.ClientRemoteConfigRepositoryImpl
 import com.example.shoptourr.domain.repository.AppBuildInfo
 import com.example.shoptourr.domain.repository.ClientRemoteConfigRepository
+import com.example.shoptourr.domain.repository.LocalSessionStore
 import com.example.shoptourr.domain.usecase.EvaluateForceUpdateUseCase
 import com.example.shoptourr.domain.usecase.ObserveFeatureFlagUseCase
 import com.example.shoptourr.domain.usecase.RefreshClientRemoteConfigUseCase
@@ -27,6 +29,7 @@ import com.example.shoptourr.data.local.DiaryLocalStore
 import com.example.shoptourr.data.local.ExportLocalStore
 import com.example.shoptourr.data.local.PurchaseLocalStore
 import com.example.shoptourr.data.local.RouteLocalStore
+import com.example.shoptourr.data.local.SettingsClientRemoteConfigStore
 import com.example.shoptourr.data.local.SettingsUserLocalStore
 import com.example.shoptourr.data.local.StatsLocalStore
 import com.example.shoptourr.data.local.TaxFreeLocalStore
@@ -34,9 +37,20 @@ import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
-import com.example.shoptourr.observability.NoOpObservability
+import com.example.shoptourr.data.local.InMemoryLocalCacheInventory
+import com.example.shoptourr.data.local.LocalCacheInventory
+import com.example.shoptourr.data.sync.BackgroundSyncScheduler
+import com.example.shoptourr.data.sync.InMemorySyncConflictNotifier
+import com.example.shoptourr.data.sync.NoOpBackgroundSyncScheduler
+import com.example.shoptourr.domain.repository.SyncConflictNotifier
+import com.example.shoptourr.domain.usecase.AcknowledgeSyncConflictUseCase
+import com.example.shoptourr.domain.usecase.EvictLocalCacheUseCase
+import com.example.shoptourr.domain.usecase.ObserveSyncConflictsUseCase
+import com.example.shoptourr.domain.usecase.RefreshPurchasesUseCase
 import com.example.shoptourr.observability.Observability
+import com.example.shoptourr.observability.ObservabilityFactory
 import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.NoOpAnalytics
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
@@ -173,6 +187,7 @@ import kotlin.random.Random
 
 data class AppConfig(
     val apiBaseUrl: String = "https://api.shoptourr.com/api",
+    val sentryDsn: String? = null,
 )
 
 val dataModule = module {
@@ -189,9 +204,29 @@ val dataModule = module {
     singleOf(::InMemoryRouteLocalStore) { bind<RouteLocalStore>() }
     singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
     singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
-    singleOf(::InMemoryClientRemoteConfigStore) { bind<ClientRemoteConfigStore>() }
+    single<ClientRemoteConfigStore> { SettingsClientRemoteConfigStore(get()) }
     single { PendingDeepLinkStore() }
-    single<Observability> { NoOpObservability }
+    single<LocalSessionStore> {
+        CompositeLocalSessionStore(
+            userLocalStore = get(),
+            tripLocalStore = get(),
+            purchaseLocalStore = get(),
+            wishlistLocalStore = get(),
+            diaryLocalStore = get(),
+            taxFreeLocalStore = get(),
+            alertsLocalStore = get(),
+            routeLocalStore = get(),
+            statsLocalStore = get(),
+            exportLocalStore = get(),
+            outbox = get(),
+            analyticsQueue = getOrNull<AnalyticsEventQueue>(),
+            pendingDeepLinks = get(),
+        )
+    }
+    single<LocalCacheInventory> { InMemoryLocalCacheInventory() }
+    single<SyncConflictNotifier> { InMemorySyncConflictNotifier() }
+    single<BackgroundSyncScheduler> { NoOpBackgroundSyncScheduler() }
+    single<Observability> { ObservabilityFactory.create(get<AppConfig>().sentryDsn) }
     single<Analytics> { NoOpAnalytics }
     single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
@@ -222,7 +257,9 @@ val dataModule = module {
                     )
                 }
             },
-            enableLogging = true,
+            enableLogging = ClientReleasePolicy.enableHttpLogging(
+                isReleaseBuild = get<AppBuildInfo>().isReleaseBuild,
+            ),
             observability = get(),
         )
     }
@@ -339,6 +376,7 @@ val dataModule = module {
             diaryApi = get(),
             diaryLocalStore = get(),
             clock = { epochMillis() },
+            conflictNotifier = get(),
         )
     }
     singleOf(::SyncRepositoryImpl) { bind<SyncRepository>() }
@@ -363,7 +401,12 @@ val domainModule = module {
     factoryOf(::RequestPasswordResetUseCase)
     factoryOf(::ObserveConnectivityUseCase)
     factoryOf(::IsLoggedInUseCase)
-    factoryOf(::LogoutUseCase)
+    factory {
+        LogoutUseCase(
+            authRepository = get(),
+            localSessionStore = get(),
+        )
+    }
     factoryOf(::ObserveHomeUseCase)
     factoryOf(::DrainSyncOutboxUseCase)
     factory {
@@ -407,7 +450,12 @@ val domainModule = module {
             drainSyncOutbox = get(),
         )
     }
-    factoryOf(::DeleteWishlistItemUseCase)
+    factory {
+        DeleteWishlistItemUseCase(
+            wishlistRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::ObserveDiaryUseCase)
     factoryOf(::RefreshDiaryUseCase)
     factory {
@@ -416,7 +464,12 @@ val domainModule = module {
             drainSyncOutbox = get(),
         )
     }
-    factoryOf(::DeleteDiaryEntryUseCase)
+    factory {
+        DeleteDiaryEntryUseCase(
+            diaryRepository = get(),
+            drainSyncOutbox = get(),
+        )
+    }
     factoryOf(::ObserveTaxFreeUseCase)
     factoryOf(::RefreshTaxFreeUseCase)
     factoryOf(::ObserveAlertsUseCase)
@@ -437,6 +490,15 @@ val domainModule = module {
     factoryOf(::RefreshClientRemoteConfigUseCase)
     factoryOf(::EvaluateForceUpdateUseCase)
     factoryOf(::ObserveFeatureFlagUseCase)
+    factory {
+        EvictLocalCacheUseCase(
+            inventory = get(),
+            clock = { epochMillis() },
+        )
+    }
+    factoryOf(::RefreshPurchasesUseCase)
+    factoryOf(::ObserveSyncConflictsUseCase)
+    factoryOf(::AcknowledgeSyncConflictUseCase)
 }
 
 val presentationModule = module {
@@ -455,6 +517,7 @@ val presentationModule = module {
             addTraveler = get(),
             inviteTraveler = get(),
             refreshExchangeRate = get(),
+            refreshPurchases = get(),
         )
     }
     factory { params ->
@@ -464,6 +527,7 @@ val presentationModule = module {
             uploadReceipt = get(),
             fetchReceiptOcr = get(),
             observeTripDetail = get(),
+            observeFeatureFlag = get(),
         )
     }
     factory { params ->
@@ -494,6 +558,7 @@ val presentationModule = module {
             tripId = params.get(),
             observeRoute = get(),
             refreshRoute = get(),
+            observeFeatureFlag = get(),
         )
     }
     factory { params ->
@@ -510,6 +575,7 @@ val presentationModule = module {
             createExport = get(),
             refreshExportJob = get(),
             observePremium = get(),
+            observeFeatureFlag = get(),
         )
     }
 }

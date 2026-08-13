@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -17,6 +18,13 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "Shared"
             isStatic = true
+        }
+        // Static Shared does not link sqlite; the iOS app links SQLCipher.
+        // Gradle native tests still need a sqlite provider.
+        iosTarget.binaries.configureEach {
+            if (this !is Framework) {
+                linkerOpts("-lsqlite3")
+            }
         }
     }
 
@@ -77,18 +85,23 @@ kotlin {
             implementation(libs.filekit.dialogs)
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.filekit.core)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.sqldelight.android)
+            implementation(libs.sqlcipher.android)
+            implementation(libs.androidx.sqlite)
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
             implementation(libs.sqldelight.native)
+            implementation(libs.sqliter.driver)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -105,6 +118,7 @@ kotlin {
 }
 
 sqldelight {
+    linkSqlite.set(false)
     databases {
         create("VoyageDatabase") {
             packageName.set("com.example.shoptourr.db")

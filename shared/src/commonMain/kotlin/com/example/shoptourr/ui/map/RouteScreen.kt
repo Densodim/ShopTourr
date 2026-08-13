@@ -116,7 +116,11 @@ internal fun RouteContent(
                 }
                 Spacer(Modifier.height(16.dp))
                 val caption = route.stops.firstOrNull()?.point?.let { "${it.lat}° · ${it.lng}°" }
-                VoyageMapHost(stops = route.stops, caption = caption)
+                VoyageMapHost(
+                    stops = route.stops,
+                    caption = caption,
+                    nativeMapsEnabled = state.nativeMapsEnabled,
+                )
                 Spacer(Modifier.height(20.dp))
                 VoyageSection(title = t("stops")) {
                     route.stops.sortedBy { it.orderIndex }.forEach { stop ->

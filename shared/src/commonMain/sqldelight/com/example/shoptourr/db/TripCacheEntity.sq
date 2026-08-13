@@ -19,3 +19,15 @@ INSERT OR REPLACE INTO TripCacheEntity(
 deleteByKindAndTrip:
 DELETE FROM TripCacheEntity
 WHERE kind = :kind AND trip_id = :tripId;
+
+deleteByKind:
+DELETE FROM TripCacheEntity WHERE kind = :kind;
+
+deleteByTripId:
+DELETE FROM TripCacheEntity WHERE trip_id = :tripId;
+
+selectAll:
+SELECT * FROM TripCacheEntity;
+
+deleteAll:
+DELETE FROM TripCacheEntity;

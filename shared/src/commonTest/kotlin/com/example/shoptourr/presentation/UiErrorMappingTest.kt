@@ -28,5 +28,12 @@ class UiErrorMappingTest {
         val ui = AppError.Validation("email").toUiError()
         assertFalse(ui.isRetryable)
         assertEquals("email", ui.message)
+        assertEquals("Проверьте поля", ui.title)
+    }
+
+    @Test
+    fun `english locale uses catalog`() {
+        val ui = AppError.Network.toUiError()
+        assertEquals("No network", ui.title(com.example.shoptourr.i18n.AppLocale.EN))
     }
 }

@@ -9,4 +9,8 @@ class StaticAppBuildInfo(
     override val isReleaseBuild: Boolean = false,
 ) : AppBuildInfo
 
+object ClientReleasePolicy {
+    fun enableHttpLogging(isReleaseBuild: Boolean): Boolean = !isReleaseBuild
+}
+
 expect fun createDefaultAppBuildInfo(): AppBuildInfo

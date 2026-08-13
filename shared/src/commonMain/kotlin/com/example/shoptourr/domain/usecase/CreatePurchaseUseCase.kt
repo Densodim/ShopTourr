@@ -27,3 +27,16 @@ class CreatePurchaseUseCase(
             }
     }
 }
+
+class RefreshPurchasesUseCase(
+    private val purchaseRepository: PurchaseRepository,
+) {
+    suspend operator fun invoke(
+        tripId: String,
+        request: com.example.shoptourr.domain.model.PurchasePageRequest =
+            com.example.shoptourr.domain.model.PurchasePageRequest(),
+    ): Result<List<Purchase>> {
+        if (tripId.isBlank()) return Result.failure(AppError.Validation("tripId"))
+        return purchaseRepository.refreshPage(tripId, request)
+    }
+}

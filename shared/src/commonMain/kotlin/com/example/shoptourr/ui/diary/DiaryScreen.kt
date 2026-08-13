@@ -30,6 +30,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun DiaryScreen(
@@ -60,9 +61,9 @@ internal fun DiaryContent(
     onIntent: (DiaryIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Дневник", onBack = { onIntent(DiaryIntent.Back) })
+        VoyageTopBar(title = t("diary"), onBack = { onIntent(DiaryIntent.Back) })
         Spacer(Modifier.height(12.dp))
-        VoyageSection(title = "Новая запись") {
+        VoyageSection(title = t("add_entry")) {
             VoyageTextField(
                 value = state.moodDraft,
                 onValueChange = { onIntent(DiaryIntent.MoodChanged(it)) },
@@ -77,7 +78,7 @@ internal fun DiaryContent(
             )
             Spacer(Modifier.height(12.dp))
             VoyageButton(
-                text = "Добавить",
+                text = t("add"),
                 onClick = { onIntent(DiaryIntent.Add) },
                 isLoading = state.isSaving,
             )
@@ -112,7 +113,7 @@ internal fun DiaryContent(
                                 Text(entry.text, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             VoyageButton(
-                                text = "Удалить",
+                                text = t("delete"),
                                 onClick = { onIntent(DiaryIntent.Delete(entry.id)) },
                                 enabled = !state.isSaving,
                                 variant = VoyageButtonVariant.Ghost,

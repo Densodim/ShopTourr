@@ -26,4 +26,8 @@ class PendingDeepLinkStore {
         pending.value = null
         return value
     }
+
+    fun clear() {
+        pending.value = null
+    }
 }

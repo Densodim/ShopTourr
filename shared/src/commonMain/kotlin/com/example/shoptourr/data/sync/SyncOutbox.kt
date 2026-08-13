@@ -10,7 +10,9 @@ enum class SyncMutationType {
     UPDATE_TRIP,
     DELETE_TRIP,
     CREATE_DIARY,
+    DELETE_DIARY,
     CREATE_WISHLIST,
+    DELETE_WISHLIST,
 }
 
 enum class SyncOutboxStatus {
@@ -53,6 +55,7 @@ interface SyncOutbox {
     suspend fun pendingCount(): Int
     suspend fun markSuccess(id: String)
     suspend fun markFailure(id: String, updatedAtEpochMs: Long)
+    suspend fun clearAll()
 }
 
 class InMemorySyncOutbox(
@@ -95,5 +98,9 @@ class InMemorySyncOutbox(
                 SyncOutboxStatus.PENDING
             },
         )
+    }
+
+    override suspend fun clearAll() {
+        entries.clear()
     }
 }

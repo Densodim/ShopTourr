@@ -82,15 +82,37 @@ internal fun HomeContent(
             Spacer(Modifier.height(12.dp))
             VoyageSurfaceBlock(modifier = Modifier.testTag(VoyageTestTags.HOME_OFFLINE_BANNER)) {
                 Text(
-                    text = "Офлайн",
+                    text = t("offline"),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Показываем кэш. Синхронизация продолжится при сети.",
+                    text = t("offline_cache"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        if (state.conflictBanner) {
+            Spacer(Modifier.height(12.dp))
+            VoyageSurfaceBlock {
+                Text(
+                    text = t("error_conflict_title"),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = t("error_conflict_banner"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(8.dp))
+                VoyageButton(
+                    text = t("dismiss"),
+                    onClick = { onIntent(HomeIntent.DismissConflict) },
+                    variant = VoyageButtonVariant.Secondary,
                 )
             }
         }

@@ -56,18 +56,20 @@ class AuthRepositoryImpl(
             api.refresh(RefreshTokenRequest(refresh)).toSession()
         }.mapHttpAppError()
 
-    override suspend fun logout(allSessions: Boolean): Result<Unit> =
-        runCatching {
+    override suspend fun logout(allSessions: Boolean): Result<Unit> {
+        val remote = runCatching {
             api.logout(
                 LogoutRequest(
                     refreshToken = tokenStore.refreshToken(),
                     allSessions = allSessions,
                 )
             )
-            tokenStore.clear()
-            userLocalStore?.clear()
-            cachedUser = null
         }.mapHttpAppError()
+        tokenStore.clear()
+        userLocalStore?.clear()
+        cachedUser = null
+        return if (remote.isSuccess) Result.success(Unit) else remote
+    }
 
     override fun currentUser(): User? = cachedUser
 

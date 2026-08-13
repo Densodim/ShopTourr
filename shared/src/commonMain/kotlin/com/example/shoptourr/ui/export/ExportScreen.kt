@@ -62,11 +62,13 @@ internal fun ExportContent(
         Spacer(Modifier.height(16.dp))
         VoyageSection(title = "Формат") {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = state.format == ExportFormat.PDF,
-                    onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.PDF)) },
-                    label = { Text("PDF") },
-                )
+                if (state.pdfEnabled) {
+                    FilterChip(
+                        selected = state.format == ExportFormat.PDF,
+                        onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.PDF)) },
+                        label = { Text("PDF") },
+                    )
+                }
                 FilterChip(
                     selected = state.format == ExportFormat.CSV,
                     onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.CSV)) },

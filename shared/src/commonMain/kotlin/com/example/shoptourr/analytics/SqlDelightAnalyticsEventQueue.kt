@@ -37,6 +37,12 @@ class SqlDelightAnalyticsEventQueue(
         pendingCountUnlocked()
     }
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.analyticsEventEntityQueries.deleteAll()
+        }
+    }
+
     private fun pendingCountUnlocked(): Int =
         db.analyticsEventEntityQueries.countPending().executeAsOne().toInt()
 

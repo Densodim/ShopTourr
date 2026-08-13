@@ -1,7 +1,5 @@
 package com.example.shoptourr.data.local
 
-import com.example.shoptourr.data.remote.dto.common.ExchangeRateDto
-import com.example.shoptourr.data.remote.dto.trip.TravelerDto
 import com.example.shoptourr.domain.model.ExchangeRate
 import com.example.shoptourr.domain.model.Traveler
 import com.example.shoptourr.domain.model.TripSummary
@@ -13,9 +11,27 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
+data class TripLocalExchangeRate(
+    val tripCurrency: String,
+    val quoteCurrency: String,
+    val rate: String,
+    val rateDate: String,
+    val provider: String? = null,
+)
+
+@Serializable
+data class TripLocalTraveler(
+    val id: String,
+    val name: String,
+    val colorHex: String,
+    val avatarGlyph: String,
+    val isOwner: Boolean,
+)
+
+@Serializable
 data class TripLocalExtrasDto(
-    val exchangeRate: ExchangeRateDto? = null,
-    val travelers: List<TravelerDto> = emptyList(),
+    val exchangeRate: TripLocalExchangeRate? = null,
+    val travelers: List<TripLocalTraveler> = emptyList(),
 )
 
 object TripLocalExtrasCodec {
@@ -26,7 +42,7 @@ object TripLocalExtrasCodec {
         return json.encodeToString(
             TripLocalExtrasDto(
                 exchangeRate = trip.exchangeRate?.let {
-                    ExchangeRateDto(
+                    TripLocalExchangeRate(
                         tripCurrency = it.tripCurrency,
                         quoteCurrency = it.quoteCurrency,
                         rate = it.rate,
@@ -35,7 +51,7 @@ object TripLocalExtrasCodec {
                     )
                 },
                 travelers = trip.travelers.map {
-                    TravelerDto(
+                    TripLocalTraveler(
                         id = it.id,
                         name = it.name,
                         colorHex = it.colorHex,
@@ -77,6 +93,7 @@ interface TripLocalStore {
     suspend fun replaceAll(trips: List<TripSummary>)
     suspend fun upsert(trip: TripSummary)
     suspend fun remove(tripId: String)
+    suspend fun clearAll()
     fun observeAll(): Flow<List<TripSummary>>
     fun all(): List<TripSummary>
 }
@@ -95,6 +112,10 @@ class InMemoryTripLocalStore : TripLocalStore {
 
     override suspend fun remove(tripId: String) {
         trips.value = trips.value.filterNot { it.id == tripId }
+    }
+
+    override suspend fun clearAll() {
+        trips.value = emptyList()
     }
 
     override fun observeAll(): Flow<List<TripSummary>> = trips.asStateFlow()

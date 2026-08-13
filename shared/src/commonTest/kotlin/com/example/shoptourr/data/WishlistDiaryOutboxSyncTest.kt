@@ -22,7 +22,9 @@ import com.example.shoptourr.domain.model.CreateWishlistDraft
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
+import com.example.shoptourr.domain.model.WishlistItem
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -171,5 +173,64 @@ class WishlistDiaryOutboxSyncTest {
             "server-d1",
             local.observe("lisbon").first().single().entries.single().id,
         )
+    }
+
+    @Test
+    fun `delete wishlist is local-first then outbox drains to api`() = runTest {
+        var deleted = 0
+        val engine = MockEngine { request ->
+            assertEquals(HttpMethod.Delete, request.method)
+            assertTrue(request.url.encodedPath.endsWith("/wishlist/w1"))
+            deleted += 1
+            respond(
+                content = ByteReadChannel(""),
+                status = HttpStatusCode.NoContent,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val client = createVoyageHttpClient(
+            baseUrl = "https://api.test",
+            engine = engine,
+            tokenProvider = { "token" },
+        )
+        val local = InMemoryWishlistLocalStore()
+        local.upsert(
+            WishlistItem(
+                id = "w1",
+                name = "Pastel",
+                city = "Lisbon",
+                targetPrice = Money.parse("1.20", "EUR"),
+                iconEmoji = null,
+                note = null,
+                createdAt = "2026-08-11T12:00:00Z",
+            ),
+        )
+        val outbox = InMemorySyncOutbox()
+        val processor = SyncOutboxProcessor(
+            outbox = outbox,
+            purchaseApi = PurchaseApi(client, "https://api.test"),
+            purchaseLocalStore = InMemoryPurchaseLocalStore(),
+            tripApi = TripApi(client, "https://api.test"),
+            tripLocalStore = InMemoryTripLocalStore(),
+            wishlistApi = WishlistApi(client, "https://api.test"),
+            wishlistLocalStore = local,
+            diaryApi = DiaryApi(client, "https://api.test"),
+            diaryLocalStore = InMemoryDiaryLocalStore(),
+            clock = { 1_700_000_000_100L },
+        )
+        DeleteWishlistItemUseCase(
+            wishlistRepository = WishlistRepositoryImpl(
+                api = WishlistApi(client, "https://api.test"),
+                localStore = local,
+                outbox = outbox,
+                idGenerator = { "x" },
+                clock = { 1_700_000_000_000L },
+            ),
+            drainSyncOutbox = DrainSyncOutboxUseCase(SyncRepositoryImpl(processor)),
+        )("w1").getOrThrow()
+
+        assertEquals(1, deleted)
+        assertTrue(outbox.pending().isEmpty())
+        assertTrue(local.observe().first().isEmpty())
     }
 }

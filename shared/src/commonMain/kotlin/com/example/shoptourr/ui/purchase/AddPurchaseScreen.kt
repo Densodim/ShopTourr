@@ -219,7 +219,7 @@ internal fun AddPurchaseContent(
                     fillMaxWidth = false,
                 )
             }
-            state.ocr?.let { ocr ->
+            state.ocr?.takeIf { state.ocrAssistEnabled }?.let { ocr ->
                 Spacer(Modifier.height(12.dp))
                 VoyageSurfaceBlock {
                     Text(

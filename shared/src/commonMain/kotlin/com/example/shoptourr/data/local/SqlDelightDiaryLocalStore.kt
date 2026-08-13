@@ -47,6 +47,12 @@ class SqlDelightDiaryLocalStore(
         }
     }
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.diaryEntityQueries.deleteAll()
+        }
+    }
+
     private fun upsertInternal(entry: DiaryEntry) {
         db.diaryEntityQueries.upsert(
             id = entry.id,

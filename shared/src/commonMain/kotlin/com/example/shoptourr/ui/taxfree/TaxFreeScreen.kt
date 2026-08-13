@@ -59,7 +59,7 @@ internal fun TaxFreeContent(
         VoyageTopBar(title = t("taxfree"), onBack = { onIntent(TaxFreeIntent.Back) })
         Spacer(Modifier.height(12.dp))
         VoyageButton(
-            text = "Обновить",
+            text = t("refresh"),
             onClick = { onIntent(TaxFreeIntent.Refresh) },
             variant = VoyageButtonVariant.Secondary,
             isLoading = state.isLoading && state.summary != null,

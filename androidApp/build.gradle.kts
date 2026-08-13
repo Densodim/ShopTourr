@@ -16,6 +16,7 @@ dependencies {
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.multiplatform.settings)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

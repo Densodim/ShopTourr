@@ -2,8 +2,10 @@ package com.example.shoptourr.presentation.home
 
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.HomeSnapshot
+import com.example.shoptourr.domain.usecase.AcknowledgeSyncConflictUseCase
 import com.example.shoptourr.domain.usecase.ObserveConnectivityUseCase
 import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
+import com.example.shoptourr.domain.usecase.ObserveSyncConflictsUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
@@ -19,6 +21,7 @@ data class HomeUiState(
     val isRefreshing: Boolean = false,
     val isOnline: Boolean = true,
     val snapshot: HomeSnapshot? = null,
+    val conflictBanner: Boolean = false,
     val error: UiError? = null,
 ) : UiState {
     val showContent: Boolean get() = !isLoading && error == null && snapshot != null
@@ -26,6 +29,7 @@ data class HomeUiState(
 
 sealed interface HomeIntent {
     data object Refresh : HomeIntent
+    data object DismissConflict : HomeIntent
 }
 
 sealed interface HomeUiEvent : UiEvent {
@@ -37,12 +41,21 @@ class HomeViewModel(
     private val observeHome: ObserveHomeUseCase,
     private val refreshHome: RefreshHomeUseCase,
     private val observeConnectivity: ObserveConnectivityUseCase,
+    private val observeSyncConflicts: ObserveSyncConflictsUseCase? = null,
+    private val acknowledgeSyncConflict: AcknowledgeSyncConflictUseCase? = null,
 ) : BaseViewModel<HomeUiState, HomeUiEvent>(HomeUiState()) {
 
     init {
         launch {
             observeConnectivity().collectLatest { online ->
                 updateState { copy(isOnline = online) }
+            }
+        }
+        observeSyncConflicts?.let { observe ->
+            launch {
+                observe().collectLatest { visible ->
+                    updateState { copy(conflictBanner = visible) }
+                }
             }
         }
         launch {
@@ -56,6 +69,7 @@ class HomeViewModel(
     fun onIntent(intent: HomeIntent) {
         when (intent) {
             HomeIntent.Refresh -> refresh()
+            HomeIntent.DismissConflict -> acknowledgeSyncConflict?.invoke()
         }
     }
 

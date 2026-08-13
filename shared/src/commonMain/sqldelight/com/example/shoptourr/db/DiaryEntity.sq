@@ -28,3 +28,6 @@ DELETE FROM DiaryEntity WHERE id = :id;
 
 deleteByTrip:
 DELETE FROM DiaryEntity WHERE trip_id = :tripId;
+
+deleteAll:
+DELETE FROM DiaryEntity;

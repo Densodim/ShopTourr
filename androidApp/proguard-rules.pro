@@ -19,6 +19,10 @@
 -keep class com.example.shoptourr.db.** { *; }
 -keep class app.cash.sqldelight.** { *; }
 
+# SQLCipher
+-keep class net.zetetic.** { *; }
+-dontwarn net.zetetic.**
+
 # Koin
 -keep class org.koin.** { *; }
 -keepclassmembers class * {

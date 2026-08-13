@@ -26,3 +26,6 @@ INSERT OR REPLACE INTO SyncOutboxEntity(
 
 deleteById:
 DELETE FROM SyncOutboxEntity WHERE id = :id;
+
+deleteAll:
+DELETE FROM SyncOutboxEntity;

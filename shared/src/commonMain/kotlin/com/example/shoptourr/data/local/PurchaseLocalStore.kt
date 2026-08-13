@@ -10,6 +10,7 @@ interface PurchaseLocalStore {
     suspend fun upsert(purchase: Purchase)
     suspend fun replaceId(oldId: String, purchase: Purchase)
     suspend fun remove(id: String)
+    suspend fun clearAll()
     fun observeByTrip(tripId: String): Flow<List<Purchase>>
     fun getById(id: String): Purchase?
 }
@@ -29,6 +30,10 @@ class InMemoryPurchaseLocalStore : PurchaseLocalStore {
 
     override suspend fun remove(id: String) {
         items.update { it - id }
+    }
+
+    override suspend fun clearAll() {
+        items.value = emptyMap()
     }
 
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =

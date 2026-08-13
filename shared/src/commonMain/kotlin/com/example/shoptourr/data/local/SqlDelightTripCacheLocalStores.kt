@@ -44,6 +44,12 @@ class SqlDelightTaxFreeLocalStore(
             )
         }
     }
+
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripCacheEntityQueries.deleteByKind(TripCacheKind.TAX_FREE)
+        }
+    }
 }
 
 class SqlDelightAlertsLocalStore(
@@ -64,6 +70,12 @@ class SqlDelightAlertsLocalStore(
                 payload_json = TripCacheCodec.encodeAlerts(alerts),
                 updated_at_epoch_ms = clock(),
             )
+        }
+    }
+
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripCacheEntityQueries.deleteByKind(TripCacheKind.ALERTS)
         }
     }
 }
@@ -88,6 +100,12 @@ class SqlDelightRouteLocalStore(
             )
         }
     }
+
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripCacheEntityQueries.deleteByKind(TripCacheKind.ROUTE)
+        }
+    }
 }
 
 class SqlDelightStatsLocalStore(
@@ -110,6 +128,12 @@ class SqlDelightStatsLocalStore(
             )
         }
     }
+
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripCacheEntityQueries.deleteByKind(TripCacheKind.STATS)
+        }
+    }
 }
 
 class SqlDelightExportLocalStore(
@@ -130,6 +154,12 @@ class SqlDelightExportLocalStore(
                 payload_json = TripCacheCodec.encodeExport(job),
                 updated_at_epoch_ms = clock(),
             )
+        }
+    }
+
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripCacheEntityQueries.deleteByKind(TripCacheKind.EXPORT)
         }
     }
 }

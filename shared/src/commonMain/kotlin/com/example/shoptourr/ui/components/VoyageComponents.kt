@@ -61,7 +61,7 @@ fun VoyageButton(
         VoyageButtonVariant.Primary -> {
             Button(
                 onClick = onClick,
-                modifier = modifier.then(widthModifier).height(52.dp),
+                modifier = modifier.then(widthModifier).height(52.dp).semantics { contentDescription = text },
                 enabled = enabled && !isLoading,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
@@ -77,7 +77,7 @@ fun VoyageButton(
         VoyageButtonVariant.Secondary -> {
             OutlinedButton(
                 onClick = onClick,
-                modifier = modifier.then(widthModifier).height(52.dp),
+                modifier = modifier.then(widthModifier).height(52.dp).semantics { contentDescription = text },
                 enabled = enabled && !isLoading,
                 shape = shape,
                 colors = ButtonDefaults.outlinedButtonColors(
@@ -91,7 +91,7 @@ fun VoyageButton(
         VoyageButtonVariant.Ghost -> {
             TextButton(
                 onClick = onClick,
-                modifier = modifier.then(widthModifier).height(48.dp),
+                modifier = modifier.then(widthModifier).height(48.dp).semantics { contentDescription = text },
                 enabled = enabled && !isLoading,
             ) {
                 VoyageButtonLabel(text = text, isLoading = isLoading, onPrimary = false)
@@ -245,13 +245,17 @@ fun UiErrorBanner(
             .border(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f), MaterialTheme.shapes.medium)
             .padding(14.dp),
     ) {
-        Text(error.title, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
+        Text(t(error.titleKey), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
-        Text(error.message, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            error.messageOverride ?: t(error.messageKey),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyMedium,
+        )
         if (onRetry != null && error.isRetryable) {
             Spacer(Modifier.height(8.dp))
             VoyageButton(
-                text = "Повторить",
+                text = t("retry"),
                 onClick = onRetry,
                 variant = VoyageButtonVariant.Secondary,
             )

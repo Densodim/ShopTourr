@@ -7,6 +7,7 @@ import com.example.shoptourr.data.remote.dto.wishlist.CreateWishlistItemRequest
 import com.example.shoptourr.data.remote.dto.wishlist.WishlistItemDto
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.sync.CreateWishlistPayload
+import com.example.shoptourr.data.sync.DeleteWishlistPayload
 import com.example.shoptourr.data.sync.SyncMutationType
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.data.sync.SyncOutboxEntry
@@ -73,8 +74,19 @@ class WishlistRepositoryImpl(
 
     override suspend fun delete(id: String): Result<Unit> =
         runCatching {
-            api.delete(id)
+            val now = clock()
             localStore.remove(id)
+            outbox.enqueue(
+                SyncOutboxEntry(
+                    id = "outbox-del-wishlist-$id-$now",
+                    type = SyncMutationType.DELETE_WISHLIST,
+                    payloadJson = SyncPayloadCodec.encodeDeleteWishlist(
+                        DeleteWishlistPayload(itemId = id),
+                    ),
+                    idempotencyKey = "del-wishlist-$id-$now",
+                    createdAtEpochMs = now,
+                ),
+            )
         }.mapHttpAppError()
 }
 

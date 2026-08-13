@@ -26,4 +26,12 @@ class PendingDeepLinkStoreTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `clear drops pending target`() {
+        val store = PendingDeepLinkStore()
+        store.offer(VoyageNavigationTarget.Home)
+        store.clear()
+        assertNull(store.consume())
+    }
 }

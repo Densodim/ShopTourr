@@ -49,6 +49,12 @@ class SqlDelightWishlistLocalStore(
         }
     }
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.wishlistEntityQueries.deleteAll()
+        }
+    }
+
     private fun upsertInternal(item: WishlistItem) {
         db.wishlistEntityQueries.upsert(
             id = item.id,

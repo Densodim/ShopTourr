@@ -36,3 +36,9 @@ INSERT OR REPLACE INTO PurchaseEntity(
 
 deleteById:
 DELETE FROM PurchaseEntity WHERE id = :id;
+
+selectAll:
+SELECT * FROM PurchaseEntity;
+
+deleteAll:
+DELETE FROM PurchaseEntity;

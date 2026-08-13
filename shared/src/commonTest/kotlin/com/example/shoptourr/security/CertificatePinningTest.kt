@@ -52,6 +52,22 @@ class CertificatePinningTest {
     }
 
     @Test
+    fun `matcher finds host and subdomain pins`() {
+        val config = CertificatePinConfig(
+            hosts = listOf(
+                HostPinSet(
+                    host = "api.shoptourr.com",
+                    pins = listOf(PublicKeyPin("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")),
+                    includeSubdomains = true,
+                ),
+            ),
+        )
+        assertEquals(1, CertificatePinMatcher.pinsForHost("api.shoptourr.com", config).size)
+        assertEquals(1, CertificatePinMatcher.pinsForHost("cdn.api.shoptourr.com", config).size)
+        assertTrue(CertificatePinMatcher.pinsForHost("evil.example", config).isEmpty())
+    }
+
+    @Test
     fun `voyageApi targets api shoptourr host`() {
         val config = CertificatePinConfig.voyageApi(
             pins = listOf("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="),

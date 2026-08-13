@@ -1,6 +1,7 @@
 package com.example.shoptourr
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.AnalyticsSink
@@ -23,6 +24,8 @@ import com.example.shoptourr.data.local.SqlDelightStatsLocalStore
 import com.example.shoptourr.data.local.SqlDelightTaxFreeLocalStore
 import com.example.shoptourr.data.local.SqlDelightTripLocalStore
 import com.example.shoptourr.data.local.SqlDelightWishlistLocalStore
+import com.example.shoptourr.data.local.SqlDelightLocalCacheInventory
+import com.example.shoptourr.data.local.LocalCacheInventory
 import com.example.shoptourr.data.local.StatsLocalStore
 import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
@@ -33,8 +36,10 @@ import com.example.shoptourr.data.settings.SecureKeyValueStore
 import com.example.shoptourr.data.settings.SecureTokenStore
 import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
+import com.example.shoptourr.data.sync.BackgroundSyncScheduler
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.sync.AndroidBackgroundSyncScheduler
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
@@ -57,11 +62,13 @@ class VoyageApp : Application() {
             androidLogger()
             androidContext(this@VoyageApp)
         }
+        org.koin.core.context.GlobalContext.get().get<BackgroundSyncScheduler>().schedule()
     }
 }
 
 private val androidDatabaseModule = module {
-    single { DatabaseDriverFactory(androidContext()) }
+    single<SecureKeyValueStore> { AndroidEncryptedSecureStore(androidContext()) }
+    single { DatabaseDriverFactory(androidContext(), get()) }
     single { createVoyageDatabase(get()) }
     single<TripLocalStore> { SqlDelightTripLocalStore(get()) }
     single<PurchaseLocalStore> { SqlDelightPurchaseLocalStore(get()) }
@@ -72,6 +79,7 @@ private val androidDatabaseModule = module {
     single<RouteLocalStore> { SqlDelightRouteLocalStore(get()) }
     single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
     single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
+    single<LocalCacheInventory> { SqlDelightLocalCacheInventory(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
     single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
     single<AnalyticsSink> { NoOpAnalyticsSink }
@@ -85,7 +93,6 @@ private val androidDatabaseModule = module {
         )
     }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
-    single<SecureKeyValueStore> { AndroidEncryptedSecureStore(androidContext()) }
     single<TokenStore> {
         SecureTokenStore(
             secure = get(),
@@ -93,12 +100,18 @@ private val androidDatabaseModule = module {
         )
     }
     single<PushTokenProvider> { FcmPushTokenProvider(androidContext()) }
+    single<BackgroundSyncScheduler> { AndroidBackgroundSyncScheduler(androidContext()) }
     single<AppBuildInfo> {
         val context = androidContext()
         val buildNumber = runCatching {
             @Suppress("DEPRECATION")
             context.packageManager.getPackageInfo(context.packageName, 0).versionCode.toLong()
         }.getOrElse { 1L }.toInt().coerceAtLeast(1)
-        StaticAppBuildInfo(ClientPlatform.ANDROID, buildNumber)
+        val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        StaticAppBuildInfo(
+            platform = ClientPlatform.ANDROID,
+            buildNumber = buildNumber,
+            isReleaseBuild = !debuggable,
+        )
     }
 }

@@ -24,6 +24,7 @@ import com.example.shoptourr.domain.model.TripStatus
 import com.example.shoptourr.domain.model.TripSummary
 import com.example.shoptourr.domain.model.VatCalculator
 import com.example.shoptourr.domain.model.WishlistItem
+import com.example.shoptourr.domain.repository.SyncConflictNotifier
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -131,6 +132,17 @@ data class DeleteTripPayload(
     val tripId: String,
 )
 
+@Serializable
+data class DeleteWishlistPayload(
+    val itemId: String,
+)
+
+@Serializable
+data class DeleteDiaryPayload(
+    val tripId: String,
+    val entryId: String,
+)
+
 data class DrainResult(
     val successCount: Int,
     val failureCount: Int,
@@ -148,6 +160,8 @@ object SyncPayloadCodec {
     fun encodeDeletePurchase(payload: DeletePurchasePayload): String = json.encodeToString(payload)
     fun encodeUpdateTrip(payload: UpdateTripPayload): String = json.encodeToString(payload)
     fun encodeDeleteTrip(payload: DeleteTripPayload): String = json.encodeToString(payload)
+    fun encodeDeleteWishlist(payload: DeleteWishlistPayload): String = json.encodeToString(payload)
+    fun encodeDeleteDiary(payload: DeleteDiaryPayload): String = json.encodeToString(payload)
 
     fun decodePurchase(raw: String): CreatePurchasePayload = json.decodeFromString(raw)
     fun decodeTrip(raw: String): CreateTripPayload = json.decodeFromString(raw)
@@ -157,6 +171,8 @@ object SyncPayloadCodec {
     fun decodeDeletePurchase(raw: String): DeletePurchasePayload = json.decodeFromString(raw)
     fun decodeUpdateTrip(raw: String): UpdateTripPayload = json.decodeFromString(raw)
     fun decodeDeleteTrip(raw: String): DeleteTripPayload = json.decodeFromString(raw)
+    fun decodeDeleteWishlist(raw: String): DeleteWishlistPayload = json.decodeFromString(raw)
+    fun decodeDeleteDiary(raw: String): DeleteDiaryPayload = json.decodeFromString(raw)
 }
 
 class SyncOutboxProcessor(
@@ -170,6 +186,7 @@ class SyncOutboxProcessor(
     private val diaryApi: DiaryApi,
     private val diaryLocalStore: DiaryLocalStore,
     private val clock: () -> Long = { 0L },
+    private val conflictNotifier: SyncConflictNotifier? = null,
 ) {
     suspend fun drainOnce(limit: Int = 20): DrainResult {
         var success = 0
@@ -190,7 +207,9 @@ class SyncOutboxProcessor(
                         SyncMutationType.UPDATE_TRIP -> drainUpdateTrip(entry)
                         SyncMutationType.DELETE_TRIP -> drainDeleteTrip(entry)
                         SyncMutationType.CREATE_WISHLIST -> drainCreateWishlist(entry)
+                        SyncMutationType.DELETE_WISHLIST -> drainDeleteWishlist(entry)
                         SyncMutationType.CREATE_DIARY -> drainCreateDiary(entry)
+                        SyncMutationType.DELETE_DIARY -> drainDeleteDiary(entry)
                     }
                 }
                 when {
@@ -203,6 +222,7 @@ class SyncOutboxProcessor(
                         if (reconciled.isSuccess) {
                             outbox.markSuccess(entry.id)
                             success += 1
+                            conflictNotifier?.reportServerWins()
                         } else {
                             outbox.markFailure(entry.id, updatedAtEpochMs = clock())
                             failure += 1
@@ -372,6 +392,24 @@ class SyncOutboxProcessor(
         )
     }
 
+    private suspend fun drainDeleteWishlist(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeDeleteWishlist(entry.payloadJson)
+        runCatching { wishlistApi.delete(payload.itemId) }
+            .onFailure { error ->
+                if (error !is AppError.NotFound) throw error
+            }
+        wishlistLocalStore.remove(payload.itemId)
+    }
+
+    private suspend fun drainDeleteDiary(entry: SyncOutboxEntry) {
+        val payload = SyncPayloadCodec.decodeDeleteDiary(entry.payloadJson)
+        runCatching { diaryApi.delete(payload.tripId, payload.entryId) }
+            .onFailure { error ->
+                if (error !is AppError.NotFound) throw error
+            }
+        diaryLocalStore.removeEntry(payload.tripId, payload.entryId)
+    }
+
     /**
      * v1 conflict policy: server wins — refresh entity and replace local, then drop outbox row.
      */
@@ -433,9 +471,17 @@ class SyncOutboxProcessor(
                     }
             }
             SyncMutationType.CREATE_WISHLIST,
+            SyncMutationType.DELETE_WISHLIST,
             SyncMutationType.CREATE_DIARY,
+            SyncMutationType.DELETE_DIARY,
             -> {
-                // No stable server id in payload; accept conflict by clearing the outbox row.
+                if (entry.type == SyncMutationType.DELETE_WISHLIST) {
+                    val payload = SyncPayloadCodec.decodeDeleteWishlist(entry.payloadJson)
+                    wishlistLocalStore.remove(payload.itemId)
+                } else if (entry.type == SyncMutationType.DELETE_DIARY) {
+                    val payload = SyncPayloadCodec.decodeDeleteDiary(entry.payloadJson)
+                    diaryLocalStore.removeEntry(payload.tripId, payload.entryId)
+                }
             }
         }
     }

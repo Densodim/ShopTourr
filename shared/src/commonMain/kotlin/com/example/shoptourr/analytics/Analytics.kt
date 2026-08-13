@@ -35,6 +35,7 @@ interface AnalyticsEventQueue {
     suspend fun pending(): List<AnalyticsEvent>
     suspend fun removeAll(events: List<AnalyticsEvent>)
     suspend fun size(): Int
+    suspend fun clearAll()
 }
 
 class InMemoryAnalyticsEventQueue(
@@ -60,6 +61,10 @@ class InMemoryAnalyticsEventQueue(
     }
 
     override suspend fun size(): Int = mutex.withLock { events.size }
+
+    override suspend fun clearAll() = mutex.withLock {
+        events.clear()
+    }
 }
 
 interface AnalyticsSink {
@@ -79,7 +84,6 @@ class QueuedAnalytics(
     private val clock: () -> Long,
     private val idGenerator: () -> String = ::newAnalyticsEventId,
 ) : Analytics {
-    @Volatile
     private var pendingUserId: String? = null
     private var hasPendingIdentify: Boolean = false
 

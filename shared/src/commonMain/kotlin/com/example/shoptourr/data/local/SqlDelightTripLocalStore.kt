@@ -69,6 +69,12 @@ class SqlDelightTripLocalStore(
     override fun all(): List<TripSummary> =
         db.tripEntityQueries.selectAllActive().executeAsList().map { it.toDomain() }
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.tripEntityQueries.deleteAll()
+        }
+    }
+
     private fun TripEntity.toDomain(): TripSummary {
         val (rate, travelers) = TripLocalExtrasCodec.decode(exchange_rate_json)
         return TripSummary(

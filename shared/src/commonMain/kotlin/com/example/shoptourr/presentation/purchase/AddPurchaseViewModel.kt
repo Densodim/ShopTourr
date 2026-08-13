@@ -8,8 +8,10 @@ import com.example.shoptourr.domain.model.PurchaseSplitCalculator
 import com.example.shoptourr.domain.model.ReceiptOcrResult
 import com.example.shoptourr.domain.model.ReceiptUploadDraft
 import com.example.shoptourr.domain.model.Traveler
+import com.example.shoptourr.domain.model.FeatureFlag
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
 import com.example.shoptourr.domain.usecase.FetchReceiptOcrUseCase
+import com.example.shoptourr.domain.usecase.ObserveFeatureFlagUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -34,6 +36,7 @@ data class AddPurchaseUiState(
     val travelers: List<Traveler> = emptyList(),
     val selectedTravelerIds: List<String> = emptyList(),
     val isUploadingReceipt: Boolean = false,
+    val ocrAssistEnabled: Boolean = true,
     val isLoading: Boolean = false,
     val error: UiError? = null,
 ) : UiState {
@@ -73,9 +76,17 @@ class AddPurchaseViewModel(
     private val uploadReceipt: UploadReceiptUseCase,
     private val fetchReceiptOcr: FetchReceiptOcrUseCase,
     private val observeTripDetail: ObserveTripDetailUseCase,
+    private val observeFeatureFlag: ObserveFeatureFlagUseCase? = null,
 ) : BaseViewModel<AddPurchaseUiState, AddPurchaseUiEvent>(AddPurchaseUiState(tripId = tripId)) {
 
     init {
+        observeFeatureFlag?.let { flags ->
+            launch {
+                flags(FeatureFlag.OCR_ASSIST).collect { enabled ->
+                    updateState { copy(ocrAssistEnabled = enabled) }
+                }
+            }
+        }
         launch {
             observeTripDetail(tripId).collect { detail ->
                 val travelers = detail?.trip?.travelers.orEmpty()
@@ -132,9 +143,11 @@ class AddPurchaseViewModel(
                             error = null,
                         )
                     }
-                    fetchReceiptOcr(asset.id)
-                        .onSuccess { ocr -> updateState { copy(ocr = ocr) } }
-                        .onFailure { /* OCR is optional assist */ }
+                    if (state.value.ocrAssistEnabled) {
+                        fetchReceiptOcr(asset.id)
+                            .onSuccess { ocr -> updateState { copy(ocr = ocr) } }
+                            .onFailure { /* OCR is optional assist */ }
+                    }
                 }
                 .onFailure { throwable ->
                     updateState {

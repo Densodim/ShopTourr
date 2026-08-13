@@ -40,9 +40,12 @@ class CreateWishlistItemUseCase(
 
 class DeleteWishlistItemUseCase(
     private val wishlistRepository: WishlistRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(id: String): Result<Unit> {
         if (id.isBlank()) return Result.failure(AppError.Validation("id"))
-        return wishlistRepository.delete(id)
+        return wishlistRepository.delete(id).onSuccess {
+            drainSyncOutbox?.invoke()
+        }
     }
 }

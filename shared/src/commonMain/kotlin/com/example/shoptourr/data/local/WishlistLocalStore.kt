@@ -12,6 +12,7 @@ interface WishlistLocalStore {
     suspend fun upsert(item: WishlistItem)
     suspend fun replaceId(oldId: String, item: WishlistItem)
     suspend fun remove(id: String)
+    suspend fun clearAll()
 }
 
 class InMemoryWishlistLocalStore : WishlistLocalStore {
@@ -30,5 +31,9 @@ class InMemoryWishlistLocalStore : WishlistLocalStore {
     }
     override suspend fun remove(id: String) {
         items.value = items.value.filterNot { it.id == id }
+    }
+
+    override suspend fun clearAll() {
+        items.value = emptyList()
     }
 }

@@ -24,3 +24,6 @@ INSERT OR REPLACE INTO AnalyticsEventEntity(
 
 deleteById:
 DELETE FROM AnalyticsEventEntity WHERE id = :id;
+
+deleteAll:
+DELETE FROM AnalyticsEventEntity;

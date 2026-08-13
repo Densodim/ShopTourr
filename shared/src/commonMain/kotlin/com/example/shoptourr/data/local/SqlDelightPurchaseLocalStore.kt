@@ -81,6 +81,12 @@ class SqlDelightPurchaseLocalStore(
     override fun getById(id: String): Purchase? =
         db.purchaseEntityQueries.selectById(id).executeAsOneOrNull()?.toDomain()
 
+    override suspend fun clearAll() {
+        withContext(Dispatchers.IO) {
+            db.purchaseEntityQueries.deleteAll()
+        }
+    }
+
     private fun PurchaseEntity.toDomain(): Purchase {
         val currency = currency
         return Purchase(

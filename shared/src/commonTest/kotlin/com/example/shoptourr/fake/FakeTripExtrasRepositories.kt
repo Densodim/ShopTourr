@@ -26,7 +26,8 @@ class FakeDiaryRepository(
         entries.map { list ->
             list.filter { it.tripId == tripId }
                 .groupBy { it.entryDate }
-                .toSortedMap()
+                .toList()
+                .sortedBy { it.first }
                 .map { (date, dayEntries) -> DiaryDayGroup(date = date, entries = dayEntries) }
         }
 

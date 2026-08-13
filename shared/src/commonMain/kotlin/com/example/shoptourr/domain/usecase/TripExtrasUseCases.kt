@@ -43,11 +43,14 @@ class CreateDiaryEntryUseCase(
 
 class DeleteDiaryEntryUseCase(
     private val diaryRepository: DiaryRepository,
+    private val drainSyncOutbox: DrainSyncOutboxUseCase? = null,
 ) {
     suspend operator fun invoke(tripId: String, entryId: String): Result<Unit> {
         if (tripId.isBlank()) return Result.failure(AppError.Validation("tripId"))
         if (entryId.isBlank()) return Result.failure(AppError.Validation("entryId"))
-        return diaryRepository.delete(tripId, entryId)
+        return diaryRepository.delete(tripId, entryId).onSuccess {
+            drainSyncOutbox?.invoke()
+        }
     }
 }
 

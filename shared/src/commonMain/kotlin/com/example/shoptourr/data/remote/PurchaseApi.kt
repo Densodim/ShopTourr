@@ -2,12 +2,14 @@ package com.example.shoptourr.data.remote
 
 import com.example.shoptourr.data.remote.dto.purchase.CreatePurchaseRequest
 import com.example.shoptourr.data.remote.dto.purchase.PurchaseDto
+import com.example.shoptourr.data.remote.dto.purchase.TripPurchasesResponse
 import com.example.shoptourr.data.remote.dto.purchase.UpdatePurchaseRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -21,6 +23,23 @@ class PurchaseApi(
     private val baseUrl: String,
 ) {
     private val root get() = baseUrl.trimEnd('/')
+
+    suspend fun fetchPurchases(
+        tripId: String,
+        page: Int = 0,
+        size: Int = 50,
+        afterDate: String? = null,
+        afterId: String? = null,
+    ): TripPurchasesResponse {
+        val response: HttpResponse = client.get("$root/trips/$tripId/purchases") {
+            parameter("page", page)
+            parameter("size", size)
+            afterDate?.let { parameter("afterDate", it) }
+            afterId?.let { parameter("afterId", it) }
+        }
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
+        return response.body()
+    }
 
     suspend fun createPurchase(
         tripId: String,

@@ -2,6 +2,7 @@ package com.example.shoptourr.fake
 
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseDraft
+import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.VatCalculator
 import com.example.shoptourr.domain.repository.PurchaseRepository
 import kotlinx.coroutines.flow.Flow
@@ -74,4 +75,10 @@ class FakePurchaseRepository(
 
     override fun observeByTrip(tripId: String): Flow<List<Purchase>> =
         items.map { list -> list.filter { it.tripId == tripId } }
+
+    override suspend fun refreshPage(
+        tripId: String,
+        request: PurchasePageRequest,
+    ): Result<List<Purchase>> =
+        Result.success(items.value.filter { it.tripId == tripId })
 }
