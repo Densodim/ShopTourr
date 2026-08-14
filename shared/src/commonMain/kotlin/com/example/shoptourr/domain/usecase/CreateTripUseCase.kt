@@ -12,6 +12,8 @@ class CreateTripUseCase(
     suspend operator fun invoke(draft: CreateTripDraft): Result<TripSummary> {
         if (draft.city.trim().isEmpty()) return Result.failure(AppError.Validation("city"))
         if (draft.country.trim().isEmpty()) return Result.failure(AppError.Validation("country"))
+        if (draft.startDate.isBlank()) return Result.failure(AppError.Validation("startDate"))
+        if (draft.endDate.isBlank()) return Result.failure(AppError.Validation("endDate"))
         if (draft.budget.minorUnits <= 0) return Result.failure(AppError.Validation("budget"))
         if (draft.endDate < draft.startDate) return Result.failure(AppError.Validation("dates"))
         return tripRepository.createTrip(

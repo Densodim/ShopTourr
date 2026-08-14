@@ -66,7 +66,7 @@ class WishlistViewModelTest {
     }
 
     @Test
-    fun `validation error maps to UiError`() = runTest {
+    fun `validation error shows field errors`() = runTest {
         val vm = WishlistViewModel(
             observeWishlist = ObserveWishlistUseCase(FakeWishlistRepository()),
             refreshWishlist = RefreshWishlistUseCase(FakeWishlistRepository()),
@@ -74,8 +74,10 @@ class WishlistViewModelTest {
             deleteItem = DeleteWishlistItemUseCase(FakeWishlistRepository()),
         )
         vm.onIntent(WishlistIntent.Add)
-        assertEquals("Проверьте поля", vm.state.value.error?.title)
-        assertEquals("name", vm.state.value.error?.message)
+        assertEquals("validation_name_required", vm.state.value.fieldErrors.name)
+        assertEquals("validation_city_required", vm.state.value.fieldErrors.city)
+        assertEquals("validation_amount_required", vm.state.value.fieldErrors.price)
+        assertEquals(null, vm.state.value.error)
         vm.onCleared()
     }
 }

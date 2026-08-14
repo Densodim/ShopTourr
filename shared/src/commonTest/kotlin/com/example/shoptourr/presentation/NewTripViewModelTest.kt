@@ -5,7 +5,6 @@ import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.fake.FakeTripRepository
-import com.example.shoptourr.presentation.error.UiError
 import com.example.shoptourr.presentation.trip.NewTripIntent
 import com.example.shoptourr.presentation.trip.NewTripUiEvent
 import com.example.shoptourr.presentation.trip.NewTripViewModel
@@ -58,16 +57,34 @@ class NewTripViewModelTest {
     }
 
     @Test
-    fun `validation failure maps to UiError`() = runTest {
+    fun `validation failure shows field errors`() = runTest {
         val trips = FakeTripRepository(HomeSnapshot("Mila", null, 0, 0))
         val vm = NewTripViewModel(CreateTripUseCase(trips))
 
         vm.onIntent(NewTripIntent.Submit)
 
-        val error = vm.state.value.error
-        assertIs<UiError>(error)
-        assertEquals("Проверьте поля", error.title)
-        assertEquals("city", error.message)
+        assertEquals("validation_city_required", vm.state.value.fieldErrors.city)
+        assertEquals("validation_country_required", vm.state.value.fieldErrors.country)
+        assertEquals("validation_start_date_required", vm.state.value.fieldErrors.startDate)
+        assertEquals("validation_end_date_required", vm.state.value.fieldErrors.endDate)
+        assertEquals("validation_amount_required", vm.state.value.fieldErrors.budget)
+        assertNull(vm.state.value.error)
+        vm.onCleared()
+    }
+
+    @Test
+    fun `end before start shows date order error`() = runTest {
+        val trips = FakeTripRepository(HomeSnapshot("Mila", null, 0, 0))
+        val vm = NewTripViewModel(CreateTripUseCase(trips))
+
+        vm.onIntent(NewTripIntent.CityChanged("Lisbon"))
+        vm.onIntent(NewTripIntent.CountryChanged("Portugal"))
+        vm.onIntent(NewTripIntent.StartDateChanged("2026-08-10"))
+        vm.onIntent(NewTripIntent.EndDateChanged("2026-08-01"))
+        vm.onIntent(NewTripIntent.BudgetChanged("1000.00"))
+        vm.onIntent(NewTripIntent.Submit)
+
+        assertEquals("validation_dates_order", vm.state.value.fieldErrors.endDate)
         vm.onCleared()
     }
 

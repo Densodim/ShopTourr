@@ -79,18 +79,21 @@ internal fun WishlistContent(
                 value = state.nameDraft,
                 onValueChange = { onIntent(WishlistIntent.NameChanged(it)) },
                 label = t("item_name"),
+                errorMessage = state.fieldErrors.name?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.cityDraft,
                 onValueChange = { onIntent(WishlistIntent.CityChanged(it)) },
                 label = t("city"),
+                errorMessage = state.fieldErrors.city?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.priceDraft,
                 onValueChange = { onIntent(WishlistIntent.PriceChanged(it)) },
                 label = t("amount"),
+                errorMessage = state.fieldErrors.price?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(

@@ -126,6 +126,7 @@ fun VoyageTextField(
     singleLine: Boolean = true,
     isPassword: Boolean = false,
     enabled: Boolean = true,
+    errorMessage: String? = null,
     testTag: String? = null,
 ) {
     val tagged = if (testTag != null) {
@@ -145,6 +146,10 @@ fun VoyageTextField(
         label = { Text(label) },
         singleLine = singleLine,
         enabled = enabled,
+        isError = errorMessage != null,
+        supportingText = errorMessage?.let { message ->
+            { Text(message, color = MaterialTheme.colorScheme.error) }
+        },
         visualTransformation = if (isPassword) {
             PasswordVisualTransformation()
         } else {
@@ -158,6 +163,9 @@ fun VoyageTextField(
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedTextColor = MaterialTheme.colorScheme.onBackground,
             unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+            errorBorderColor = MaterialTheme.colorScheme.error,
+            errorLabelColor = MaterialTheme.colorScheme.error,
+            errorCursorColor = MaterialTheme.colorScheme.error,
         ),
     )
 }
@@ -314,7 +322,7 @@ fun VoyageScreen(
             .background(VoyageTokens.bg)
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(VoyageTokens.glow, VoyageTokens.bg, VoyageTokens.glow),
+                    colors = listOf(VoyageTokens.glow, VoyageTokens.bg),
                 ),
             ),
     ) {

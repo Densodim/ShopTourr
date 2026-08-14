@@ -19,5 +19,5 @@ object VoyageTokens {
     val accentDim = Color(0x1FFFD84D) // rgba(255,216,77,0.12)
     val success = Color(0xFF4ADE80)
     val danger = Color(0xFFF87171)
-    val glow = Color(0x0FFFFD84D) // soft ambient wash
+    val glow = Color(0x0FFFD84D) // soft ambient wash (~6% accent)
 }

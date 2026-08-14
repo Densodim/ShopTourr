@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.wishlist
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateWishlistDraft
 import com.example.shoptourr.domain.model.Money
@@ -17,6 +18,14 @@ import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+data class WishlistFieldErrors(
+    val name: String? = null,
+    val city: String? = null,
+    val price: String? = null,
+) {
+    val hasErrors: Boolean get() = name != null || city != null || price != null
+}
+
 data class WishlistUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -25,6 +34,7 @@ data class WishlistUiState(
     val cityDraft: String = "",
     val priceDraft: String = "",
     val currencyDraft: String = "EUR",
+    val fieldErrors: WishlistFieldErrors = WishlistFieldErrors(),
     val error: UiError? = null,
 ) : UiState
 
@@ -63,11 +73,35 @@ class WishlistViewModel(
     fun onIntent(intent: WishlistIntent) {
         when (intent) {
             WishlistIntent.Refresh -> refresh()
-            is WishlistIntent.NameChanged -> updateState { copy(nameDraft = intent.value, error = null) }
-            is WishlistIntent.CityChanged -> updateState { copy(cityDraft = intent.value, error = null) }
-            is WishlistIntent.PriceChanged -> updateState { copy(priceDraft = intent.value, error = null) }
+            is WishlistIntent.NameChanged -> updateState {
+                copy(
+                    nameDraft = intent.value,
+                    error = null,
+                    fieldErrors = fieldErrors.copy(name = null),
+                )
+            }
+            is WishlistIntent.CityChanged -> updateState {
+                copy(
+                    cityDraft = intent.value,
+                    error = null,
+                    fieldErrors = fieldErrors.copy(city = null),
+                )
+            }
+            is WishlistIntent.PriceChanged -> updateState {
+                copy(
+                    priceDraft = intent.value,
+                    error = null,
+                    fieldErrors = fieldErrors.copy(price = null),
+                )
+            }
             is WishlistIntent.CurrencyChanged ->
-                updateState { copy(currencyDraft = intent.value.uppercase(), error = null) }
+                updateState {
+                    copy(
+                        currencyDraft = intent.value.uppercase(),
+                        error = null,
+                        fieldErrors = fieldErrors.copy(price = null),
+                    )
+                }
             WishlistIntent.Add -> add()
             is WishlistIntent.Delete -> remove(intent.id)
             WishlistIntent.Back -> emitEvent(WishlistUiEvent.NavigateBack)
@@ -90,21 +124,16 @@ class WishlistViewModel(
     }
 
     private fun add() {
+        val current = state.value
+        val fieldErrors = validateFields(current)
+        if (fieldErrors.hasErrors) {
+            updateState { copy(fieldErrors = fieldErrors, error = null) }
+            return
+        }
+
         launch {
-            val current = state.value
             updateState { copy(isSaving = true, error = null) }
-            val amount = runCatching {
-                Money.parse(current.priceDraft.ifBlank { "0" }, current.currencyDraft)
-            }.getOrElse {
-                updateState {
-                    copy(
-                        isSaving = false,
-                        error = com.example.shoptourr.domain.error.AppError.Validation("targetPrice")
-                            .toUiError(),
-                    )
-                }
-                return@launch
-            }
+            val amount = Money.parse(current.priceDraft, current.currencyDraft)
             createItem(
                 CreateWishlistDraft(
                     name = current.nameDraft,
@@ -119,13 +148,25 @@ class WishlistViewModel(
                             nameDraft = "",
                             cityDraft = "",
                             priceDraft = "",
+                            fieldErrors = WishlistFieldErrors(),
                             error = null,
                         )
                     }
                 }
                 .onFailure { throwable ->
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
                     updateState {
-                        copy(isSaving = false, error = throwable.asAppError().toUiError())
+                        copy(
+                            isSaving = false,
+                            error = if (fieldKey == null) appError.toUiError() else null,
+                            fieldErrors = when (fieldKey) {
+                                "name" -> fieldErrors.copy(name = "validation_name_required")
+                                "city" -> fieldErrors.copy(city = "validation_city_required")
+                                "targetPrice" -> fieldErrors.copy(price = "validation_amount_positive")
+                                else -> fieldErrors
+                            },
+                        )
                     }
                 }
         }
@@ -142,5 +183,22 @@ class WishlistViewModel(
                     }
                 }
         }
+    }
+
+    private fun validateFields(state: WishlistUiState): WishlistFieldErrors {
+        val name = if (state.nameDraft.trim().isEmpty()) "validation_name_required" else null
+        val city = if (state.cityDraft.trim().isEmpty()) "validation_city_required" else null
+        val price = when {
+            state.priceDraft.isBlank() -> "validation_amount_required"
+            else -> {
+                val parsed = runCatching { Money.parse(state.priceDraft, state.currencyDraft) }.getOrNull()
+                when {
+                    parsed == null -> "validation_amount_invalid"
+                    parsed.minorUnits <= 0 -> "validation_amount_positive"
+                    else -> null
+                }
+            }
+        }
+        return WishlistFieldErrors(name = name, city = city, price = price)
     }
 }
