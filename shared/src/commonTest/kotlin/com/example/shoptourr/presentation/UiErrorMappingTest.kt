@@ -36,4 +36,17 @@ class UiErrorMappingTest {
         val ui = AppError.Network.toUiError()
         assertEquals("No network", ui.title(com.example.shoptourr.i18n.AppLocale.EN))
     }
+
+    @Test
+    fun `default title follows current locale`() {
+        val ui = AppError.Network.toUiError()
+        val previous = com.example.shoptourr.i18n.VoyageI18n.currentLocale
+        try {
+            com.example.shoptourr.i18n.VoyageI18n.currentLocale =
+                com.example.shoptourr.i18n.AppLocale.EN
+            assertEquals("No network", ui.title)
+        } finally {
+            com.example.shoptourr.i18n.VoyageI18n.currentLocale = previous
+        }
+    }
 }

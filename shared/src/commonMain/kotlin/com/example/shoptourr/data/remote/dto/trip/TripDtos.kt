@@ -12,7 +12,7 @@ data class TravelerDto(
     val id: String,
     val name: String,
     val colorHex: String,
-    val avatarGlyph: String,
+    val avatarGlyph: String? = null,
     val isOwner: Boolean,
 )
 

@@ -1,5 +1,7 @@
 package com.example.shoptourr.i18n
 
+import kotlin.concurrent.Volatile
+
 enum class AppLocale(val tag: String) {
     RU("ru"),
     EN("en"),
@@ -16,6 +18,9 @@ enum class AppLocale(val tag: String) {
 }
 
 object VoyageI18n {
+    @Volatile
+    var currentLocale: AppLocale = AppLocale.RU
+
     fun t(
         locale: AppLocale,
         key: String,

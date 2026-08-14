@@ -47,44 +47,45 @@ import com.russhwolf.settings.Settings
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
 import com.example.shoptourr.epochMillis
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform.getKoinOrNull
 import platform.Foundation.NSBundle
 import platform.UIKit.UIViewController
 
 private val iosDatabaseModule = module {
-    single<SecureKeyValueStore> { IosKeychainSecureStore() }
+    single { IosKeychainSecureStore() } bind SecureKeyValueStore::class
     single { DatabaseDriverFactory(get()) }
     single { createVoyageDatabase(get()) }
-    single<TripLocalStore> { SqlDelightTripLocalStore(get()) }
-    single<PurchaseLocalStore> { SqlDelightPurchaseLocalStore(get()) }
-    single<WishlistLocalStore> { SqlDelightWishlistLocalStore(get()) }
-    single<DiaryLocalStore> { SqlDelightDiaryLocalStore(get()) }
-    single<TaxFreeLocalStore> { SqlDelightTaxFreeLocalStore(get()) }
-    single<AlertsLocalStore> { SqlDelightAlertsLocalStore(get()) }
-    single<RouteLocalStore> { SqlDelightRouteLocalStore(get()) }
-    single<StatsLocalStore> { SqlDelightStatsLocalStore(get()) }
-    single<ExportLocalStore> { SqlDelightExportLocalStore(get()) }
-    single<LocalCacheInventory> { SqlDelightLocalCacheInventory(get()) }
-    single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
-    single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
-    single<AnalyticsSink> { NoOpAnalyticsSink }
-    single<Analytics> {
+    single { SqlDelightTripLocalStore(get()) } bind TripLocalStore::class
+    single { SqlDelightPurchaseLocalStore(get()) } bind PurchaseLocalStore::class
+    single { SqlDelightWishlistLocalStore(get()) } bind WishlistLocalStore::class
+    single { SqlDelightDiaryLocalStore(get()) } bind DiaryLocalStore::class
+    single { SqlDelightTaxFreeLocalStore(get()) } bind TaxFreeLocalStore::class
+    single { SqlDelightAlertsLocalStore(get()) } bind AlertsLocalStore::class
+    single { SqlDelightRouteLocalStore(get()) } bind RouteLocalStore::class
+    single { SqlDelightStatsLocalStore(get()) } bind StatsLocalStore::class
+    single { SqlDelightExportLocalStore(get()) } bind ExportLocalStore::class
+    single { SqlDelightLocalCacheInventory(get()) } bind LocalCacheInventory::class
+    single { SqlDelightSyncOutbox(get()) } bind SyncOutbox::class
+    single { SqlDelightAnalyticsEventQueue(get()) } bind AnalyticsEventQueue::class
+    single { NoOpAnalyticsSink } bind AnalyticsSink::class
+    single {
         QueuedAnalytics(
             queue = get(),
             sink = get(),
             isOnline = { true },
             clock = { epochMillis() },
         )
-    }
-    single<ConnectivityMonitor> { IosConnectivityMonitor() }
-    single<TokenStore> {
+    } bind Analytics::class
+    single { IosConnectivityMonitor() } bind ConnectivityMonitor::class
+    single {
         SecureTokenStore(
             secure = get(),
             legacy = SettingsTokenStore(get<Settings>()),
         )
-    }
-    single<AppBuildInfo> {
+    } bind TokenStore::class
+    single {
         val raw = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
         val buildNumber = raw?.toIntOrNull()?.coerceAtLeast(1) ?: 1
         @OptIn(ExperimentalNativeApi::class)
@@ -93,13 +94,17 @@ private val iosDatabaseModule = module {
             buildNumber = buildNumber,
             isReleaseBuild = !Platform.isDebugBinary,
         )
-    }
+    } bind AppBuildInfo::class
 }
 
 fun MainViewController(): UIViewController {
     if (getKoinOrNull() == null) {
+        @OptIn(ExperimentalNativeApi::class)
         initKoin(
-            config = AppConfig(),
+            config = AppConfig.forClient(
+                isReleaseBuild = !Platform.isDebugBinary,
+                platform = ClientPlatform.IOS,
+            ),
             extraModules = listOf(iosDatabaseModule),
         )
     }

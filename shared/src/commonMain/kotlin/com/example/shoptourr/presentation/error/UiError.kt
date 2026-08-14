@@ -11,8 +11,8 @@ data class UiError(
     val action: UiErrorAction? = null,
     val messageOverride: String? = null,
 ) {
-    val title: String get() = VoyageI18n.t(AppLocale.RU, titleKey)
-    val message: String get() = messageOverride ?: VoyageI18n.t(AppLocale.RU, messageKey)
+    val title: String get() = title(VoyageI18n.currentLocale)
+    val message: String get() = message(VoyageI18n.currentLocale)
 
     fun title(locale: AppLocale): String = VoyageI18n.t(locale, titleKey)
     fun message(locale: AppLocale): String = messageOverride ?: VoyageI18n.t(locale, messageKey)

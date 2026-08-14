@@ -8,6 +8,11 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.koin.compiler)
+}
+
+koinCompiler {
+    skipDefaultValues = true
 }
 
 kotlin {
@@ -113,6 +118,7 @@ kotlin {
         }
         getByName("androidHostTest").dependencies {
             implementation(libs.sqldelight.sqlite.driver)
+            implementation(libs.ktor.client.okhttp)
         }
     }
 }
@@ -122,6 +128,8 @@ sqldelight {
     databases {
         create("VoyageDatabase") {
             packageName.set("com.example.shoptourr.db")
+            verifyMigrations.set(true)
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/databases"))
         }
     }
 }

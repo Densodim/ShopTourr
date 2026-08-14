@@ -71,6 +71,8 @@ import com.example.shoptourr.data.remote.UserApi
 import com.example.shoptourr.data.remote.WishlistApi
 import com.example.shoptourr.data.remote.createPlatformHttpEngine
 import com.example.shoptourr.data.remote.createVoyageHttpClient
+import com.example.shoptourr.data.remote.installVoyageHttpTimeouts
+import com.example.shoptourr.domain.model.ClientPlatform
 import com.example.shoptourr.data.repository.AlertsRepositoryImpl
 import com.example.shoptourr.data.repository.AuthRepositoryImpl
 import com.example.shoptourr.data.repository.DiaryRepositoryImpl
@@ -85,7 +87,6 @@ import com.example.shoptourr.data.repository.TaxFreeRepositoryImpl
 import com.example.shoptourr.data.repository.TripRepositoryImpl
 import com.example.shoptourr.data.repository.UserRepositoryImpl
 import com.example.shoptourr.data.repository.WishlistRepositoryImpl
-import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.InMemorySyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
@@ -177,35 +178,60 @@ import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.russhwolf.settings.Settings
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
-import org.koin.core.module.dsl.bind
-import org.koin.core.module.dsl.factoryOf
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.factory
+import org.koin.plugin.module.dsl.single
 import kotlin.random.Random
 
 data class AppConfig(
-    val apiBaseUrl: String = "https://api.shoptourr.com/api",
+    val apiBaseUrl: String = PRODUCTION_API_BASE_URL,
     val sentryDsn: String? = null,
-)
+) {
+    companion object {
+        const val PRODUCTION_API_BASE_URL = "https://api.shoptourr.com/api"
+        /** Android emulator → host loopback. Physical device: `adb reverse tcp:8080 tcp:8080` + [JVM_LOCAL_API]. */
+        const val ANDROID_EMULATOR_LOCAL_API = "http://10.0.2.2:8080/api"
+        const val IOS_SIMULATOR_LOCAL_API = "http://127.0.0.1:8080/api"
+        /** JVM host tests and `adb reverse` against local ShopTourBoot. */
+        const val JVM_LOCAL_API = "http://127.0.0.1:8080/api"
+
+        fun forClient(
+            isReleaseBuild: Boolean,
+            platform: ClientPlatform,
+        ): AppConfig = AppConfig(
+            apiBaseUrl = if (isReleaseBuild) {
+                PRODUCTION_API_BASE_URL
+            } else {
+                when (platform) {
+                    ClientPlatform.ANDROID -> ANDROID_EMULATOR_LOCAL_API
+                    ClientPlatform.IOS -> IOS_SIMULATOR_LOCAL_API
+                }
+            },
+        )
+    }
+}
 
 val dataModule = module {
     single<Settings> { Settings() }
-    singleOf(::SettingsTokenStore) { bind<TokenStore>() }
-    singleOf(::SettingsUserLocalStore) { bind<UserLocalStore>() }
-    single<SyncOutbox> { InMemorySyncOutbox() }
-    singleOf(::InMemoryTripLocalStore) { bind<TripLocalStore>() }
-    singleOf(::InMemoryPurchaseLocalStore) { bind<PurchaseLocalStore>() }
-    singleOf(::InMemoryWishlistLocalStore) { bind<WishlistLocalStore>() }
-    singleOf(::InMemoryDiaryLocalStore) { bind<DiaryLocalStore>() }
-    singleOf(::InMemoryTaxFreeLocalStore) { bind<TaxFreeLocalStore>() }
-    singleOf(::InMemoryAlertsLocalStore) { bind<AlertsLocalStore>() }
-    singleOf(::InMemoryRouteLocalStore) { bind<RouteLocalStore>() }
-    singleOf(::InMemoryStatsLocalStore) { bind<StatsLocalStore>() }
-    singleOf(::InMemoryExportLocalStore) { bind<ExportLocalStore>() }
+    // Overridden by platform extraModules with SecureTokenStore.
+    single<TokenStore> {
+        error("TokenStore must be provided by platform extraModules (SecureTokenStore)")
+    }
+    single<SettingsUserLocalStore>() bind UserLocalStore::class
+    single<InMemorySyncOutbox>() bind SyncOutbox::class
+    single<InMemoryTripLocalStore>() bind TripLocalStore::class
+    single<InMemoryPurchaseLocalStore>() bind PurchaseLocalStore::class
+    single<InMemoryWishlistLocalStore>() bind WishlistLocalStore::class
+    single<InMemoryDiaryLocalStore>() bind DiaryLocalStore::class
+    single<InMemoryTaxFreeLocalStore>() bind TaxFreeLocalStore::class
+    single<InMemoryAlertsLocalStore>() bind AlertsLocalStore::class
+    single<InMemoryRouteLocalStore>() bind RouteLocalStore::class
+    single<InMemoryStatsLocalStore>() bind StatsLocalStore::class
+    single<InMemoryExportLocalStore>() bind ExportLocalStore::class
     single<ClientRemoteConfigStore> { SettingsClientRemoteConfigStore(get()) }
-    single { PendingDeepLinkStore() }
+    single<PendingDeepLinkStore>()
     single<LocalSessionStore> {
         CompositeLocalSessionStore(
             userLocalStore = get(),
@@ -223,12 +249,12 @@ val dataModule = module {
             pendingDeepLinks = get(),
         )
     }
-    single<LocalCacheInventory> { InMemoryLocalCacheInventory() }
-    single<SyncConflictNotifier> { InMemorySyncConflictNotifier() }
-    single<BackgroundSyncScheduler> { NoOpBackgroundSyncScheduler() }
+    single<InMemoryLocalCacheInventory>() bind LocalCacheInventory::class
+    single<InMemorySyncConflictNotifier>() bind SyncConflictNotifier::class
+    single<NoOpBackgroundSyncScheduler>() bind BackgroundSyncScheduler::class
     single<Observability> { ObservabilityFactory.create(get<AppConfig>().sentryDsn) }
-    single<Analytics> { NoOpAnalytics }
-    single<ConnectivityMonitor> { AlwaysOnlineConnectivityMonitor() }
+    single { NoOpAnalytics } bind Analytics::class
+    single<AlwaysOnlineConnectivityMonitor>() bind ConnectivityMonitor::class
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
@@ -276,6 +302,7 @@ val dataModule = module {
             ),
         ) {
             expectSuccess = false
+            installVoyageHttpTimeouts()
         }
     }
     single { AuthApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
@@ -298,13 +325,7 @@ val dataModule = module {
             baseUrl = get<AppConfig>().apiBaseUrl,
         )
     }
-    single {
-        AuthRepositoryImpl(
-            api = get(),
-            tokenStore = get(),
-            userLocalStore = get(),
-        )
-    } bind AuthRepository::class
+    single<AuthRepositoryImpl>() bind AuthRepository::class
     single {
         TripRepositoryImpl(
             homeApi = get(),
@@ -324,13 +345,8 @@ val dataModule = module {
             clock = { epochMillis() },
         )
     } bind PurchaseRepository::class
-    singleOf(::UserRepositoryImpl) { bind<UserRepository>() }
-    single {
-        ClientRemoteConfigRepositoryImpl(
-            api = get(),
-            localStore = get(),
-        )
-    } bind ClientRemoteConfigRepository::class
+    single<UserRepositoryImpl>() bind UserRepository::class
+    single<ClientRemoteConfigRepositoryImpl>() bind ClientRemoteConfigRepository::class
     single {
         WishlistRepositoryImpl(
             api = get(),
@@ -352,18 +368,18 @@ val dataModule = module {
             },
         )
     } bind DiaryRepository::class
-    singleOf(::TaxFreeRepositoryImpl) { bind<TaxFreeRepository>() }
-    singleOf(::AlertsRepositoryImpl) { bind<AlertsRepository>() }
-    singleOf(::RouteRepositoryImpl) { bind<RouteRepository>() }
-    singleOf(::StatsRepositoryImpl) { bind<StatsRepository>() }
-    singleOf(::ExportRepositoryImpl) { bind<ExportRepository>() }
+    single<TaxFreeRepositoryImpl>() bind TaxFreeRepository::class
+    single<AlertsRepositoryImpl>() bind AlertsRepository::class
+    single<RouteRepositoryImpl>() bind RouteRepository::class
+    single<StatsRepositoryImpl>() bind StatsRepository::class
+    single<ExportRepositoryImpl>() bind ExportRepository::class
     single {
         MediaRepositoryImpl(
             api = get(),
             idempotencyKey = { "m-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
         )
     } bind MediaRepository::class
-    singleOf(::PushRepositoryImpl) { bind<PushRepository>() }
+    single<PushRepositoryImpl>() bind PushRepository::class
     single {
         SyncOutboxProcessor(
             outbox = get(),
@@ -379,13 +395,13 @@ val dataModule = module {
             conflictNotifier = get(),
         )
     }
-    singleOf(::SyncRepositoryImpl) { bind<SyncRepository>() }
-    singleOf(::SyncScheduler)
+    single<SyncRepositoryImpl>() bind SyncRepository::class
+    single<SyncScheduler>()
 }
 
 val domainModule = module {
-    factoryOf(::RegisterPushDeviceUseCase)
-    factoryOf(::UnregisterPushDeviceUseCase)
+    factory<RegisterPushDeviceUseCase>()
+    factory<UnregisterPushDeviceUseCase>()
     factory {
         LoginUseCase(
             authRepository = get(),
@@ -398,117 +414,76 @@ val domainModule = module {
             registerPushDevice = get(),
         )
     }
-    factoryOf(::RequestPasswordResetUseCase)
-    factoryOf(::ObserveConnectivityUseCase)
-    factoryOf(::IsLoggedInUseCase)
+    factory<RequestPasswordResetUseCase>()
+    factory<ObserveConnectivityUseCase>()
+    factory<IsLoggedInUseCase>()
     factory {
         LogoutUseCase(
             authRepository = get(),
             localSessionStore = get(),
         )
     }
-    factoryOf(::ObserveHomeUseCase)
-    factoryOf(::DrainSyncOutboxUseCase)
-    factory {
-        RefreshHomeUseCase(
-            tripRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factory {
-        CreatePurchaseUseCase(
-            purchaseRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factory {
-        UploadReceiptUseCase(
-            mediaRepository = get(),
-            checksum = get(),
-            compressor = get(),
-        )
-    }
-    factoryOf(::FetchReceiptOcrUseCase)
-    factory {
-        CreateTripUseCase(
-            tripRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factoryOf(::ObserveTripDetailUseCase)
-    factoryOf(::ObserveProfileUseCase)
-    factoryOf(::ObservePreferencesUseCase)
-    factoryOf(::RefreshProfileUseCase)
-    factoryOf(::RefreshPreferencesUseCase)
-    factoryOf(::UpdateProfileUseCase)
-    factoryOf(::UpdatePreferencesUseCase)
-    factoryOf(::ObserveWishlistUseCase)
-    factoryOf(::RefreshWishlistUseCase)
-    factory {
-        CreateWishlistItemUseCase(
-            wishlistRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factory {
-        DeleteWishlistItemUseCase(
-            wishlistRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factoryOf(::ObserveDiaryUseCase)
-    factoryOf(::RefreshDiaryUseCase)
-    factory {
-        CreateDiaryEntryUseCase(
-            diaryRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factory {
-        DeleteDiaryEntryUseCase(
-            diaryRepository = get(),
-            drainSyncOutbox = get(),
-        )
-    }
-    factoryOf(::ObserveTaxFreeUseCase)
-    factoryOf(::RefreshTaxFreeUseCase)
-    factoryOf(::ObserveAlertsUseCase)
-    factoryOf(::RefreshAlertsUseCase)
-    factoryOf(::ObserveRouteUseCase)
-    factoryOf(::RefreshRouteUseCase)
-    factoryOf(::ObserveStatsUseCase)
-    factoryOf(::RefreshStatsUseCase)
-    factoryOf(::ObserveExportJobUseCase)
-    factoryOf(::CreateExportUseCase)
-    factoryOf(::RefreshExportJobUseCase)
-    factoryOf(::RefreshTripUseCase)
-    factoryOf(::AddTravelerUseCase)
-    factoryOf(::InviteTravelerUseCase)
-    factoryOf(::RefreshExchangeRateUseCase)
-    factoryOf(::ActivatePremiumUseCase)
-    factoryOf(::ObservePremiumUseCase)
-    factoryOf(::RefreshClientRemoteConfigUseCase)
-    factoryOf(::EvaluateForceUpdateUseCase)
-    factoryOf(::ObserveFeatureFlagUseCase)
+    factory<ObserveHomeUseCase>()
+    factory<DrainSyncOutboxUseCase>()
+    factory<RefreshHomeUseCase>()
+    factory<CreatePurchaseUseCase>()
+    factory<UploadReceiptUseCase>()
+    factory<FetchReceiptOcrUseCase>()
+    factory<CreateTripUseCase>()
+    factory<ObserveTripDetailUseCase>()
+    factory<ObserveProfileUseCase>()
+    factory<ObservePreferencesUseCase>()
+    factory<RefreshProfileUseCase>()
+    factory<RefreshPreferencesUseCase>()
+    factory<UpdateProfileUseCase>()
+    factory<UpdatePreferencesUseCase>()
+    factory<ObserveWishlistUseCase>()
+    factory<RefreshWishlistUseCase>()
+    factory<CreateWishlistItemUseCase>()
+    factory<DeleteWishlistItemUseCase>()
+    factory<ObserveDiaryUseCase>()
+    factory<RefreshDiaryUseCase>()
+    factory<CreateDiaryEntryUseCase>()
+    factory<DeleteDiaryEntryUseCase>()
+    factory<ObserveTaxFreeUseCase>()
+    factory<RefreshTaxFreeUseCase>()
+    factory<ObserveAlertsUseCase>()
+    factory<RefreshAlertsUseCase>()
+    factory<ObserveRouteUseCase>()
+    factory<RefreshRouteUseCase>()
+    factory<ObserveStatsUseCase>()
+    factory<RefreshStatsUseCase>()
+    factory<ObserveExportJobUseCase>()
+    factory<CreateExportUseCase>()
+    factory<RefreshExportJobUseCase>()
+    factory<RefreshTripUseCase>()
+    factory<AddTravelerUseCase>()
+    factory<InviteTravelerUseCase>()
+    factory<RefreshExchangeRateUseCase>()
+    factory<ActivatePremiumUseCase>()
+    factory<ObservePremiumUseCase>()
+    factory<RefreshClientRemoteConfigUseCase>()
+    factory<EvaluateForceUpdateUseCase>()
+    factory<ObserveFeatureFlagUseCase>()
     factory {
         EvictLocalCacheUseCase(
             inventory = get(),
             clock = { epochMillis() },
         )
     }
-    factoryOf(::RefreshPurchasesUseCase)
-    factoryOf(::ObserveSyncConflictsUseCase)
-    factoryOf(::AcknowledgeSyncConflictUseCase)
+    factory<RefreshPurchasesUseCase>()
+    factory<ObserveSyncConflictsUseCase>()
+    factory<AcknowledgeSyncConflictUseCase>()
 }
 
 val presentationModule = module {
-    factoryOf(::AuthViewModel)
-    factoryOf(::ForgotPasswordViewModel)
-    factoryOf(::ForceUpdateViewModel)
-    factoryOf(::HomeViewModel)
-    factoryOf(::NewTripViewModel)
-    factoryOf(::ProfileViewModel)
-    factoryOf(::WishlistViewModel)
+    factory<AuthViewModel>()
+    factory<ForgotPasswordViewModel>()
+    factory<ForceUpdateViewModel>()
+    factory<HomeViewModel>()
+    factory<NewTripViewModel>()
+    factory<ProfileViewModel>()
+    factory<WishlistViewModel>()
     factory { params ->
         TripDetailViewModel(
             tripId = params.get(),
@@ -591,7 +566,12 @@ fun initKoin(
     appDeclaration()
     modules(
         module { single { config } },
-        *sharedModules.toTypedArray(),
-        *extraModules.toTypedArray(),
+        dataModule,
+        domainModule,
+        presentationModule,
     )
+    // Platform extras (drivers/stores) stay dynamic — KOIN-W003 is expected here.
+    if (extraModules.isNotEmpty()) {
+        modules(extraModules)
+    }
 }

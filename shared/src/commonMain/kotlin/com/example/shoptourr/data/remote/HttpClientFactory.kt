@@ -3,6 +3,11 @@ package com.example.shoptourr.data.remote
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -16,6 +21,7 @@ import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import com.example.shoptourr.observability.NoOpObservability
@@ -70,6 +76,11 @@ private fun requestIdPlugin(observability: Observability) = createClientPlugin("
     }
 }
 
+internal const val VOYAGE_REQUEST_TIMEOUT_MS = 15_000L
+internal const val VOYAGE_CONNECT_TIMEOUT_MS = 10_000L
+internal const val VOYAGE_SOCKET_TIMEOUT_MS = 15_000L
+internal const val VOYAGE_HTTP_MAX_RETRIES = 3
+
 fun createVoyageHttpClient(
     baseUrl: String,
     engine: HttpClientEngine,
@@ -78,6 +89,7 @@ fun createVoyageHttpClient(
     refreshTokens: (suspend () -> BearerTokens?)? = null,
     enableLogging: Boolean = false,
     observability: Observability = NoOpObservability,
+    retryDelayMillis: Long? = null,
 ): HttpClient = HttpClient(engine) {
     expectSuccess = false
     install(ContentNegotiation) {
@@ -114,11 +126,53 @@ fun createVoyageHttpClient(
         url.takeFrom(baseUrl.trimEnd('/') + "/")
         header(HttpHeaders.Accept, ContentType.Application.Json.toString())
     }
-    applyCommonTimeouts()
+    // Retry before timeout so timed-out GET/HEAD can be retried (Ktor plugin order).
+    installVoyageSafeRetry(retryDelayMillis)
+    installVoyageHttpTimeouts()
 }
 
-private fun HttpClientConfig<*>.applyCommonTimeouts() {
-    // Engine-specific timeouts configured in platform engines.
+internal fun HttpClientConfig<*>.installVoyageHttpTimeouts() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = VOYAGE_REQUEST_TIMEOUT_MS
+        connectTimeoutMillis = VOYAGE_CONNECT_TIMEOUT_MS
+        socketTimeoutMillis = VOYAGE_SOCKET_TIMEOUT_MS
+    }
+}
+
+internal fun HttpClientConfig<*>.installVoyageSafeRetry(retryDelayMillis: Long? = null) {
+    install(HttpRequestRetry) {
+        maxRetries = VOYAGE_HTTP_MAX_RETRIES
+        retryIf { request, response ->
+            request.method.isIdempotentSafe() && response.status.value in 500..599
+        }
+        retryOnExceptionIf { request, cause ->
+            request.method.isIdempotentSafe() && cause.isRetryableTimeout()
+        }
+        val delayMs = retryDelayMillis
+        if (delayMs != null) {
+            delayMillis { delayMs }
+        } else {
+            exponentialDelay()
+        }
+    }
+}
+
+private fun HttpMethod.isIdempotentSafe(): Boolean =
+    this == HttpMethod.Get || this == HttpMethod.Head
+
+private fun Throwable.isRetryableTimeout(): Boolean {
+    var current: Throwable? = this
+    while (current != null) {
+        if (
+            current is HttpRequestTimeoutException ||
+            current is ConnectTimeoutException ||
+            current is SocketTimeoutException
+        ) {
+            return true
+        }
+        current = current.cause
+    }
+    return false
 }
 
 /** Context7: expect/actual httpClient with OkHttp (Android) / Darwin (iOS). */

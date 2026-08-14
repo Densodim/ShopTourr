@@ -26,6 +26,7 @@ import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun TripDetailScreen(
@@ -80,8 +81,8 @@ internal fun TripDetailContent(
             VoyageTopBar(onBack = { onIntent(TripDetailIntent.Back) })
             Spacer(Modifier.height(16.dp))
             EmptyState(
-                title = state.error?.title ?: "Не найдено",
-                message = state.error?.message.orEmpty(),
+                title = state.error?.let { t(it.titleKey) } ?: t("error_not_found_title"),
+                message = state.error?.let { it.messageOverride ?: t(it.messageKey) }.orEmpty(),
             )
         }
         return

@@ -9,4 +9,6 @@ plugins {
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.sqldelight) apply false
     alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.koin.compiler) apply false
+    alias(libs.plugins.spring.boot) apply false
 }

@@ -2,6 +2,7 @@ package com.example.shoptourr.ui.i18n
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.example.shoptourr.domain.model.UserPreferences
@@ -33,6 +34,8 @@ fun VoyageLocaleProvider(
     val preferences = produceState<UserPreferences?>(initialValue = null, observePreferences) {
         observePreferences().collect { value = it }
     }.value
-    val strings = VoyageStrings(AppLocale.fromTag(preferences?.locale))
+    val locale = AppLocale.fromTag(preferences?.locale)
+    SideEffect { VoyageI18n.currentLocale = locale }
+    val strings = VoyageStrings(locale)
     CompositionLocalProvider(LocalVoyageStrings provides strings, content = content)
 }

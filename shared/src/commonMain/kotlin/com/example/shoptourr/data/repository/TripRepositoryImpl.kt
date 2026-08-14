@@ -253,7 +253,7 @@ class TripRepositoryImpl(
             id = id,
             name = name,
             colorHex = colorHex,
-            avatarGlyph = avatarGlyph,
+            avatarGlyph = avatarGlyph ?: name.take(1).uppercase(),
             isOwner = isOwner,
         )
 

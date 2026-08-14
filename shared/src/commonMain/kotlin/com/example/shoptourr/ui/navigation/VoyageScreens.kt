@@ -51,8 +51,6 @@ import com.example.shoptourr.ui.theme.VoyageTokens
 import com.example.shoptourr.ui.trip.NewTripScreen
 import com.example.shoptourr.ui.trip.TripDetailScreen
 import com.example.shoptourr.ui.wishlist.WishlistScreen
-import org.koin.compose.koinInject
-import org.koin.core.parameter.parametersOf
 
 object WelcomeVoyageScreen : Screen {
     @Composable
@@ -69,7 +67,7 @@ data class LoginVoyageScreen(val registerMode: Boolean = false) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<AuthViewModel>()
+        val viewModel = rememberVoyageViewModel<AuthViewModel>()
         LaunchedEffect(registerMode) {
             viewModel.onIntent(AuthIntent.SetRegisterMode(registerMode))
         }
@@ -85,7 +83,7 @@ object ForgotPasswordVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<ForgotPasswordViewModel>()
+        val viewModel = rememberVoyageViewModel<ForgotPasswordViewModel>()
         ForgotPasswordScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -106,9 +104,9 @@ object MainShellVoyageScreen : Screen {
                 .background(VoyageTokens.bg),
         ) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                val homeViewModel = koinInject<HomeViewModel>()
-                val wishlistViewModel = koinInject<WishlistViewModel>()
-                val profileViewModel = koinInject<ProfileViewModel>()
+                val homeViewModel = rememberVoyageViewModel<HomeViewModel>()
+                val wishlistViewModel = rememberVoyageViewModel<WishlistViewModel>()
+                val profileViewModel = rememberVoyageViewModel<ProfileViewModel>()
                 when (current) {
                     VoyageTab.Home -> {
                         HomeScreen(
@@ -157,7 +155,7 @@ object NewTripVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<NewTripViewModel>()
+        val viewModel = rememberVoyageViewModel<NewTripViewModel>()
         NewTripScreen(
             viewModel = viewModel,
             onCreated = { navigator.pop() },
@@ -170,7 +168,7 @@ object SettingsVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<ProfileViewModel>()
+        val viewModel = rememberVoyageViewModel<ProfileViewModel>()
         SettingsScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -187,7 +185,7 @@ object EditProfileVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<ProfileViewModel>()
+        val viewModel = rememberVoyageViewModel<ProfileViewModel>()
         ProfileScreen(
             viewModel = viewModel,
             onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
@@ -225,7 +223,7 @@ object ProfileVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<ProfileViewModel>()
+        val viewModel = rememberVoyageViewModel<ProfileViewModel>()
         ProfileScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -241,7 +239,7 @@ object WishlistVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<WishlistViewModel>()
+        val viewModel = rememberVoyageViewModel<WishlistViewModel>()
         WishlistScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -254,7 +252,7 @@ data class TripDetailVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<TripDetailViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<TripDetailViewModel>(tripId)
         TripDetailScreen(
             viewModel = viewModel,
             onAddPurchase = { id -> navigator.push(AddPurchaseVoyageScreen(id)) },
@@ -274,7 +272,7 @@ data class AddPurchaseVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<AddPurchaseViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<AddPurchaseViewModel>(tripId)
         AddPurchaseScreen(
             viewModel = viewModel,
             onCreated = { navigator.pop() },
@@ -287,7 +285,7 @@ data class DiaryVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<DiaryViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<DiaryViewModel>(tripId)
         DiaryScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -300,7 +298,7 @@ data class TaxFreeVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<TaxFreeViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<TaxFreeViewModel>(tripId)
         TaxFreeScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -313,7 +311,7 @@ data class AlertsVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<AlertsViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<AlertsViewModel>(tripId)
         AlertsScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -326,7 +324,7 @@ data class RouteVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<RouteViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<RouteViewModel>(tripId)
         RouteScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -339,7 +337,7 @@ data class StatsVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<StatsViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<StatsViewModel>(tripId)
         StatsScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
@@ -352,7 +350,7 @@ data class ExportVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinInject<ExportViewModel> { parametersOf(tripId) }
+        val viewModel = rememberVoyageViewModel<ExportViewModel>(tripId)
         ExportScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },

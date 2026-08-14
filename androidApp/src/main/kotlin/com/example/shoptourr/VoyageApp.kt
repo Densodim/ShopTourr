@@ -55,8 +55,12 @@ import org.koin.dsl.module
 class VoyageApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
         initKoin(
-            config = AppConfig(),
+            config = AppConfig.forClient(
+                isReleaseBuild = !debuggable,
+                platform = ClientPlatform.ANDROID,
+            ),
             extraModules = listOf(androidDatabaseModule),
         ) {
             androidLogger()
