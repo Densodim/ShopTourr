@@ -38,7 +38,7 @@ class ScreenStringsTest {
     }
 
     @Test
-    fun `english values are real translations, not the russian fallback`() {
+    fun `english values are real translations and not the russian fallback`() {
         screenKeys.forEach { key ->
             assertNotEquals(
                 VoyageI18n.t(AppLocale.RU, key),

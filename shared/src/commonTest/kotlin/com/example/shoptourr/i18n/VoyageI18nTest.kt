@@ -55,7 +55,7 @@ class VoyageI18nTest {
     }
 
     @Test
-    fun `reset password screen is really translated, not falling back to russian`() {
+    fun `reset password screen is really translated and not falling back to russian`() {
         listOf("reset_password", "reset_password_sub", "reset_token", "reset_done", "reset_done_sub")
             .forEach { key ->
                 assertNotEquals(

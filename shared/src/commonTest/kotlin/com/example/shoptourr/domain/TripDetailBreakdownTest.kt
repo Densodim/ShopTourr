@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class TripDetailBreakdownTest {
 
     @Test
-    fun `groups purchases by day, newest first, with a per-day total`() {
+    fun `groups purchases by day newest first with a per-day total`() {
         val detail = detail(
             purchase("p1", "Кофе", PurchaseCategory.FOOD, "4.50", date = "2026-08-15"),
             purchase("p2", "Трамвай", PurchaseCategory.TRANSPORT, "3.00", date = "2026-08-15"),
@@ -44,7 +44,7 @@ class TripDetailBreakdownTest {
     }
 
     @Test
-    fun `lists only the categories actually used, in spend order`() {
+    fun `lists only the categories actually used in spend order`() {
         val detail = detail(
             purchase("p1", "Кофе", PurchaseCategory.FOOD, "4.50"),
             purchase("p2", "Плитка", PurchaseCategory.SOUVENIRS, "24.00"),
