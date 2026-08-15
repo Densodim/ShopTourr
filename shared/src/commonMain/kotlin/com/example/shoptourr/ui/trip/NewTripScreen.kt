@@ -19,6 +19,7 @@ import com.example.shoptourr.presentation.trip.NewTripViewModel
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageDateField
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
@@ -108,13 +109,13 @@ internal fun NewTripContent(
                 testTag = VoyageTestTags.NEW_TRIP_BUDGET,
             )
             Spacer(Modifier.height(12.dp))
-            VoyageTextField(
+            VoyageCurrencyField(
                 value = state.budgetCurrency,
-                onValueChange = { onIntent(NewTripIntent.CurrencyChanged(it.uppercase())) },
+                onValueChange = { onIntent(NewTripIntent.CurrencyChanged(it)) },
                 label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
-            VoyageTextField(
+            VoyageCurrencyField(
                 value = state.quoteCurrency,
                 onValueChange = { onIntent(NewTripIntent.QuoteCurrencyChanged(it)) },
                 label = t("quote_currency"),

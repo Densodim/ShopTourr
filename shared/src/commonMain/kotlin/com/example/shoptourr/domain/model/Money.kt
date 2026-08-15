@@ -54,6 +54,18 @@ data class Money(
     }
 }
 
+/** ISO-4217 codes aligned with the backend FX catalog. */
+object SupportedCurrencies {
+    val codes: List<String> = listOf(
+        "EUR", "USD", "GBP", "JPY", "CHF",
+        "NOK", "SEK", "DKK", "PLN", "CZK", "HUF",
+        "RUB", "TRY", "BRL", "CAD", "AUD",
+        "CNY", "KRW", "INR",
+    )
+
+    fun nameKey(code: String): String = "currency_$code"
+}
+
 data class VatBreakdown(
     val net: Money,
     val vat: Money,

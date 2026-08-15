@@ -26,6 +26,7 @@ import com.example.shoptourr.ui.components.LoadingBlock
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageTextField
@@ -96,7 +97,7 @@ internal fun WishlistContent(
                 errorMessage = state.fieldErrors.price?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
-            VoyageTextField(
+            VoyageCurrencyField(
                 value = state.currencyDraft,
                 onValueChange = { onIntent(WishlistIntent.CurrencyChanged(it)) },
                 label = t("currency_pref"),

@@ -26,6 +26,7 @@ import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
@@ -104,7 +105,7 @@ internal fun AddPurchaseContent(
                 testTag = VoyageTestTags.ADD_PURCHASE_AMOUNT,
             )
             Spacer(Modifier.height(12.dp))
-            VoyageTextField(
+            VoyageCurrencyField(
                 value = state.currency,
                 onValueChange = { onIntent(AddPurchaseIntent.CurrencyChanged(it)) },
                 label = t("currency_pref"),

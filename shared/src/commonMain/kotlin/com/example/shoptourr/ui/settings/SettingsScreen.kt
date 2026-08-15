@@ -25,11 +25,11 @@ import com.example.shoptourr.ui.components.LoadingBlock
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageListRow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
-import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
 
@@ -106,9 +106,12 @@ internal fun SettingsContent(
                 }
             }
             Spacer(Modifier.height(12.dp))
-            VoyageTextField(
+            VoyageCurrencyField(
                 value = state.currencyDraft,
-                onValueChange = { onIntent(ProfileIntent.CurrencyChanged(it)) },
+                onValueChange = {
+                    onIntent(ProfileIntent.CurrencyChanged(it))
+                    onIntent(ProfileIntent.SavePreferences)
+                },
                 label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
