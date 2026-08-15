@@ -2,6 +2,7 @@ package com.example.shoptourr.i18n
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class VoyageI18nTest {
 
@@ -51,5 +52,17 @@ class VoyageI18nTest {
     @Test
     fun `russian and english catalogs cover the same keys`() {
         assertEquals(VoyageCatalog.ru.keys, VoyageCatalog.en.keys)
+    }
+
+    @Test
+    fun `reset password screen is really translated, not falling back to russian`() {
+        listOf("reset_password", "reset_password_sub", "reset_token", "reset_done", "reset_done_sub")
+            .forEach { key ->
+                assertNotEquals(
+                    VoyageI18n.t(AppLocale.RU, key),
+                    VoyageI18n.t(AppLocale.EN, key),
+                    "key '$key' resolves to the same text in both locales",
+                )
+            }
     }
 }

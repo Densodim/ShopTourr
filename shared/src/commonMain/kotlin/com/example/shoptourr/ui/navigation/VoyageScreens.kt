@@ -19,6 +19,7 @@ import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthViewModel
 import com.example.shoptourr.presentation.auth.ForgotPasswordViewModel
+import com.example.shoptourr.presentation.auth.ResetPasswordViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
@@ -32,6 +33,7 @@ import com.example.shoptourr.presentation.trip.TripDetailViewModel
 import com.example.shoptourr.presentation.wishlist.WishlistViewModel
 import com.example.shoptourr.ui.alerts.AlertsScreen
 import com.example.shoptourr.ui.auth.ForgotPasswordScreen
+import com.example.shoptourr.ui.auth.ResetPasswordScreen
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.auth.WelcomeScreen
 import com.example.shoptourr.ui.components.VoyageTabBar
@@ -87,6 +89,25 @@ object ForgotPasswordVoyageScreen : Screen {
         ForgotPasswordScreen(
             viewModel = viewModel,
             onBack = { navigator.pop() },
+            onEnterCode = { email -> navigator.push(ResetPasswordVoyageScreen(email = email)) },
+        )
+    }
+}
+
+data class ResetPasswordVoyageScreen(
+    val email: String = "",
+    val token: String = "",
+) : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val viewModel = rememberVoyageViewModel<ResetPasswordViewModel>()
+        ResetPasswordScreen(
+            viewModel = viewModel,
+            onBack = { navigator.pop() },
+            onSignIn = { navigator.replaceAll(LoginVoyageScreen(registerMode = false)) },
+            prefillEmail = email,
+            prefillToken = token,
         )
     }
 }

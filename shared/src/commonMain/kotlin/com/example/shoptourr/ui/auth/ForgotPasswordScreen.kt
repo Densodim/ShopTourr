@@ -27,6 +27,7 @@ import com.example.shoptourr.ui.i18n.t
 fun ForgotPasswordScreen(
     viewModel: ForgotPasswordViewModel,
     onBack: () -> Unit,
+    onEnterCode: (email: String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     LaunchedEffect(viewModel) {
@@ -37,6 +38,7 @@ fun ForgotPasswordScreen(
     ForgotPasswordContent(
         state = state,
         onIntent = viewModel::onIntent,
+        onEnterCode = { onEnterCode(state.email) },
     )
 }
 
@@ -44,6 +46,7 @@ fun ForgotPasswordScreen(
 internal fun ForgotPasswordContent(
     state: ForgotPasswordUiState,
     onIntent: (ForgotPasswordIntent) -> Unit,
+    onEnterCode: () -> Unit = {},
 ) {
     VoyageScreen {
         VoyageTopBar(title = t("forgot_password"), onBack = { onIntent(ForgotPasswordIntent.Back) })
@@ -69,6 +72,11 @@ internal fun ForgotPasswordContent(
                 )
             }
             Spacer(Modifier.height(16.dp))
+            VoyageButton(
+                text = t("enter_code"),
+                onClick = onEnterCode,
+            )
+            Spacer(Modifier.height(8.dp))
             VoyageButton(
                 text = t("back"),
                 onClick = { onIntent(ForgotPasswordIntent.Back) },
