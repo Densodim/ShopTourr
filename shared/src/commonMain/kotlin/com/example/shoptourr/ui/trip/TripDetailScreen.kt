@@ -1,16 +1,20 @@
 package com.example.shoptourr.ui.trip
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.trip.TripDetailIntent
 import com.example.shoptourr.presentation.trip.TripDetailUiEvent
@@ -21,12 +25,15 @@ import com.example.shoptourr.ui.components.FullScreenLoading
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
+import com.example.shoptourr.ui.components.VoyageQuickAction
+import com.example.shoptourr.ui.components.VoyageQuickActions
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun TripDetailScreen(
@@ -92,6 +99,16 @@ internal fun TripDetailContent(
         VoyageTopBar(
             title = detail.trip.city,
             onBack = { onIntent(TripDetailIntent.Back) },
+            actions = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { onIntent(TripDetailIntent.OpenMap) }) {
+                        Text(t("map"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = { onIntent(TripDetailIntent.OpenExport) }) {
+                        Text(t("export"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            },
         )
         Text(
             text = detail.trip.country,
@@ -185,21 +202,20 @@ internal fun TripDetailContent(
         }
 
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = "Поездка") {
-            VoyageButton(text = "Добавить покупку", onClick = { onIntent(TripDetailIntent.AddPurchase) })
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Дневник", onClick = { onIntent(TripDetailIntent.OpenDiary) }, variant = VoyageButtonVariant.Secondary)
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Tax Free", onClick = { onIntent(TripDetailIntent.OpenTaxFree) }, variant = VoyageButtonVariant.Secondary)
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Алерты", onClick = { onIntent(TripDetailIntent.OpenAlerts) }, variant = VoyageButtonVariant.Secondary)
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Маршрут", onClick = { onIntent(TripDetailIntent.OpenMap) }, variant = VoyageButtonVariant.Secondary)
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Статистика", onClick = { onIntent(TripDetailIntent.OpenStats) }, variant = VoyageButtonVariant.Secondary)
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(text = "Экспорт", onClick = { onIntent(TripDetailIntent.OpenExport) }, variant = VoyageButtonVariant.Secondary)
-        }
+        VoyageQuickActions(
+            modifier = Modifier.testTag(VoyageTestTags.TRIP_QUICK_ACTIONS),
+            actions = listOf(
+                VoyageQuickAction(label = t("stats"), onClick = { onIntent(TripDetailIntent.OpenStats) }),
+                VoyageQuickAction(label = t("diary"), onClick = { onIntent(TripDetailIntent.OpenDiary) }),
+                VoyageQuickAction(label = t("alerts"), onClick = { onIntent(TripDetailIntent.OpenAlerts) }),
+                VoyageQuickAction(label = t("taxfree"), onClick = { onIntent(TripDetailIntent.OpenTaxFree) }),
+            ),
+        )
+        Spacer(Modifier.height(16.dp))
+        VoyageButton(
+            text = t("new_purchase"),
+            onClick = { onIntent(TripDetailIntent.AddPurchase) },
+        )
 
         Spacer(Modifier.height(20.dp))
         VoyageSection(title = "Покупки · ${detail.purchases.size}") {

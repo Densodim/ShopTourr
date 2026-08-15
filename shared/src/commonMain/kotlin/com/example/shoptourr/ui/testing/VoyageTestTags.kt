@@ -25,6 +25,8 @@ object VoyageTestTags {
     const val NEW_TRIP_BUDGET = "new_trip_budget"
     const val NEW_TRIP_SUBMIT = "new_trip_submit"
 
+    const val TRIP_QUICK_ACTIONS = "trip_quick_actions"
+
     const val ADD_PURCHASE_NAME = "add_purchase_name"
     const val ADD_PURCHASE_AMOUNT = "add_purchase_amount"
     const val ADD_PURCHASE_SUBMIT = "add_purchase_submit"
