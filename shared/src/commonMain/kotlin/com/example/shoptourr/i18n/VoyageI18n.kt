@@ -36,4 +36,28 @@ object VoyageI18n {
         }
         return value
     }
+
+    /**
+     * Counted noun for [base] — "1 покупка" / "3 покупки" / "7 покупок". Russian
+     * needs three forms, which a single catalog string cannot carry, so this looks
+     * up `<base>_one|few|many` and fills `{n}`.
+     */
+    fun plural(locale: AppLocale, base: String, count: Int): String {
+        val suffix = when (locale) {
+            AppLocale.RU -> russianForm(count)
+            AppLocale.EN -> if (count == 1) "one" else "many"
+        }
+        return t(locale, "${base}_$suffix", mapOf("n" to count.toString()))
+    }
+
+    private fun russianForm(count: Int): String {
+        val n = if (count < 0) -count else count
+        // 11..14 look like 1..4 but take the plural form.
+        if (n % 100 in 11..14) return "many"
+        return when (n % 10) {
+            1 -> "one"
+            2, 3, 4 -> "few"
+            else -> "many"
+        }
+    }
 }

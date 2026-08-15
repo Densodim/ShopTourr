@@ -52,6 +52,7 @@ import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.i18n.tPlural
 import com.example.shoptourr.ui.testing.VoyageTestTags
 import com.example.shoptourr.ui.util.TripDayLabel
 import kotlinx.datetime.TimeZone
@@ -304,7 +305,7 @@ private fun TripHero(state: TripDetailUiState) {
             trip.country
         }
         Text(
-            text = "$dayLine · ${state.detail.purchases.size} ${t("purchases").lowercase()}",
+            text = "$dayLine · ${tPlural("purchases", state.detail.purchases.size)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -566,7 +567,7 @@ private fun PurchaseRow(purchase: Purchase, currency: String) {
             }
             val sub = listOfNotNull(
                 purchase.place?.takeIf { it.isNotBlank() },
-                purchase.purchaseTime,
+                purchase.purchaseTime?.take(5),
                 if (purchase.pendingSync) "sync…" else null,
             ).joinToString(" · ")
             if (sub.isNotBlank()) {

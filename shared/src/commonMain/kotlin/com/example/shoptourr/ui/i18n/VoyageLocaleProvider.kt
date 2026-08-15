@@ -26,6 +26,11 @@ val LocalVoyageStrings = staticCompositionLocalOf { VoyageStrings(AppLocale.RU) 
 fun t(key: String, vararg pairs: Pair<String, Any>): String =
     LocalVoyageStrings.current(key, *pairs)
 
+/** Counted noun in the current locale, e.g. "1 покупка" / "7 покупок". */
+@Composable
+fun tPlural(base: String, count: Int): String =
+    VoyageI18n.plural(LocalVoyageStrings.current.locale, base, count)
+
 @Composable
 fun VoyageLocaleProvider(
     content: @Composable () -> Unit,
