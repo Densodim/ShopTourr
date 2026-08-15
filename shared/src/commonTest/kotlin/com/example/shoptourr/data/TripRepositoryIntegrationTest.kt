@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import com.example.shoptourr.data.remote.dto.common.MoneyDto
+import com.example.shoptourr.data.local.InMemoryUserLocalStore
 import com.example.shoptourr.data.remote.dto.home.HomeResponse
 import com.example.shoptourr.data.remote.dto.trip.TripStatus
 import com.example.shoptourr.data.remote.dto.trip.TripSummaryDto
@@ -65,6 +66,7 @@ class TripRepositoryIntegrationTest {
         )
         val local = InMemoryTripLocalStore()
         val outbox = InMemorySyncOutbox()
+        val users = InMemoryUserLocalStore()
         val repo = TripRepositoryImpl(
             homeApi = HomeApi(client, "https://api.test"),
             tripApi = TripApi(client, "https://api.test"),
@@ -72,6 +74,7 @@ class TripRepositoryIntegrationTest {
             outbox = outbox,
             idGenerator = { "local-trip" },
             clock = { 1L },
+            userLocalStore = users,
         )
 
         repo.refreshTrips().getOrThrow()
@@ -81,6 +84,9 @@ class TripRepositoryIntegrationTest {
         assertEquals(1, snapshot.upcomingCount)
         assertEquals(1, snapshot.archiveCount)
         assertEquals(DomainTripStatus.ACTIVE, local.all().first { it.city == "Lisbon" }.status)
+        // /api/home already carries the user; persisting it here is what survives a
+        // cold start, so home can greet by name without a second call to /api/me.
+        assertEquals("Mila", users.profile()?.displayName)
     }
 
     private fun trip(id: String, status: TripStatus, city: String) = TripSummaryDto(

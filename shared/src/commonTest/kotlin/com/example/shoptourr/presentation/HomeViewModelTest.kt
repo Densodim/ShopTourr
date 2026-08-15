@@ -10,6 +10,7 @@ import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
 import com.example.shoptourr.fake.FakeAuthRepository
 import com.example.shoptourr.fake.FakeConnectivityMonitor
 import com.example.shoptourr.fake.FakeTripRepository
+import com.example.shoptourr.fake.FakeUserRepository
 import com.example.shoptourr.presentation.home.HomeIntent
 import com.example.shoptourr.presentation.home.HomeViewModel
 import kotlin.test.AfterTest
@@ -46,7 +47,7 @@ class HomeViewModelTest {
         )
         val connectivity = FakeConnectivityMonitor(initiallyOnline = true)
         val vm = HomeViewModel(
-            observeHome = ObserveHomeUseCase(auth, trips),
+            observeHome = ObserveHomeUseCase(auth, trips, FakeUserRepository()),
             refreshHome = RefreshHomeUseCase(trips),
             observeConnectivity = ObserveConnectivityUseCase(connectivity),
         )
@@ -74,7 +75,7 @@ class HomeViewModelTest {
         )
         val connectivity = FakeConnectivityMonitor(initiallyOnline = true)
         val vm = HomeViewModel(
-            observeHome = ObserveHomeUseCase(auth, trips),
+            observeHome = ObserveHomeUseCase(auth, trips, FakeUserRepository()),
             refreshHome = RefreshHomeUseCase(trips),
             observeConnectivity = ObserveConnectivityUseCase(connectivity),
         )

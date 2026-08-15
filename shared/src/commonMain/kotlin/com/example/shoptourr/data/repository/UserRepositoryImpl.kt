@@ -75,7 +75,7 @@ class UserRepositoryImpl(
         }.mapHttpAppError()
 }
 
-private fun UserDto.toDomain(): UserProfile =
+internal fun UserDto.toDomain(): UserProfile =
     UserProfile(
         id = id,
         displayName = displayName,

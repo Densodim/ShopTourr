@@ -336,6 +336,7 @@ val dataModule = module {
             outbox = get(),
             idGenerator = { "t-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
             clock = { epochMillis() },
+            userLocalStore = get(),
         )
     } bind TripRepository::class
     single {

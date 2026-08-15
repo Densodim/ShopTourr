@@ -1,6 +1,7 @@
 package com.example.shoptourr.data.repository
 
 import com.example.shoptourr.data.local.TripLocalStore
+import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.remote.HomeApi
 import com.example.shoptourr.data.remote.TripApi
 import com.example.shoptourr.data.remote.dto.common.ExchangeRateDto
@@ -42,6 +43,7 @@ class TripRepositoryImpl(
     private val outbox: SyncOutbox,
     private val idGenerator: () -> String,
     private val clock: () -> Long,
+    private val userLocalStore: UserLocalStore? = null,
 ) : TripRepository {
 
     override suspend fun refreshTrips(): Result<Unit> =
@@ -52,6 +54,9 @@ class TripRepositoryImpl(
                 addAll(home.upcoming.map { it.toDomain() })
                 addAll(home.archive.map { it.toDomain() })
             }
+            // The home payload already carries the user, so persist it here instead of
+            // spending a second request on /api/me just to greet by name.
+            userLocalStore?.saveProfile(home.user.toDomain())
             localStore.replaceAll(trips)
         }.mapHttpAppError()
 
