@@ -41,4 +41,15 @@ class VoyageI18nTest {
         assertEquals(false, title.contains("<"))
         assertEquals(true, title.contains("глава истории"))
     }
+
+    @Test
+    fun `resolves the open affordance used by the current trip card`() {
+        assertEquals("Открыть", VoyageI18n.t(AppLocale.RU, "open"))
+        assertEquals("Open", VoyageI18n.t(AppLocale.EN, "open"))
+    }
+
+    @Test
+    fun `russian and english catalogs cover the same keys`() {
+        assertEquals(VoyageCatalog.ru.keys, VoyageCatalog.en.keys)
+    }
 }

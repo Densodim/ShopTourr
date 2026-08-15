@@ -16,6 +16,7 @@ object VoyageTestTags {
     const val HOME_NEW_TRIP = "home_new_trip"
     const val HOME_ADD_PURCHASE = "home_add_purchase"
     const val HOME_OFFLINE_BANNER = "home_offline_banner"
+    const val HOME_CURRENT_TRIP = "home_current_trip"
 
     const val NEW_TRIP_CITY = "new_trip_city"
     const val NEW_TRIP_COUNTRY = "new_trip_country"

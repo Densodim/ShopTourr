@@ -16,6 +16,7 @@ class VoyageTestTagsTest {
             VoyageTestTags.HOME_ROOT,
             VoyageTestTags.HOME_NEW_TRIP,
             VoyageTestTags.HOME_ADD_PURCHASE,
+            VoyageTestTags.HOME_CURRENT_TRIP,
             VoyageTestTags.NEW_TRIP_SUBMIT,
             VoyageTestTags.ADD_PURCHASE_SUBMIT,
         )
