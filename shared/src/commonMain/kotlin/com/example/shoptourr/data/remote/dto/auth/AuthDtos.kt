@@ -34,6 +34,13 @@ data class ForgotPasswordRequest(
 )
 
 @Serializable
+data class ResetPasswordRequest(
+    val email: String,
+    val token: String,
+    val newPassword: String,
+)
+
+@Serializable
 data class AuthUserDto(
     val id: String,
     val displayName: String,

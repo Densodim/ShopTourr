@@ -6,6 +6,7 @@ import com.example.shoptourr.data.remote.dto.auth.LoginRequest
 import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
 import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
+import com.example.shoptourr.data.remote.dto.auth.ResetPasswordRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -30,6 +31,16 @@ class AuthApi(
 
     suspend fun forgotPassword(request: ForgotPasswordRequest) {
         val response: HttpResponse = client.post("$root/auth/forgot-password") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+        if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {
+            throw mapHttpStatus(response.status)
+        }
+    }
+
+    suspend fun resetPassword(request: ResetPasswordRequest) {
+        val response: HttpResponse = client.post("$root/auth/reset-password") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }

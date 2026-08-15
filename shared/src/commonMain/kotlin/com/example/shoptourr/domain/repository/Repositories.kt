@@ -21,6 +21,7 @@ interface AuthRepository {
         locale: String = "ru",
     ): Result<AuthSession>
     suspend fun requestPasswordReset(email: String): Result<Unit>
+    suspend fun resetPassword(email: String, token: String, newPassword: String): Result<Unit>
     suspend fun refresh(): Result<AuthSession>
     suspend fun logout(allSessions: Boolean = false): Result<Unit>
     fun currentUser(): User?

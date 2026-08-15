@@ -54,6 +54,28 @@ class FakeAuthRepository(
         return Result.success(Unit)
     }
 
+    var resetPasswordCalls: Int = 0
+        private set
+    var lastResetEmail: String? = null
+        private set
+    var lastResetToken: String? = null
+        private set
+    var lastResetPassword: String? = null
+        private set
+
+    override suspend fun resetPassword(
+        email: String,
+        token: String,
+        newPassword: String,
+    ): Result<Unit> {
+        resetPasswordCalls += 1
+        lastResetEmail = email
+        lastResetToken = token
+        lastResetPassword = newPassword
+        error?.let { return Result.failure(it) }
+        return Result.success(Unit)
+    }
+
     override suspend fun refresh(): Result<AuthSession> =
         session?.let { Result.success(it) } ?: Result.failure(AppError.Unauthorized)
 
