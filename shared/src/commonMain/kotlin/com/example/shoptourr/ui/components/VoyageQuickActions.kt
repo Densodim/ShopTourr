@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 /** One tile of a [VoyageQuickActions] row. */
 data class VoyageQuickAction(
@@ -69,14 +71,21 @@ fun VoyageQuickActions(
                         },
                     )
                     .clickable(onClick = action.onClick)
-                    .padding(vertical = 16.dp, horizontal = 6.dp),
+                    .padding(vertical = 16.dp, horizontal = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = action.label,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    // Long labels ("Статистика") would otherwise break mid-word across
+                    // four columns; shrink to fit instead of hyphenating badly.
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 8.sp,
+                        maxFontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    ),
                 )
             }
         }
