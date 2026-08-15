@@ -70,11 +70,11 @@ internal fun TaxFreeContent(
         }
         Spacer(Modifier.height(16.dp))
         when {
-            state.isLoading && state.summary == null -> LoadingBlock(label = "Считаем возврат…")
+            state.isLoading && state.summary == null -> LoadingBlock(label = t("taxfree_calculating"))
             state.summary == null -> EmptyState(
-                title = "Нет данных",
-                message = "Отметьте покупки как Tax Free, чтобы увидеть оценку",
-                actionLabel = "Обновить",
+                title = t("no_data"),
+                message = t("taxfree_empty_sub"),
+                actionLabel = t("refresh"),
                 onAction = { onIntent(TaxFreeIntent.Refresh) },
             )
             else -> {
@@ -87,20 +87,20 @@ internal fun TaxFreeContent(
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "Мин. сумма: ${summary.rules.minimumPurchase.toDecimalString()} ${summary.rules.currency}",
+                        text = "${t("taxfree_min")}: ${summary.rules.minimumPurchase.toDecimalString()} ${summary.rules.currency}",
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "Оценка возврата: ${summary.estimatedRefundTotal.toDecimalString()} ${summary.estimatedRefundTotal.currency}",
+                        text = "${t("taxfree_estimate")}: ${summary.estimatedRefundTotal.toDecimalString()} ${summary.estimatedRefundTotal.currency}",
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "Подходящих покупок: ${summary.eligibleCount}",
+                        text = "${t("taxfree_eligible")}: ${summary.eligibleCount}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Spacer(Modifier.height(20.dp))
-                VoyageSection(title = "Покупки") {
+                VoyageSection(title = t("purchases_section")) {
                     summary.items.forEach { item ->
                         Text(item.name, color = MaterialTheme.colorScheme.onBackground)
                         Text(

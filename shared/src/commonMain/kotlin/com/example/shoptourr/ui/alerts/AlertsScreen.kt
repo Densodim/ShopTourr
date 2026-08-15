@@ -23,6 +23,7 @@ import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun AlertsScreen(
@@ -53,10 +54,10 @@ internal fun AlertsContent(
     onIntent: (AlertsIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Алерты", onBack = { onIntent(AlertsIntent.Back) })
+        VoyageTopBar(title = t("alerts"), onBack = { onIntent(AlertsIntent.Back) })
         Spacer(Modifier.height(12.dp))
         VoyageButton(
-            text = "Обновить",
+            text = t("refresh"),
             onClick = { onIntent(AlertsIntent.Refresh) },
             variant = VoyageButtonVariant.Secondary,
             isLoading = state.isLoading && state.alerts.isNotEmpty(),
@@ -67,11 +68,11 @@ internal fun AlertsContent(
         }
         Spacer(Modifier.height(16.dp))
         when {
-            state.isLoading && state.alerts.isEmpty() -> LoadingBlock(label = "Загружаем…")
+            state.isLoading && state.alerts.isEmpty() -> LoadingBlock(label = t("loading"))
             state.alerts.isEmpty() -> EmptyState(
-                title = "Алертов нет",
-                message = "Покажем, когда бюджет или Tax Free потребуют внимания",
-                actionLabel = "Обновить",
+                title = t("alerts_empty"),
+                message = t("alerts_empty_sub"),
+                actionLabel = t("refresh"),
                 onAction = { onIntent(AlertsIntent.Refresh) },
             )
             else -> {

@@ -67,13 +67,13 @@ internal fun DiaryContent(
             VoyageTextField(
                 value = state.moodDraft,
                 onValueChange = { onIntent(DiaryIntent.MoodChanged(it)) },
-                label = "Настроение",
+                label = t("mood"),
             )
             Spacer(Modifier.height(8.dp))
             VoyageTextField(
                 value = state.textDraft,
                 onValueChange = { onIntent(DiaryIntent.TextChanged(it)) },
-                label = "Запись",
+                label = t("entry"),
                 singleLine = false,
             )
             Spacer(Modifier.height(12.dp))
@@ -89,10 +89,10 @@ internal fun DiaryContent(
         }
         Spacer(Modifier.height(20.dp))
         when {
-            state.isLoading && state.days.isEmpty() -> LoadingBlock(label = "Загружаем…")
+            state.isLoading && state.days.isEmpty() -> LoadingBlock(label = t("loading"))
             state.days.isEmpty() -> EmptyState(
-                title = "Пока пусто",
-                message = "Первая запись станет началом главы поездки",
+                title = t("diary_empty"),
+                message = t("diary_empty_sub"),
             )
             else -> {
                 state.days.forEach { day ->

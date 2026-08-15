@@ -28,6 +28,7 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
+import com.example.shoptourr.ui.i18n.t
 
 @Composable
 fun ExportScreen(
@@ -58,9 +59,9 @@ internal fun ExportContent(
     onIntent: (ExportIntent) -> Unit,
 ) {
     VoyageScreen {
-        VoyageTopBar(title = "Экспорт", onBack = { onIntent(ExportIntent.Back) })
+        VoyageTopBar(title = t("export"), onBack = { onIntent(ExportIntent.Back) })
         Spacer(Modifier.height(16.dp))
-        VoyageSection(title = "Формат") {
+        VoyageSection(title = t("format")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (state.pdfEnabled) {
                     FilterChip(
@@ -87,12 +88,12 @@ internal fun ExportContent(
                     checked = state.includeDiary,
                     onCheckedChange = { onIntent(ExportIntent.IncludeDiaryChanged(it)) },
                 )
-                Text("Дневник", color = MaterialTheme.colorScheme.onBackground)
+                Text(t("diary"), color = MaterialTheme.colorScheme.onBackground)
             }
         }
         Spacer(Modifier.height(16.dp))
         VoyageButton(
-            text = "Создать экспорт",
+            text = t("create_export"),
             onClick = { onIntent(ExportIntent.Create) },
             enabled = !state.isLoading && !state.isPolling,
             isLoading = state.isLoading,
@@ -102,13 +103,13 @@ internal fun ExportContent(
             UiErrorBanner(error = err)
         }
         if (state.isPolling) {
-            LoadingBlock(label = "Готовим файл…")
+            LoadingBlock(label = t("export_preparing"))
         }
         state.job?.let { job ->
             Spacer(Modifier.height(16.dp))
             VoyageSurfaceBlock {
                 Text(
-                    text = "Статус: ${job.status.name.lowercase()}",
+                    text = "${t("status")}: ${job.status.name.lowercase()}",
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -116,24 +117,24 @@ internal fun ExportContent(
                     ExportJobStatus.READY -> {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = job.downloadUrl ?: "Готово",
+                            text = job.downloadUrl ?: t("done"),
                             color = MaterialTheme.colorScheme.primary,
                         )
                         job.expiresAt?.let {
                             Spacer(Modifier.height(4.dp))
-                            Text("Истекает: $it", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${t("expires")}: $it", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     ExportJobStatus.FAILED -> {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = job.errorCode ?: "Ошибка экспорта",
+                            text = job.errorCode ?: t("export_failed"),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
                     ExportJobStatus.EXPIRED -> {
                         Spacer(Modifier.height(8.dp))
-                        Text("Ссылка истекла", color = MaterialTheme.colorScheme.error)
+                        Text(t("link_expired"), color = MaterialTheme.colorScheme.error)
                     }
                     else -> Unit
                 }

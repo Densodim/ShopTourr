@@ -145,7 +145,7 @@ internal fun WishlistContent(
                             )
                         }
                         VoyageButton(
-                            text = "Удалить",
+                            text = t("delete"),
                             onClick = { onIntent(WishlistIntent.Delete(item.id)) },
                             enabled = !state.isSaving,
                             variant = VoyageButtonVariant.Ghost,

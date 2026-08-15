@@ -70,7 +70,7 @@ internal fun StatsContent(
         }
         Spacer(Modifier.height(16.dp))
         when {
-            state.isLoading && state.stats == null -> LoadingBlock(label = "Считаем…")
+            state.isLoading && state.stats == null -> LoadingBlock(label = t("calculating"))
             state.stats == null -> EmptyState(
                 title = t("stats"),
                 message = t("purchases"),
@@ -81,26 +81,26 @@ internal fun StatsContent(
                 val stats = state.stats!!
                 VoyageSurfaceBlock {
                     Text(
-                        text = "Потрачено: ${stats.totalSpent.toDecimalString()} ${stats.totalSpent.currency}",
+                        text = "${t("spent")}: ${stats.totalSpent.toDecimalString()} ${stats.totalSpent.currency}",
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "Бюджет: ${stats.budget.toDecimalString()} ${stats.budget.currency}",
+                        text = "${t("budget")}: ${stats.budget.toDecimalString()} ${stats.budget.currency}",
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                     Text(
-                        text = "Остаток: ${stats.remaining.toDecimalString()} ${stats.remaining.currency}",
+                        text = "${t("remaining")}: ${stats.remaining.toDecimalString()} ${stats.remaining.currency}",
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = if (stats.onBudget) "В бюджете" else "Сверх бюджета",
+                        text = if (stats.onBudget) t("on_budget") else t("over_budget"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     stats.topCategory?.let {
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            "Топ категория: ${it.name.lowercase()}",
+                            "${t("top_category")}: ${it.name.lowercase()}",
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }
