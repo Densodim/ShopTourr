@@ -97,6 +97,46 @@ class TripDetailViewModelTest {
     }
 
     @Test
+    fun `category filter narrows the listed days and toggles off when reselected`() = runTest {
+        val trips = tripRepo(sampleTrip)
+        val purchases = FakePurchaseRepository()
+        purchases.create("lisbon", draft("Pasteis", PurchaseCategory.FOOD, "4.50"))
+        purchases.create("lisbon", draft("Tram", PurchaseCategory.TRANSPORT, "3.00"))
+        val viewModel = vm(trips, purchases)
+
+        viewModel.state.test {
+            var state = awaitItem()
+            if (state.detail == null) state = awaitItem()
+            assertNull(state.categoryFilter)
+            assertEquals(2, state.visibleDays.sumOf { it.items.size })
+
+            viewModel.onIntent(TripDetailIntent.CategoryFilterChanged(PurchaseCategory.FOOD))
+            state = awaitItem()
+            assertEquals(PurchaseCategory.FOOD, state.categoryFilter)
+            assertEquals(1, state.visibleDays.sumOf { it.items.size })
+            assertEquals("4.50", state.visibleDays.first().total.toDecimalString())
+
+            // Tapping the active chip clears the filter rather than reapplying it.
+            viewModel.onIntent(TripDetailIntent.CategoryFilterChanged(PurchaseCategory.FOOD))
+            state = awaitItem()
+            assertNull(state.categoryFilter)
+            assertEquals(2, state.visibleDays.sumOf { it.items.size })
+
+            cancelAndIgnoreRemainingEvents()
+        }
+        viewModel.onCleared()
+    }
+
+    private fun draft(name: String, category: PurchaseCategory, amount: String) = PurchaseDraft(
+        name = name,
+        category = category,
+        amount = Money.parse(amount, "EUR"),
+        vatIncluded = true,
+        vatRatePercent = "23",
+        place = null,
+    )
+
+    @Test
     fun `add purchase intent emits navigation event`() = runTest {
         val viewModel = vm(tripRepo(sampleTrip))
         viewModel.events.test {

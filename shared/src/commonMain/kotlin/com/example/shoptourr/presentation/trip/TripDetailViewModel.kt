@@ -2,6 +2,8 @@ package com.example.shoptourr.presentation.trip
 
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateTravelerDraft
+import com.example.shoptourr.domain.model.PurchaseCategory
+import com.example.shoptourr.domain.model.TripDayGroup
 import com.example.shoptourr.domain.model.TripDetail
 import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.usecase.AddTravelerUseCase
@@ -24,15 +26,23 @@ data class TripDetailUiState(
     val isLoading: Boolean = true,
     val isWorking: Boolean = false,
     val detail: TripDetail? = null,
+    val categoryFilter: PurchaseCategory? = null,
     val travelerNameDraft: String = "",
     val inviteEmailDraft: String = "",
     val lastInvite: TripInvite? = null,
     val error: UiError? = null,
-) : UiState
+) : UiState {
+    /** Categories offered as filter chips — only the ones actually spent on. */
+    val categoryChips: List<PurchaseCategory> get() = detail?.categoriesUsed().orEmpty()
+
+    /** Purchases for the list, grouped by day and narrowed to the active chip. */
+    val visibleDays: List<TripDayGroup> get() = detail?.dayGroups(categoryFilter).orEmpty()
+}
 
 sealed interface TripDetailIntent {
     data object Refresh : TripDetailIntent
     data object AddPurchase : TripDetailIntent
+    data class CategoryFilterChanged(val category: PurchaseCategory) : TripDetailIntent
     data object OpenDiary : TripDetailIntent
     data object OpenTaxFree : TripDetailIntent
     data object OpenAlerts : TripDetailIntent
@@ -103,6 +113,11 @@ class TripDetailViewModel(
             TripDetailIntent.OpenMap -> emitEvent(TripDetailUiEvent.NavigateMap(tripId))
             TripDetailIntent.OpenStats -> emitEvent(TripDetailUiEvent.NavigateStats(tripId))
             TripDetailIntent.OpenExport -> emitEvent(TripDetailUiEvent.NavigateExport(tripId))
+            is TripDetailIntent.CategoryFilterChanged ->
+                updateState {
+                    // Re-tapping the active chip clears the filter.
+                    copy(categoryFilter = intent.category.takeIf { it != categoryFilter })
+                }
             is TripDetailIntent.TravelerNameChanged ->
                 updateState { copy(travelerNameDraft = intent.value, error = null) }
             TripDetailIntent.AddTraveler -> addLocalTraveler()
