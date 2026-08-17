@@ -11,6 +11,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.Font
+import shoptourr.shared.generated.resources.Res
+import shoptourr.shared.generated.resources.jetbrains_mono_regular
 
 private val VoyageLightColors = lightColorScheme(
     // Oxblood is the emphasis colour — links, active chips, highlighted amounts —
@@ -34,80 +37,91 @@ private val VoyageLightColors = lightColorScheme(
 
 /**
  * Editorial split: serif for headings and amounts, monospace for eyebrows and
- * small labels, sans for body copy and buttons. Instrument Serif and JetBrains
- * Mono are not bundled, so the platform serif / mono families stand in.
+ * small labels, sans for body copy and buttons.
+ *
+ * JetBrains Mono is bundled (see `composeResources/font`) because it covers
+ * Cyrillic and this app is Russian-first. Instrument Serif is deliberately not:
+ * it ships Latin only, so Russian headings would fall back and a mixed line
+ * ("Привет, Dima") would render in two faces. The mock hits the same wall — its
+ * stack is `'Instrument Serif', Georgia, serif` — so Russian headings there are
+ * Georgia, and the platform serif is the honest match.
  */
-private val VoyageTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 42.sp,
-        lineHeight = 44.sp,
-        letterSpacing = (-0.84).sp,
-        color = VoyageTokens.ink,
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 28.sp,
-        lineHeight = 32.sp,
-        letterSpacing = (-0.56).sp,
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 26.sp,
-        letterSpacing = (-0.22).sp,
-    ),
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        lineHeight = 24.sp,
-    ),
-    titleMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-    ),
-    // .primary-btn — 13px / 500 / .08em, uppercased at the call site.
-    labelLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
-        fontSize = 13.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 1.04.sp,
-    ),
-    // .nav-title / .eyebrow — mono, wide tracking, uppercase.
-    labelMedium = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.5.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 1.68.sp,
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 13.sp,
-        letterSpacing = 1.6.sp,
-    ),
-)
+@Composable
+private fun voyageTypography(): Typography {
+    val serif = FontFamily.Serif
+    val mono = FontFamily(Font(Res.font.jetbrains_mono_regular, FontWeight.Normal))
+    return Typography(
+        displayLarge = TextStyle(
+            fontFamily = serif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 42.sp,
+            lineHeight = 44.sp,
+            letterSpacing = (-0.84).sp,
+            color = VoyageTokens.ink,
+        ),
+        headlineMedium = TextStyle(
+            fontFamily = serif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 28.sp,
+            lineHeight = 32.sp,
+            letterSpacing = (-0.56).sp,
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = serif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 22.sp,
+            lineHeight = 26.sp,
+            letterSpacing = (-0.22).sp,
+        ),
+        titleLarge = TextStyle(
+            fontFamily = serif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 20.sp,
+            lineHeight = 24.sp,
+        ),
+        titleMedium = TextStyle(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+        ),
+        bodyLarge = TextStyle(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+        ),
+        bodyMedium = TextStyle(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+        ),
+        // .primary-btn — 13px / 500 / .08em, uppercased at the call site.
+        labelLarge = TextStyle(
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 1.04.sp,
+        ),
+        // .nav-title / .eyebrow — mono, wide tracking, uppercase.
+        labelMedium = TextStyle(
+            fontFamily = mono,
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.5.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 1.68.sp,
+        ),
+        labelSmall = TextStyle(
+            fontFamily = mono,
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.sp,
+            lineHeight = 13.sp,
+            letterSpacing = 1.6.sp,
+        ),
+    )
+}
 
 // Paper & ink squares everything off; only the interactive controls that map to
 // `medium` (.primary-btn, .ghost-btn, .social-btn) keep the 2px the design gives them.
@@ -124,7 +138,7 @@ fun VoyageTheme(content: @Composable () -> Unit) {
     // The design is light-only; there is no dark counterpart to switch to.
     MaterialTheme(
         colorScheme = VoyageLightColors,
-        typography = VoyageTypography,
+        typography = voyageTypography(),
         shapes = VoyageShapes,
         content = content,
     )
