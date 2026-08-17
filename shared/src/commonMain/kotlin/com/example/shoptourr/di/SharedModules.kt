@@ -47,8 +47,10 @@ import com.example.shoptourr.domain.usecase.AcknowledgeSyncConflictUseCase
 import com.example.shoptourr.domain.usecase.EvictLocalCacheUseCase
 import com.example.shoptourr.domain.usecase.ObserveSyncConflictsUseCase
 import com.example.shoptourr.domain.usecase.RefreshPurchasesUseCase
+import com.example.shoptourr.observability.AppTracer
 import com.example.shoptourr.observability.Observability
 import com.example.shoptourr.observability.ObservabilityFactory
+import com.example.shoptourr.observability.createDefaultTracer
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.NoOpAnalytics
@@ -255,6 +257,7 @@ val dataModule = module {
     single<InMemorySyncConflictNotifier>() bind SyncConflictNotifier::class
     single<NoOpBackgroundSyncScheduler>() bind BackgroundSyncScheduler::class
     single<Observability> { ObservabilityFactory.create(get<AppConfig>().sentryDsn) }
+    single<AppTracer> { createDefaultTracer() }
     single { NoOpAnalytics } bind Analytics::class
     single<AlwaysOnlineConnectivityMonitor>() bind ConnectivityMonitor::class
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
