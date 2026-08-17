@@ -49,12 +49,6 @@ private fun LegalPage(
 ) {
     VoyageScreen {
         VoyageTopBar(title = title, onBack = onBack)
-        Spacer(Modifier.height(12.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
         Spacer(Modifier.height(16.dp))
         VoyageSurfaceBlock {
             Text(

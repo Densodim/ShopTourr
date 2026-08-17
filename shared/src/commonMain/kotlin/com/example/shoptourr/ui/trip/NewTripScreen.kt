@@ -1,6 +1,8 @@
 package com.example.shoptourr.ui.trip
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -100,7 +102,8 @@ internal fun NewTripContent(
             )
         }
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = t("budget")) {
+        // No section eyebrow here: the field below already carries this exact label.
+        Column(modifier = Modifier.fillMaxWidth()) {
             VoyageTextField(
                 value = state.budgetAmount,
                 onValueChange = { onIntent(NewTripIntent.BudgetChanged(it)) },
@@ -122,7 +125,8 @@ internal fun NewTripContent(
             )
         }
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = t("travelers_section")) {
+        // "Участники" over a "Участник" field read as one stutter; the field label carries it.
+        Column(modifier = Modifier.fillMaxWidth()) {
             VoyageTextField(
                 value = state.travelerDraft,
                 onValueChange = { onIntent(NewTripIntent.TravelerDraftChanged(it)) },

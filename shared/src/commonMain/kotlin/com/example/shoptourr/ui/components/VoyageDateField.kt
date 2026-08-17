@@ -70,7 +70,7 @@ fun VoyageDateField(
                 TextButton(onClick = { showPicker = true }) {
                     Text(
                         text = t("date_pick_action").uppercase(),
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }

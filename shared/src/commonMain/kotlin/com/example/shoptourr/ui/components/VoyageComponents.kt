@@ -73,8 +73,9 @@ fun VoyageButton(
                 enabled = enabled && !isLoading,
                 shape = shape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    // `.primary-btn` is ink on paper — the one spot that is not the accent.
+                    containerColor = VoyageTokens.ink,
+                    contentColor = VoyageTokens.bg,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 ),
@@ -146,11 +147,11 @@ fun voyageFieldColors(): TextFieldColors = TextFieldDefaults.colors(
     unfocusedContainerColor = Color.Transparent,
     disabledContainerColor = Color.Transparent,
     errorContainerColor = Color.Transparent,
-    focusedIndicatorColor = MaterialTheme.colorScheme.secondary,
+    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
     unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
     disabledIndicatorColor = MaterialTheme.colorScheme.outlineVariant,
     errorIndicatorColor = MaterialTheme.colorScheme.error,
-    cursorColor = MaterialTheme.colorScheme.secondary,
+    cursorColor = MaterialTheme.colorScheme.primary,
     focusedTextColor = MaterialTheme.colorScheme.onBackground,
     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
     focusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -202,7 +203,7 @@ fun VoyageUnderlineField(
         ),
         visualTransformation = visualTransformation,
         interactionSource = interactionSource,
-        cursorBrush = SolidColor(MaterialTheme.colorScheme.secondary),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         decorationBox = { innerTextField ->
             TextFieldDefaults.DecorationBox(
                 value = value,
@@ -300,10 +301,12 @@ fun VoyageTopBar(
                 Spacer(Modifier.width(12.dp))
             }
             if (title != null) {
+                // `.nav-title` — sub-screens are headed by this mono caption alone;
+                // the big serif title belongs to the top-level screens only.
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    text = title.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

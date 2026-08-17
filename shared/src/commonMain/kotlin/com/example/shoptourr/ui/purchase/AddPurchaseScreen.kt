@@ -1,6 +1,7 @@
 package com.example.shoptourr.ui.purchase
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -90,7 +91,8 @@ internal fun AddPurchaseContent(
     VoyageScreen {
         VoyageTopBar(title = t("new_purchase"), onBack = onBack)
         Spacer(Modifier.height(16.dp))
-        VoyageSection(title = t("item_name")) {
+        // No section eyebrow here: the field below already carries this exact label.
+        Column(modifier = Modifier.fillMaxWidth()) {
             VoyageTextField(
                 value = state.name,
                 onValueChange = { onIntent(AddPurchaseIntent.NameChanged(it)) },

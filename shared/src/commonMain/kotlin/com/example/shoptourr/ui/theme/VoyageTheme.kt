@@ -13,11 +13,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 private val VoyageLightColors = lightColorScheme(
-    // The design's primary action (.primary-btn) is ink on paper; oxblood is the
-    // emphasis colour for links, active states and hover, so it maps to secondary.
-    primary = VoyageTokens.ink,
+    // Oxblood is the emphasis colour — links, active chips, highlighted amounts —
+    // and the app already reaches for `primary` at those call sites. The one place
+    // the design wants ink instead is `.primary-btn`, which sets it on its own.
+    primary = VoyageTokens.accent,
     onPrimary = VoyageTokens.bg,
-    secondary = VoyageTokens.accent,
+    secondary = VoyageTokens.ink,
     onSecondary = VoyageTokens.bg,
     background = VoyageTokens.bg,
     onBackground = VoyageTokens.ink,

@@ -75,12 +75,6 @@ internal fun SettingsContent(
 ) {
     VoyageScreen {
         VoyageTopBar(title = t("settings"), onBack = { onIntent(ProfileIntent.Back) })
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = t("settings"),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
         if (state.isLoading && state.preferences == null) {
             Spacer(Modifier.height(24.dp))
             LoadingBlock(label = "…")

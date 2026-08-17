@@ -52,12 +52,6 @@ internal fun ForgotPasswordContent(
         VoyageTopBar(title = t("forgot_password"), onBack = { onIntent(ForgotPasswordIntent.Back) })
         Spacer(Modifier.height(12.dp))
         Text(
-            text = t("forgot_password"),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
             text = t("forgot_password_sub"),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
