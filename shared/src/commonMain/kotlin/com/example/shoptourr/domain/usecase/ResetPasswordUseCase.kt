@@ -1,7 +1,9 @@
 package com.example.shoptourr.domain.usecase
 
-import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.validation.ResetPasswordForm
+import com.example.shoptourr.domain.validation.ResetPasswordFormValidator
+import com.example.shoptourr.domain.validation.toValidationError
 
 /**
  * Completes a password reset started by [RequestPasswordResetUseCase].
@@ -18,20 +20,10 @@ class ResetPasswordUseCase(
     ): Result<Unit> {
         val trimmedEmail = email.trim()
         val trimmedToken = token.trim()
-        if (trimmedEmail.isBlank() || !trimmedEmail.contains('@')) {
-            return Result.failure(AppError.Validation("email"))
-        }
-        if (trimmedToken.length !in TOKEN_LENGTH) {
-            return Result.failure(AppError.Validation("token"))
-        }
-        if (newPassword.length !in PASSWORD_LENGTH) {
-            return Result.failure(AppError.Validation("newPassword"))
-        }
-        return authRepository.resetPassword(trimmedEmail, trimmedToken, newPassword)
-    }
+        ResetPasswordFormValidator.validate(ResetPasswordForm(trimmedEmail, trimmedToken, newPassword))
+            .toValidationError()
+            ?.let { return Result.failure(it) }
 
-    private companion object {
-        val TOKEN_LENGTH = 16..128
-        val PASSWORD_LENGTH = 6..128
+        return authRepository.resetPassword(trimmedEmail, trimmedToken, newPassword)
     }
 }

@@ -1,8 +1,10 @@
 package com.example.shoptourr.domain.usecase
 
-import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.AuthSession
 import com.example.shoptourr.domain.repository.AuthRepository
+import com.example.shoptourr.domain.validation.RegisterForm
+import com.example.shoptourr.domain.validation.RegisterFormValidator
+import com.example.shoptourr.domain.validation.toValidationError
 
 class RegisterUseCase(
     private val authRepository: AuthRepository,
@@ -14,12 +16,15 @@ class RegisterUseCase(
         password: String,
         locale: String = "ru",
     ): Result<AuthSession> {
-        if (displayName.isBlank()) return Result.failure(AppError.Validation("displayName"))
-        if (email.isBlank() || !email.contains("@")) return Result.failure(AppError.Validation("email"))
-        if (password.length < 8) return Result.failure(AppError.Validation("password"))
+        val trimmedName = displayName.trim()
+        val trimmedEmail = email.trim()
+        RegisterFormValidator.validate(RegisterForm(trimmedName, trimmedEmail, password, locale))
+            .toValidationError()
+            ?.let { return Result.failure(it) }
+
         return authRepository.register(
-            displayName = displayName.trim(),
-            email = email.trim(),
+            displayName = trimmedName,
+            email = trimmedEmail,
             password = password,
             locale = locale,
         ).also { result ->
