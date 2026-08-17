@@ -25,6 +25,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -359,29 +360,26 @@ fun UiErrorBanner(
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.12f))
-            .border(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f), MaterialTheme.shapes.medium)
-            .padding(14.dp),
-    ) {
+    // This design has no filled error panel: a notice is plain text on paper,
+    // closed by the hairline `.alert-card` uses to separate rows.
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(t(error.titleKey), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
         Text(
             error.messageOverride ?: t(error.messageKey),
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
         if (onRetry != null && error.isRetryable) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
             VoyageButton(
                 text = t("retry"),
                 onClick = onRetry,
                 variant = VoyageButtonVariant.Secondary,
             )
         }
+        Spacer(Modifier.height(14.dp))
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 
