@@ -1,9 +1,9 @@
 package com.example.shoptourr.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,13 +31,15 @@ fun VoyageTabBar(
     onChange: (VoyageTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // `.tab-bar` sits on bare paper; each tab is topped by a rule that goes
+    // oxblood on the active one, so together they read as one hairline.
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(VoyageTokens.surface.copy(alpha = 0.96f))
-            .border(1.dp, VoyageTokens.border)
+            .background(VoyageTokens.bg)
             .navigationBarsPadding()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 24.dp)
+            .padding(top = 14.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -48,21 +49,26 @@ fun VoyageTabBar(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(MaterialTheme.shapes.medium)
                     .testTag(tabTestTag(tab))
                     .semantics { contentDescription = label }
-                    .clickable { onChange(tab) }
-                    .padding(vertical = 8.dp),
+                    .clickable { onChange(tab) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.5.dp)
+                        .background(if (selected) VoyageTokens.accent else VoyageTokens.border),
+                )
+                Spacer(Modifier.height(12.dp))
                 Text(
                     text = tabGlyph(tab),
-                    color = if (selected) VoyageTokens.accent else VoyageTokens.muted,
+                    color = if (selected) VoyageTokens.ink else VoyageTokens.muted,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Spacer(Modifier.height(2.dp))
+                Spacer(Modifier.height(6.dp))
                 Text(
-                    text = label,
+                    text = label.uppercase(),
                     color = if (selected) VoyageTokens.ink else VoyageTokens.muted,
                     style = MaterialTheme.typography.labelSmall,
                 )

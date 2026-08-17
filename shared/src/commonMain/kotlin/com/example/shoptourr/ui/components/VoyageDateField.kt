@@ -2,14 +2,15 @@ package com.example.shoptourr.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.example.shoptourr.ui.i18n.t
 import com.example.shoptourr.ui.util.DatePickerFormats
 
@@ -41,48 +43,43 @@ fun VoyageDateField(
     var showPicker by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
     val tagged = if (testTag != null) {
-        modifier
+        Modifier
             .fillMaxWidth()
             .testTag(testTag)
             .semantics { contentDescription = label }
     } else {
-        modifier
+        Modifier
             .fillMaxWidth()
             .semantics { contentDescription = label }
     }
 
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        modifier = tagged.clickable(
-            interactionSource = interactionSource,
-            indication = null,
-        ) { showPicker = true },
-        readOnly = true,
-        label = { Text(label) },
-        placeholder = { Text(t("date_pick_hint")) },
-        isError = errorMessage != null,
-        supportingText = errorMessage?.let { message ->
-            { Text(message, color = MaterialTheme.colorScheme.error) }
-        },
-        trailingIcon = {
-            TextButton(onClick = { showPicker = true }) {
-                Text(t("date_pick_action"), color = MaterialTheme.colorScheme.primary)
-            }
-        },
-        shape = MaterialTheme.shapes.medium,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-            focusedLabelColor = MaterialTheme.colorScheme.primary,
-            cursorColor = MaterialTheme.colorScheme.primary,
-            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-            errorBorderColor = MaterialTheme.colorScheme.error,
-            errorLabelColor = MaterialTheme.colorScheme.error,
-            errorCursorColor = MaterialTheme.colorScheme.error,
-        ),
-    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        VoyageFieldLabel(label)
+        Spacer(Modifier.height(10.dp))
+        VoyageUnderlineField(
+            value = value,
+            onValueChange = {},
+            modifier = tagged.clickable(
+                interactionSource = interactionSource,
+                indication = null,
+            ) { showPicker = true },
+            readOnly = true,
+            isError = errorMessage != null,
+            placeholder = { Text(t("date_pick_hint")) },
+            trailingIcon = {
+                TextButton(onClick = { showPicker = true }) {
+                    Text(
+                        text = t("date_pick_action").uppercase(),
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            },
+            supportingText = errorMessage?.let { message ->
+                { voyageFieldErrorText(message) }
+            },
+        )
+    }
 
     if (showPicker) {
         val initialMillis = value.takeIf { it.isNotBlank() }?.let(DatePickerFormats::isoToEpochMillis)
