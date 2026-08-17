@@ -26,6 +26,7 @@ security-crypto = "1.1.0"
 turbine = "1.2.1"
 voyager = "1.0.1"
 filekit = "0.15.0"
+androidx-tracing = "2.0.0"
 androidx-work = "2.10.3"
 androidx-sqlite = "2.6.2"
 sqlcipher = "4.17.0"
@@ -95,6 +96,8 @@ filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref =
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+# 2.0.0 folded the old tracing-ktx `trace {}` into the main artifact, so tracing-ktx is not needed.
+androidx-tracing = { module = "androidx.tracing:tracing", version.ref = "androidx-tracing" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil3" }
 coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil3" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }

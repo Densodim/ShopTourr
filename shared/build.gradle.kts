@@ -105,6 +105,7 @@ kotlin {
             implementation(libs.androidx.sqlite)
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.androidx.tracing)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

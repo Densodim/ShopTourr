@@ -47,6 +47,8 @@ import com.example.shoptourr.data.platform.StaticAppBuildInfo
 import com.example.shoptourr.domain.model.ClientPlatform
 import com.example.shoptourr.domain.repository.AppBuildInfo
 import com.example.shoptourr.domain.push.PushTokenProvider
+import com.example.shoptourr.observability.createDefaultTracer
+import com.example.shoptourr.observability.trace
 import com.russhwolf.settings.Settings
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -55,18 +57,23 @@ import org.koin.dsl.module
 class VoyageApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        val tracer = createDefaultTracer()
         val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        initKoin(
-            config = AppConfig.forClient(
-                isReleaseBuild = !debuggable,
-                platform = ClientPlatform.ANDROID,
-            ),
-            extraModules = listOf(androidDatabaseModule),
-        ) {
-            androidLogger()
-            androidContext(this@VoyageApp)
+        tracer.trace("VoyageApp.initKoin") {
+            initKoin(
+                config = AppConfig.forClient(
+                    isReleaseBuild = !debuggable,
+                    platform = ClientPlatform.ANDROID,
+                ),
+                extraModules = listOf(androidDatabaseModule),
+            ) {
+                androidLogger()
+                androidContext(this@VoyageApp)
+            }
         }
-        org.koin.core.context.GlobalContext.get().get<BackgroundSyncScheduler>().schedule()
+        tracer.trace("VoyageApp.scheduleBackgroundSync") {
+            org.koin.core.context.GlobalContext.get().get<BackgroundSyncScheduler>().schedule()
+        }
     }
 }
 
