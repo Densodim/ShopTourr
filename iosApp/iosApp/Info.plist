@@ -4,6 +4,9 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Paper & ink is light-only; without this the status bar turns white on a dark-mode device. -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Voyage needs camera access to photograph receipts.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

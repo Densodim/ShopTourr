@@ -1,11 +1,10 @@
 package com.example.shoptourr.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -13,10 +12,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val VoyageDarkColors = darkColorScheme(
-    primary = VoyageTokens.accent,
+private val VoyageLightColors = lightColorScheme(
+    // The design's primary action (.primary-btn) is ink on paper; oxblood is the
+    // emphasis colour for links, active states and hover, so it maps to secondary.
+    primary = VoyageTokens.ink,
     onPrimary = VoyageTokens.bg,
-    secondary = VoyageTokens.accent2,
+    secondary = VoyageTokens.accent,
     onSecondary = VoyageTokens.bg,
     background = VoyageTokens.bg,
     onBackground = VoyageTokens.ink,
@@ -25,37 +26,44 @@ private val VoyageDarkColors = darkColorScheme(
     surfaceVariant = VoyageTokens.surface2,
     onSurfaceVariant = VoyageTokens.muted,
     error = VoyageTokens.danger,
-    onError = VoyageTokens.ink,
+    onError = VoyageTokens.bg,
     outline = VoyageTokens.border,
+    outlineVariant = VoyageTokens.border2,
 )
 
+/**
+ * Editorial split: serif for headings and amounts, monospace for eyebrows and
+ * small labels, sans for body copy and buttons. Instrument Serif and JetBrains
+ * Mono are not bundled, so the platform serif / mono families stand in.
+ */
 private val VoyageTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Serif,
         fontWeight = FontWeight.Normal,
         fontSize = 42.sp,
-        lineHeight = 46.sp,
-        letterSpacing = (-0.6).sp,
+        lineHeight = 44.sp,
+        letterSpacing = (-0.84).sp,
         color = VoyageTokens.ink,
     ),
     headlineMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
         fontSize = 28.sp,
-        lineHeight = 34.sp,
-        letterSpacing = (-0.3).sp,
+        lineHeight = 32.sp,
+        letterSpacing = (-0.56).sp,
     ),
     headlineSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
         fontSize = 22.sp,
-        lineHeight = 28.sp,
+        lineHeight = 26.sp,
+        letterSpacing = (-0.22).sp,
     ),
     titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
+        fontFamily = FontFamily.Serif,
+        fontWeight = FontWeight.Normal,
         fontSize = 20.sp,
-        lineHeight = 26.sp,
+        lineHeight = 24.sp,
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
@@ -75,45 +83,46 @@ private val VoyageTypography = Typography(
         fontSize = 14.sp,
         lineHeight = 20.sp,
     ),
+    // .primary-btn — 13px / 500 / .08em, uppercased at the call site.
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
-        lineHeight = 18.sp,
-        letterSpacing = (-0.01).sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 13.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 1.04.sp,
     ),
+    // .nav-title / .eyebrow — mono, wide tracking, uppercase.
     labelMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Normal,
         fontSize = 10.5.sp,
         lineHeight = 14.sp,
-        letterSpacing = 1.6.sp,
+        letterSpacing = 1.68.sp,
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Normal,
         fontSize = 10.sp,
-        lineHeight = 12.sp,
-        letterSpacing = 1.4.sp,
+        lineHeight = 13.sp,
+        letterSpacing = 1.6.sp,
     ),
 )
 
+// Paper & ink squares everything off; only the interactive controls that map to
+// `medium` (.primary-btn, .ghost-btn, .social-btn) keep the 2px the design gives them.
 private val VoyageShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(18.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+    extraSmall = RoundedCornerShape(0.dp),
+    small = RoundedCornerShape(0.dp),
+    medium = RoundedCornerShape(2.dp),
+    large = RoundedCornerShape(0.dp),
+    extraLarge = RoundedCornerShape(0.dp),
 )
 
 @Composable
-fun VoyageTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
-    // Product is dark-premium by design; keep light request mapped to dark palette.
+fun VoyageTheme(content: @Composable () -> Unit) {
+    // The design is light-only; there is no dark counterpart to switch to.
     MaterialTheme(
-        colorScheme = VoyageDarkColors,
+        colorScheme = VoyageLightColors,
         typography = VoyageTypography,
         shapes = VoyageShapes,
         content = content,
