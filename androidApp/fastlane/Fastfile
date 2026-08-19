@@ -1,0 +1,14 @@
+default_platform(:android)
+
+platform :android do
+  desc "Assemble debug APKs"
+  lane :assemble do
+    gradle(task: ":androidApp:assembleDebug")
+  end
+
+  desc "Enforce the 40 MiB APK budget"
+  lane :size do
+    assemble
+    sh("../scripts/check-app-size.sh")
+  end
+end

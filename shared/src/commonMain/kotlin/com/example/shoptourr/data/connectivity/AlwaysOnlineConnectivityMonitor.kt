@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.asStateFlow
 /** Default / iOS / tests until NWPathMonitor is wired. */
 class AlwaysOnlineConnectivityMonitor : ConnectivityMonitor {
     override fun observeIsOnline(): Flow<Boolean> = MutableStateFlow(true).asStateFlow()
+    override fun currentIsOnline(): Boolean = true
 }

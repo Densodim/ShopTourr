@@ -15,4 +15,5 @@ interface UserRepository {
     suspend fun refreshPreferences(): Result<UserPreferences>
     suspend fun updatePreferences(draft: UpdatePreferencesDraft): Result<UserPreferences>
     suspend fun activatePremium(plan: PremiumPlan): Result<UserProfile>
+    suspend fun deleteAccount(): Result<Unit>
 }

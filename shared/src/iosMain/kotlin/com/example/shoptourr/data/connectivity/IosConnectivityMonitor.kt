@@ -6,6 +6,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.concurrent.Volatile
 import platform.Network.nw_path_get_status
 import platform.Network.nw_path_monitor_cancel
 import platform.Network.nw_path_monitor_create
@@ -22,10 +23,16 @@ import platform.posix.QOS_CLASS_UTILITY
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosConnectivityMonitor : ConnectivityMonitor {
+    @Volatile
+    private var lastOnline: Boolean = true
+
+    override fun currentIsOnline(): Boolean = lastOnline
+
     override fun observeIsOnline(): Flow<Boolean> = callbackFlow {
         val monitor = nw_path_monitor_create()
         nw_path_monitor_set_update_handler(monitor) { path ->
             val online = path != null && nw_path_get_status(path) == nw_path_status_satisfied
+            lastOnline = online
             trySend(online)
         }
         val queue = dispatch_get_global_queue(QOS_CLASS_UTILITY.toLong(), 0u)

@@ -30,6 +30,8 @@ import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.data.local.createVoyageDatabase
+import com.example.shoptourr.data.push.RegisteredPushDeviceStore
+import com.example.shoptourr.data.push.SecureRegisteredPushDeviceStore
 import com.example.shoptourr.data.settings.IosKeychainSecureStore
 import com.example.shoptourr.data.settings.SecureKeyValueStore
 import com.example.shoptourr.data.settings.SecureTokenStore
@@ -74,7 +76,7 @@ private val iosDatabaseModule = module {
         QueuedAnalytics(
             queue = get(),
             sink = get(),
-            isOnline = { true },
+            isOnline = { get<ConnectivityMonitor>().currentIsOnline() },
             clock = { epochMillis() },
         )
     } bind Analytics::class
@@ -85,6 +87,7 @@ private val iosDatabaseModule = module {
             legacy = SettingsTokenStore(get<Settings>()),
         )
     } bind TokenStore::class
+    single { SecureRegisteredPushDeviceStore(get()) } bind RegisteredPushDeviceStore::class
     single {
         val raw = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
         val buildNumber = raw?.toIntOrNull()?.coerceAtLeast(1) ?: 1

@@ -7,6 +7,7 @@ import com.example.shoptourr.domain.model.UpdateProfileDraft
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.model.UserProfile
 import com.example.shoptourr.domain.model.UserStats
+import com.example.shoptourr.domain.usecase.DeleteAccountUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
 import com.example.shoptourr.domain.usecase.UpdatePreferencesUseCase
 import com.example.shoptourr.domain.usecase.UpdateProfileUseCase
@@ -109,5 +110,34 @@ class ProfileUseCasesTest {
         LogoutUseCase(auth)().getOrThrow()
         assertNull(auth.session)
         assertTrue(!auth.isLoggedIn())
+    }
+
+    @Test
+    fun `delete account logs out only after the server accepts`() = runTest {
+        val users = FakeUserRepository()
+        val auth = FakeAuthRepository(
+            session = com.example.shoptourr.domain.model.AuthSession(
+                "a", "r", 1, 1,
+                com.example.shoptourr.domain.model.User("u1", "Mila", "m@v.app", "ru"),
+            ),
+        )
+        DeleteAccountUseCase(users, LogoutUseCase(auth))().getOrThrow()
+        assertEquals(1, users.deleteAccountCalls)
+        assertNull(auth.session)
+    }
+
+    @Test
+    fun `delete account keeps the session when the server rejects`() = runTest {
+        val users = FakeUserRepository(deleteAccountError = AppError.Network)
+        val auth = FakeAuthRepository(
+            session = com.example.shoptourr.domain.model.AuthSession(
+                "a", "r", 1, 1,
+                com.example.shoptourr.domain.model.User("u1", "Mila", "m@v.app", "ru"),
+            ),
+        )
+        val result = DeleteAccountUseCase(users, LogoutUseCase(auth))()
+        assertTrue(result.isFailure)
+        assertEquals(1, users.deleteAccountCalls)
+        assertTrue(auth.isLoggedIn())
     }
 }

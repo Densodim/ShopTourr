@@ -36,4 +36,4 @@ Keep YAML ids in sync with `shared/.../ui/testing/VoyageTestTags.kt`.
 
 ## CI
 
-Not wired into GitHub Actions yet (needs emulator + secrets). Local/device runs are the v1 gate.
+`workflow_dispatch` job `maestro` on GitHub Actions installs the debug APK onto an Android emulator and runs `maestro/flows/tab_bar_a11y.yaml`. Auth/purchase smokes still need a live API and secrets — run those locally.

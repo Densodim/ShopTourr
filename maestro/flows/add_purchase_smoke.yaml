@@ -1,4 +1,4 @@
-appId: com.example.shoptourr
+appId: com.shoptourr
 name: Auth → trip → purchase smoke
 tags:
   - smoke

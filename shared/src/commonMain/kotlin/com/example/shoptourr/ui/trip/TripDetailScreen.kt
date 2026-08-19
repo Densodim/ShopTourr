@@ -224,6 +224,15 @@ internal fun TripDetailContent(
                 DayGroup(day = day, currency = currency, today = today.toString())
                 Spacer(Modifier.height(16.dp))
             }
+            if (state.hasMorePurchases) {
+                VoyageButton(
+                    text = t("load_more"),
+                    onClick = { onIntent(TripDetailIntent.LoadMore) },
+                    variant = VoyageButtonVariant.Secondary,
+                    isLoading = state.isLoadingMore,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
         }
 
         Spacer(Modifier.height(12.dp))

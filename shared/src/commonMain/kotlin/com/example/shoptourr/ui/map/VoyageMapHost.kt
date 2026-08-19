@@ -5,7 +5,8 @@ import androidx.compose.ui.Modifier
 import com.example.shoptourr.domain.model.RouteStop
 
 /**
- * Map host: canvas fallback now; swap for MapKit / Google Maps via expect/actual later.
+ * Honors the `nativeMaps` remote flag. Native SDKs stay off the classpath to keep
+ * the 40 MiB budget; the expect/actual slot currently renders [RouteMapCanvas].
  */
 @Composable
 fun VoyageMapHost(
@@ -14,9 +15,9 @@ fun VoyageMapHost(
     nativeMapsEnabled: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    RouteMapCanvas(
-        stops = stops,
-        caption = if (nativeMapsEnabled) caption else caption,
-        modifier = modifier,
-    )
+    if (nativeMapsEnabled) {
+        VoyageNativeMap(stops = stops, caption = caption, modifier = modifier)
+    } else {
+        RouteMapCanvas(stops = stops, caption = caption, modifier = modifier)
+    }
 }

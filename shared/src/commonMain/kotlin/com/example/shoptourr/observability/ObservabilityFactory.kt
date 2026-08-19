@@ -1,9 +1,8 @@
 package com.example.shoptourr.observability
 
 /**
- * Sentry-ready factory: empty DSN stays no-op so release APK size stays under budget
- * until a real DSN is checked in. Non-blank DSN enables an in-process buffer that
- * the Sentry MP SDK can replace without changing call sites.
+ * Empty DSN stays no-op. A non-blank DSN enables [RecordingObservability] in shared tests;
+ * Android production overrides this with Sentry via `VoyageApp` extraModules.
  */
 object ObservabilityFactory {
     fun create(dsn: String?): Observability =

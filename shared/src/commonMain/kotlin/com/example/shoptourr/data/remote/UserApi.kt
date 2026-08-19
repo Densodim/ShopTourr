@@ -8,6 +8,7 @@ import com.example.shoptourr.data.remote.dto.user.UserDto
 import com.example.shoptourr.data.remote.dto.user.UserPreferencesDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
@@ -66,5 +67,10 @@ class UserApi(
         val response: HttpResponse = client.get("$root/me/app-config")
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
         return response.body()
+    }
+
+    suspend fun deleteMe() {
+        val response: HttpResponse = client.delete("$root/me")
+        if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
     }
 }

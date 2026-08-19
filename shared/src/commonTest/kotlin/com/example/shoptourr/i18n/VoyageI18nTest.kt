@@ -37,6 +37,12 @@ class VoyageI18nTest {
     }
 
     @Test
+    fun `ru and en stay left to right`() {
+        assertEquals(false, AppLocale.RU.isRtl)
+        assertEquals(false, AppLocale.EN.isRtl)
+    }
+
+    @Test
     fun `welcome title has no html tags`() {
         val title = VoyageI18n.t(AppLocale.RU, "welcome_title")
         assertEquals(false, title.contains("<"))

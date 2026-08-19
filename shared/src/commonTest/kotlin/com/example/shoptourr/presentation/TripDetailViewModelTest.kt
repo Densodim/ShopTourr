@@ -11,6 +11,7 @@ import com.example.shoptourr.domain.usecase.AddTravelerUseCase
 import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
 import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
+import com.example.shoptourr.domain.usecase.RefreshPurchasesUseCase
 import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.fake.FakePurchaseRepository
 import com.example.shoptourr.fake.FakeTripRepository
@@ -23,6 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -46,7 +48,11 @@ class TripDetailViewModelTest {
         trips = listOf(trip),
     )
 
-    private fun vm(trips: FakeTripRepository, purchases: FakePurchaseRepository = FakePurchaseRepository()) =
+    private fun vm(
+        trips: FakeTripRepository,
+        purchases: FakePurchaseRepository = FakePurchaseRepository(),
+        pageSize: Int = 50,
+    ) =
         TripDetailViewModel(
             tripId = "lisbon",
             observeTripDetail = ObserveTripDetailUseCase(trips, purchases),
@@ -54,6 +60,8 @@ class TripDetailViewModelTest {
             addTraveler = AddTravelerUseCase(trips),
             inviteTraveler = InviteTravelerUseCase(trips),
             refreshExchangeRate = RefreshExchangeRateUseCase(trips),
+            refreshPurchases = RefreshPurchasesUseCase(purchases),
+            purchasePageSize = pageSize,
         )
 
     private val sampleTrip = TripSummary(
@@ -122,6 +130,37 @@ class TripDetailViewModelTest {
             assertNull(state.categoryFilter)
             assertEquals(2, state.visibleDays.sumOf { it.items.size })
 
+            cancelAndIgnoreRemainingEvents()
+        }
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `load more requests the next purchase page`() = runTest {
+        val trips = tripRepo(sampleTrip)
+        val purchases = FakePurchaseRepository()
+        purchases.create("lisbon", draft("One", PurchaseCategory.FOOD, "1.00"))
+        purchases.create("lisbon", draft("Two", PurchaseCategory.FOOD, "2.00"))
+        purchases.create("lisbon", draft("Three", PurchaseCategory.FOOD, "3.00"))
+        val viewModel = vm(trips, purchases, pageSize = 2)
+
+        viewModel.state.test {
+            var state = awaitItem()
+            while (state.isLoading || purchases.refreshPageCalls == 0) {
+                state = awaitItem()
+            }
+            assertEquals(1, purchases.refreshPageCalls)
+            assertEquals(0, purchases.lastRefreshRequest?.page)
+            assertTrue(state.hasMorePurchases)
+
+            viewModel.onIntent(TripDetailIntent.LoadMore)
+            state = awaitItem()
+            while (state.isLoadingMore) {
+                state = awaitItem()
+            }
+            assertEquals(2, purchases.refreshPageCalls)
+            assertEquals(1, purchases.lastRefreshRequest?.page)
+            assertTrue(!state.hasMorePurchases)
             cancelAndIgnoreRemainingEvents()
         }
         viewModel.onCleared()

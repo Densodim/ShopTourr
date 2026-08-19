@@ -3,6 +3,7 @@ package com.example.shoptourr.presentation.trip
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.PurchaseCategory
+import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.TripDayGroup
 import com.example.shoptourr.domain.model.TripDetail
 import com.example.shoptourr.domain.model.TripInvite
@@ -30,6 +31,9 @@ data class TripDetailUiState(
     val travelerNameDraft: String = "",
     val inviteEmailDraft: String = "",
     val lastInvite: TripInvite? = null,
+    val nextPurchasePage: Int = 0,
+    val hasMorePurchases: Boolean = false,
+    val isLoadingMore: Boolean = false,
     val error: UiError? = null,
 ) : UiState {
     /** Categories offered as filter chips — only the ones actually spent on. */
@@ -41,6 +45,7 @@ data class TripDetailUiState(
 
 sealed interface TripDetailIntent {
     data object Refresh : TripDetailIntent
+    data object LoadMore : TripDetailIntent
     data object AddPurchase : TripDetailIntent
     data class CategoryFilterChanged(val category: PurchaseCategory) : TripDetailIntent
     data object OpenDiary : TripDetailIntent
@@ -77,6 +82,7 @@ class TripDetailViewModel(
     private val inviteTraveler: InviteTravelerUseCase,
     private val refreshExchangeRate: RefreshExchangeRateUseCase,
     private val refreshPurchases: RefreshPurchasesUseCase? = null,
+    private val purchasePageSize: Int = DEFAULT_PURCHASE_PAGE_SIZE,
 ) : BaseViewModel<TripDetailUiState, TripDetailUiEvent>(TripDetailUiState(tripId = tripId)) {
 
     init {
@@ -106,6 +112,7 @@ class TripDetailViewModel(
         val tripId = state.value.tripId
         when (intent) {
             TripDetailIntent.Refresh -> refresh()
+            TripDetailIntent.LoadMore -> loadMore()
             TripDetailIntent.AddPurchase -> emitEvent(TripDetailUiEvent.NavigateAddPurchase(tripId))
             TripDetailIntent.OpenDiary -> emitEvent(TripDetailUiEvent.NavigateDiary(tripId))
             TripDetailIntent.OpenTaxFree -> emitEvent(TripDetailUiEvent.NavigateTaxFree(tripId))
@@ -134,12 +141,45 @@ class TripDetailViewModel(
             updateState { copy(isLoading = true, error = null) }
             refreshTrip(state.value.tripId)
                 .onSuccess {
-                    refreshPurchases?.invoke(state.value.tripId)
-                    updateState { copy(isLoading = false) }
+                    val page = fetchPurchasePage(page = 0) ?: emptyList()
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            nextPurchasePage = 1,
+                            hasMorePurchases = page.size >= purchasePageSize,
+                            isLoadingMore = false,
+                        )
+                    }
                 }
                 .onFailure { handleFailure(it) }
         }
     }
+
+    private fun loadMore() {
+        val snapshot = state.value
+        if (snapshot.isLoadingMore || !snapshot.hasMorePurchases || refreshPurchases == null) return
+        launch {
+            updateState { copy(isLoadingMore = true, error = null) }
+            val page = fetchPurchasePage(page = snapshot.nextPurchasePage)
+            if (page == null) {
+                updateState { copy(isLoadingMore = false) }
+                return@launch
+            }
+            updateState {
+                copy(
+                    isLoadingMore = false,
+                    nextPurchasePage = snapshot.nextPurchasePage + 1,
+                    hasMorePurchases = page.size >= purchasePageSize,
+                )
+            }
+        }
+    }
+
+    private suspend fun fetchPurchasePage(page: Int) =
+        refreshPurchases?.invoke(
+            state.value.tripId,
+            PurchasePageRequest(page = page, size = purchasePageSize),
+        )?.onFailure { handleFailure(it) }?.getOrNull()
 
     private fun addLocalTraveler() {
         launch {
@@ -182,10 +222,15 @@ class TripDetailViewModel(
         updateState {
             copy(
                 isLoading = false,
+                isLoadingMore = false,
                 isWorking = if (working) false else isWorking,
                 error = uiError,
             )
         }
         if (uiError.action is UiErrorAction.Logout) emitEvent(TripDetailUiEvent.Logout)
+    }
+
+    companion object {
+        const val DEFAULT_PURCHASE_PAGE_SIZE = 50
     }
 }

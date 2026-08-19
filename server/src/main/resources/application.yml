@@ -36,7 +36,7 @@ voyage:
     min-ios-build: 1
     soft-min-android-build: 1
     soft-min-ios-build: 1
-    store-url-android: https://play.google.com/store/apps/details?id=com.example.shoptourr
+    store-url-android: https://play.google.com/store/apps/details?id=com.shoptourr
     store-url-ios: https://apps.apple.com/app/id000000000
     flags:
       export-pdf: true

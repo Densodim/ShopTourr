@@ -24,6 +24,7 @@ import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.map.RouteViewModel
+import com.example.shoptourr.presentation.privacy.PrivacyViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.stats.StatsViewModel
@@ -222,7 +223,12 @@ object PrivacyVoyageScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        PrivacyScreen(onBack = { navigator.pop() })
+        val viewModel = rememberVoyageViewModel<PrivacyViewModel>()
+        PrivacyScreen(
+            viewModel = viewModel,
+            onBack = { navigator.pop() },
+            onAccountDeleted = { navigator.replaceAll(WelcomeVoyageScreen) },
+        )
     }
 }
 

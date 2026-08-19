@@ -22,9 +22,11 @@ import com.example.shoptourr.domain.repository.MediaRepository
 class MediaRepositoryImpl(
     private val api: MediaApi,
     private val idempotencyKey: () -> String,
-    private val uploader: ResumableMediaUploader = PresignedPutMediaUploader { url, bytes, headers ->
-        api.uploadBytes(uploadUrl = url, bytes = bytes, requiredHeaders = headers)
-    },
+    private val uploader: ResumableMediaUploader = PresignedPutMediaUploader(
+        put = { url, bytes, headers ->
+            api.uploadBytes(uploadUrl = url, bytes = bytes, requiredHeaders = headers)
+        },
+    ),
 ) : MediaRepository {
     override suspend fun createReceiptUploadIntent(draft: ReceiptUploadDraft): Result<MediaUploadIntent> =
         runCatching {

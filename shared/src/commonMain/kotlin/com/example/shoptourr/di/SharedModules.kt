@@ -3,6 +3,12 @@ package com.example.shoptourr.di
 import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.hash.createDefaultContentChecksum
 import com.example.shoptourr.data.media.FileKitReceiptImageCompressor
+import com.example.shoptourr.data.media.InMemoryUploadCheckpointStore
+import com.example.shoptourr.data.media.UploadCheckpointStore
+import com.example.shoptourr.data.push.InMemoryRegisteredPushDeviceStore
+import com.example.shoptourr.data.push.RegisteredPushDeviceStore
+import com.example.shoptourr.data.remote.KtorAuthTokenCache
+import com.example.shoptourr.domain.session.AuthTokenCache
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.ClientRemoteConfigStore
 import com.example.shoptourr.data.local.CompositeLocalSessionStore
@@ -54,6 +60,7 @@ import com.example.shoptourr.observability.createDefaultTracer
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.NoOpAnalytics
+import com.example.shoptourr.security.CertificatePinConfig
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
@@ -127,6 +134,7 @@ import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.LogoutUseCase
+import com.example.shoptourr.domain.usecase.DeleteAccountUseCase
 import com.example.shoptourr.domain.usecase.ObserveAlertsUseCase
 import com.example.shoptourr.domain.usecase.ObserveConnectivityUseCase
 import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
@@ -172,6 +180,7 @@ import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
 import com.example.shoptourr.presentation.map.RouteViewModel
+import com.example.shoptourr.presentation.privacy.PrivacyViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
 import com.example.shoptourr.presentation.purchase.AddPurchaseViewModel
 import com.example.shoptourr.presentation.stats.StatsViewModel
@@ -264,9 +273,12 @@ val dataModule = module {
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
+    single<InMemoryRegisteredPushDeviceStore>() bind RegisteredPushDeviceStore::class
+    single<InMemoryUploadCheckpointStore>() bind UploadCheckpointStore::class
+    single<AuthTokenCache> { KtorAuthTokenCache(get()) }
 
     single {
-        val pinConfig = VoyageCertificatePins.configured
+        val pinConfig = pinConfigForBuild(get())
         val enforcePinning = CertificatePinPolicy.shouldEnforce(
             isReleaseBuild = get<AppBuildInfo>().isReleaseBuild,
             config = pinConfig,
@@ -295,7 +307,7 @@ val dataModule = module {
         )
     }
     single(named("uploadHttpClient")) {
-        val pinConfig = VoyageCertificatePins.configured
+        val pinConfig = pinConfigForBuild(get())
         val enforcePinning = CertificatePinPolicy.shouldEnforce(
             isReleaseBuild = get<AppBuildInfo>().isReleaseBuild,
             config = pinConfig,
@@ -428,8 +440,11 @@ val domainModule = module {
         LogoutUseCase(
             authRepository = get(),
             localSessionStore = get(),
+            unregisterPushDevice = get(),
+            authTokenCache = get(),
         )
     }
+    factory<DeleteAccountUseCase>()
     factory<ObserveHomeUseCase>()
     factory<DrainSyncOutboxUseCase>()
     factory<RefreshHomeUseCase>()
@@ -491,6 +506,7 @@ val presentationModule = module {
     factory<HomeViewModel>()
     factory<NewTripViewModel>()
     factory<ProfileViewModel>()
+    factory<PrivacyViewModel>()
     factory<WishlistViewModel>()
     factory { params ->
         TripDetailViewModel(
@@ -564,6 +580,14 @@ val presentationModule = module {
 }
 
 val sharedModules = listOf(dataModule, domainModule, presentationModule)
+
+private fun pinConfigForBuild(appBuild: AppBuildInfo): CertificatePinConfig {
+    val config = VoyageCertificatePins.configured
+    check(!CertificatePinPolicy.isMisconfiguredRelease(appBuild.isReleaseBuild, config)) {
+        "Release builds must ship SPKI pins in VoyageCertificatePins"
+    }
+    return config
+}
 
 fun initKoin(
     config: AppConfig = AppConfig(),

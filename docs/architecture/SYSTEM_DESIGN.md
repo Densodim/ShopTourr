@@ -16,7 +16,7 @@
 | A1 | Platforms | Android + iOS only (no web/desktop v1) |
 | A2 | UI sharing | Compose Multiplatform in `shared` (already in project) |
 | A3 | Auth | Email/password + JWT access (15m) + refresh (30d) in HttpOnly-equivalent secure storage |
-| A4 | Offline | Cache-first for trips/purchases/diary; mutation outbox with LWW |
+| A4 | Offline | Cache-first for trips/purchases/diary; mutation outbox with **server-wins** (409 → refetch). LWW is not v1. |
 | A5 | Media | Receipt photos via pre-signed upload (S3-compatible); OCR async job v1.1 |
 | A6 | Money | `BigDecimal` + ISO-4217; trip locks currency at creation |
 | A7 | FX | Snapshot rate at trip create (+ optional refresh); base display currency from user prefs (default RUB) |
@@ -122,7 +122,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Tax Free | `GET /trips/{id}/tax-free` |
 | Export | `POST /trips/{id}/exports` → poll job |
 | Wishlist (tab) | `GET/POST/DELETE /wishlist` |
-| Profile (tab) / Settings / Privacy / About / Support | `GET/PATCH /me`, `GET/PATCH /me/preferences` |
+| Profile (tab) / Settings / Privacy / About / Support | `GET/PATCH /me`, `DELETE /me`, `GET/PATCH /me/preferences` |
 
 ---
 
@@ -154,9 +154,17 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Wired (client) |
 | Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Wired (client) |
 | A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
-| Analytics | `Analytics` + `QueuedAnalytics` + SQLDelight `AnalyticsEventEntity` queue; NoOp sink until PostHog/Firebase | Facade + SQL queue |
-| Crash / observability | `Observability` facade + HTTP `request_id` breadcrumbs; swap `NoOp` → Sentry MP when DSN set | Facade wired |
-| Certificate pinning | `CertificatePinPolicy` + OkHttp `CertificatePinner` (Android); empty pins → fail-open; iOS TrustKit later | Facade wired |
+| Analytics | `QueuedAnalytics` + SQL queue; flush uses `ConnectivityMonitor.currentIsOnline()`; NoOp sink until PostHog/Firebase | Wired |
+| Crash / observability | `Observability` facade; Android `SentryAndroid` when `SENTRY_DSN` / `BuildConfig.SENTRY_DSN` is set; iOS stays recording until SPM | Wired (Android) |
+| Certificate pinning | Release + pins → OkHttp `CertificatePinner` / Darwin SPKI compare; empty pins on **release** crash HTTP client init (fail-closed). Debug unpinned. | Wired |
+| Account deletion | `DELETE /api/me` soft-deletes (`deleted_at`) and revokes refresh tokens; Privacy screen confirms then logs out | Wired |
+| App identity | Android `applicationId` / iOS bundle `com.shoptourr` (re-download `google-services.json` from Firebase after registering that package). Kotlin sources stay `com.example.shoptourr`. | Wired |
+| Local search | Purchase name/place `LIKE` filter (`PurchaseSearch`); FTS5 deferred (verifyMigrations + size) | Wired (LIKE) |
+| Maps | `nativeMaps` flag selects `VoyageNativeMap` expect/actual; actuals render canvas until MapLibre fits 40 MiB | Wired (slot) |
+| E2E | Maestro flows under `maestro/flows/`; CI `workflow_dispatch` installs debug APK and runs flows on an emulator | Wired |
+| CI/CD | GitHub Actions: shared host tests, iOS sim tests, APK size; Fastlane `assemble` / `size` lanes | Wired |
+| App size | Budget 40 MiB APK (`scripts/check-app-size.sh`); iOS `.ipa` (`scripts/check-ipa-size.sh`) when an archive exists | Wired |
+| RTL | `VoyageLocaleProvider` sets `LocalLayoutDirection` from `AppLocale.isRtl` (RU/EN LTR) | Wired |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
 | E2E | Maestro flows under `maestro/flows/`: auth → trip → purchase (+ tab a11y); local device gate | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs; TalkBack smoke via Maestro tab flow | Partial |

@@ -4,8 +4,9 @@ import com.example.shoptourr.domain.model.MediaUploadIntent
 
 /**
  * Upload strategy for receipt bytes.
- * v1: single PUT to pre-signed URL.
- * Later: tus / multipart resume with [offsetBytes].
+ * v1: single PUT to a pre-signed URL. The URL addresses one object; slicing
+ * [offsetBytes] would overwrite it with a truncated body, so resume always
+ * re-sends the full bytes. tus / multipart comes later.
  */
 interface ResumableMediaUploader {
     suspend fun upload(
@@ -18,6 +19,7 @@ interface ResumableMediaUploader {
 
 class PresignedPutMediaUploader(
     private val put: suspend (uploadUrl: String, bytes: ByteArray, headers: Map<String, String>) -> Unit,
+    private val checkpoints: UploadCheckpointStore? = null,
 ) : ResumableMediaUploader {
     override suspend fun upload(
         intent: MediaUploadIntent,
@@ -25,9 +27,11 @@ class PresignedPutMediaUploader(
         offsetBytes: Long,
         onProgress: ((uploaded: Long, total: Long) -> Unit)?,
     ): Result<Unit> = runCatching {
-        // Foundation: ignore offset for single PUT; resume requires tus or multipart APIs.
-        val slice = if (offsetBytes <= 0L) bytes else bytes.copyOfRange(offsetBytes.toInt(), bytes.size)
-        put(intent.uploadUrl, slice, intent.requiredHeaders)
+        put(intent.uploadUrl, bytes, intent.requiredHeaders)
         onProgress?.invoke(bytes.size.toLong(), bytes.size.toLong())
+        checkpoints?.clear(intent.mediaId)
+        Unit
+    }.onFailure {
+        checkpoints?.save(intent.mediaId, 0L)
     }
 }

@@ -16,6 +16,22 @@ class CertificatePinningTest {
     }
 
     @Test
+    fun `policy treats empty pins on release as misconfigured`() {
+        assertTrue(
+            CertificatePinPolicy.isMisconfiguredRelease(
+                isReleaseBuild = true,
+                config = CertificatePinConfig.Empty,
+            ),
+        )
+        assertFalse(
+            CertificatePinPolicy.isMisconfiguredRelease(
+                isReleaseBuild = false,
+                config = CertificatePinConfig.Empty,
+            ),
+        )
+    }
+
+    @Test
     fun `policy disables pinning when release but no pins configured`() {
         assertFalse(
             CertificatePinPolicy.shouldEnforce(

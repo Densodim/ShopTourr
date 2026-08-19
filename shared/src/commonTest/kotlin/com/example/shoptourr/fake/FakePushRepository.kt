@@ -28,5 +28,16 @@ class FakePushRepository(
         )
     }
 
-    override suspend fun unregisterDevice(deviceId: String): Result<Unit> = Result.success(Unit)
+    var unregisterCalls: Int = 0
+        private set
+    var lastUnregisteredId: String? = null
+        private set
+    var unregisterError: Throwable? = null
+
+    override suspend fun unregisterDevice(deviceId: String): Result<Unit> {
+        unregisterCalls += 1
+        lastUnregisteredId = deviceId
+        unregisterError?.let { return Result.failure(it) }
+        return Result.success(Unit)
+    }
 }

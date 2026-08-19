@@ -2,7 +2,7 @@ package com.example.shoptourr.i18n
 
 import kotlin.concurrent.Volatile
 
-enum class AppLocale(val tag: String) {
+enum class AppLocale(val tag: String, val isRtl: Boolean = false) {
     RU("ru"),
     EN("en"),
     ;

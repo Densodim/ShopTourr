@@ -5,6 +5,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import com.example.shoptourr.domain.model.UserPreferences
 import com.example.shoptourr.domain.usecase.ObservePreferencesUseCase
 import com.example.shoptourr.i18n.AppLocale
@@ -42,5 +44,10 @@ fun VoyageLocaleProvider(
     val locale = AppLocale.fromTag(preferences?.locale)
     SideEffect { VoyageI18n.currentLocale = locale }
     val strings = VoyageStrings(locale)
-    CompositionLocalProvider(LocalVoyageStrings provides strings, content = content)
+    val direction = if (locale.isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+    CompositionLocalProvider(
+        LocalVoyageStrings provides strings,
+        LocalLayoutDirection provides direction,
+        content = content,
+    )
 }

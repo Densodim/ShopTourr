@@ -15,6 +15,7 @@ class FakeUserRepository(
     preferences: UserPreferences? = null,
     private val refreshError: Throwable? = null,
     private val updateError: Throwable? = null,
+    private val deleteAccountError: Throwable? = null,
 ) : UserRepository {
     private val profileState = MutableStateFlow(profile)
     private val prefsState = MutableStateFlow(preferences)
@@ -26,6 +27,8 @@ class FakeUserRepository(
     var refreshProfileCalls: Int = 0
         private set
     var activatePremiumCalls: Int = 0
+        private set
+    var deleteAccountCalls: Int = 0
         private set
 
     override fun observeProfile(): Flow<UserProfile?> = profileState.asStateFlow()
@@ -80,5 +83,11 @@ class FakeUserRepository(
         val updated = current.copy(premiumPlan = plan)
         profileState.value = updated
         return Result.success(updated)
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> {
+        deleteAccountCalls += 1
+        deleteAccountError?.let { return Result.failure(it) }
+        return Result.success(Unit)
     }
 }

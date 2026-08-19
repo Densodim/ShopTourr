@@ -37,6 +37,15 @@ INSERT OR REPLACE INTO PurchaseEntity(
 deleteById:
 DELETE FROM PurchaseEntity WHERE id = :id;
 
+searchByTrip:
+SELECT * FROM PurchaseEntity
+WHERE trip_id = :tripId
+  AND (
+    name LIKE '%' || :needle || '%'
+    OR IFNULL(place, '') LIKE '%' || :needle || '%'
+  )
+ORDER BY purchase_date DESC, purchase_time DESC;
+
 selectAll:
 SELECT * FROM PurchaseEntity;
 

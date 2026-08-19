@@ -2,6 +2,7 @@ package com.example.shoptourr.fake
 
 import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchaseDraft
+import com.example.shoptourr.domain.model.PurchasePageKeyset
 import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.VatCalculator
 import com.example.shoptourr.domain.repository.PurchaseRepository
@@ -18,6 +19,10 @@ class FakePurchaseRepository(
     var enqueuedSyncCalls: Int = 0
         private set
     var lastDraft: PurchaseDraft? = null
+        private set
+    var lastRefreshRequest: PurchasePageRequest? = null
+        private set
+    var refreshPageCalls: Int = 0
         private set
 
     private val items = MutableStateFlow<List<Purchase>>(emptyList())
@@ -79,6 +84,10 @@ class FakePurchaseRepository(
     override suspend fun refreshPage(
         tripId: String,
         request: PurchasePageRequest,
-    ): Result<List<Purchase>> =
-        Result.success(items.value.filter { it.tripId == tripId })
+    ): Result<List<Purchase>> {
+        lastRefreshRequest = request
+        refreshPageCalls += 1
+        val forTrip = items.value.filter { it.tripId == tripId }
+        return Result.success(PurchasePageKeyset.slice(forTrip, request))
+    }
 }

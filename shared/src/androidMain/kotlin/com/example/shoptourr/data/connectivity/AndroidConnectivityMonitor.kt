@@ -37,6 +37,8 @@ class AndroidConnectivityMonitor(
         awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
     }.distinctUntilChanged()
 
+    override fun currentIsOnline(): Boolean = isCurrentlyOnline()
+
     private fun isCurrentlyOnline(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val caps = connectivityManager.getNetworkCapabilities(network) ?: return false

@@ -5,7 +5,7 @@ import BackgroundTasks
 import Shared
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    static let syncTaskId = "com.example.shoptourr.sync"
+    static let syncTaskId = "com.shoptourr.sync"
 
     func application(
         _ application: UIApplication,

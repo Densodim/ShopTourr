@@ -109,8 +109,29 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew :androidApp:assembleDebug --stacktrace
 
-      - name: Note
-        run: echo "Maestro flows live in maestro/flows; run against a local emulator + API."
+      - name: Run Maestro flows on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          script: |
+            export PATH="$PATH:$HOME/.maestro/bin"
+            APK=$(find androidApp/build/outputs/apk -name '*.apk' | head -n 1)
+            adb install -r "$APK"
+            maestro test maestro/flows/tab_bar_a11y.yaml
+
+  ios-size:
+    name: iOS ipa size budget (when archived)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce 40 MiB IPA budget if present
+        run: |
+          chmod +x scripts/check-ipa-size.sh
+          ./scripts/check-ipa-size.sh
 
   app-size:
     name: android debug APK size budget

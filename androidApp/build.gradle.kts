@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.multiplatform.settings)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation(libs.sentry.android)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
@@ -30,11 +31,15 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.example.shoptourr"
+        applicationId = "com.shoptourr"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        val sentryDsn = (System.getenv("SENTRY_DSN") ?: "")
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
@@ -68,5 +73,6 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }

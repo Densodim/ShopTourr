@@ -31,6 +31,8 @@ import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.data.local.createVoyageDatabase
+import com.example.shoptourr.data.push.RegisteredPushDeviceStore
+import com.example.shoptourr.data.push.SecureRegisteredPushDeviceStore
 import com.example.shoptourr.data.settings.AndroidEncryptedSecureStore
 import com.example.shoptourr.data.settings.SecureKeyValueStore
 import com.example.shoptourr.data.settings.SecureTokenStore
@@ -47,6 +49,8 @@ import com.example.shoptourr.data.platform.StaticAppBuildInfo
 import com.example.shoptourr.domain.model.ClientPlatform
 import com.example.shoptourr.domain.repository.AppBuildInfo
 import com.example.shoptourr.domain.push.PushTokenProvider
+import com.example.shoptourr.observability.NoOpObservability
+import com.example.shoptourr.observability.Observability
 import com.example.shoptourr.observability.createDefaultTracer
 import com.example.shoptourr.observability.trace
 import com.russhwolf.settings.Settings
@@ -59,12 +63,14 @@ class VoyageApp : Application() {
         super.onCreate()
         val tracer = createDefaultTracer()
         val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        val sentryDsn = BuildConfig.SENTRY_DSN.takeIf { it.isNotBlank() }
+        initSentryIfConfigured(this, sentryDsn, debuggable)
         tracer.trace("VoyageApp.initKoin") {
             initKoin(
                 config = AppConfig.forClient(
                     isReleaseBuild = !debuggable,
                     platform = ClientPlatform.ANDROID,
-                ),
+                ).copy(sentryDsn = sentryDsn),
                 extraModules = listOf(androidDatabaseModule),
             ) {
                 androidLogger()
@@ -98,8 +104,7 @@ private val androidDatabaseModule = module {
         QueuedAnalytics(
             queue = get(),
             sink = get(),
-            // ConnectivityMonitor is Flow-only; treat flush as online until StateFlow snapshot exists.
-            isOnline = { true },
+            isOnline = { get<ConnectivityMonitor>().currentIsOnline() },
             clock = { System.currentTimeMillis() },
         )
     }
@@ -110,6 +115,7 @@ private val androidDatabaseModule = module {
             legacy = SettingsTokenStore(get<Settings>()),
         )
     }
+    single<RegisteredPushDeviceStore> { SecureRegisteredPushDeviceStore(get()) }
     single<PushTokenProvider> { FcmPushTokenProvider(androidContext()) }
     single<BackgroundSyncScheduler> { AndroidBackgroundSyncScheduler(androidContext()) }
     single<AppBuildInfo> {
@@ -124,5 +130,9 @@ private val androidDatabaseModule = module {
             buildNumber = buildNumber,
             isReleaseBuild = !debuggable,
         )
+    }
+    single<Observability> {
+        val dsn = get<AppConfig>().sentryDsn
+        if (dsn.isNullOrBlank()) NoOpObservability else AndroidSentryObservability()
     }
 }

@@ -15,4 +15,6 @@ class FakeConnectivityMonitor(
     }
 
     override fun observeIsOnline(): Flow<Boolean> = online.asStateFlow()
+
+    override fun currentIsOnline(): Boolean = online.value
 }

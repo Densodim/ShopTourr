@@ -47,7 +47,14 @@ data class CertificatePinConfig(
 }
 
 object CertificatePinPolicy {
-    /** Pin only in release, and only when at least one host has pins. Fail-open otherwise. */
+    /**
+     * Release builds must ship pins. Empty pins on a release HTTP client is a
+     * crash-at-init misconfiguration ([isMisconfiguredRelease]), not fail-open.
+     * Debug stays unpinned so local/emulator certs work.
+     */
+    fun isMisconfiguredRelease(isReleaseBuild: Boolean, config: CertificatePinConfig): Boolean =
+        isReleaseBuild && !config.hasPins
+
     fun shouldEnforce(isReleaseBuild: Boolean, config: CertificatePinConfig): Boolean =
         isReleaseBuild && config.hasPins
 }
@@ -64,7 +71,12 @@ object CertificatePinMatcher {
     }
 }
 
-/** Default config until real SPKI hashes are checked in (empty → pinning off). */
+/** Default config until real SPKI hashes are checked in (empty → pinning off on debug). */
 object VoyageCertificatePins {
+    /**
+     * Leaf + backup SPKI hashes for `api.shoptourr.com`.
+     * Empty on purpose until the production cert is minted; [CertificatePinPolicy.isMisconfiguredRelease]
+     * then blocks release HTTP clients so we cannot ship fail-open.
+     */
     val configured: CertificatePinConfig = CertificatePinConfig.Empty
 }

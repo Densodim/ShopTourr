@@ -73,6 +73,9 @@ class UserRepositoryImpl(
             localStore.saveProfile(profile)
             profile
         }.mapHttpAppError()
+
+    override suspend fun deleteAccount(): Result<Unit> =
+        runCatching { api.deleteMe() }.mapHttpAppError()
 }
 
 internal fun UserDto.toDomain(): UserProfile =

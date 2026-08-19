@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:000000000000:android:0123456789abcdef012345",
         "android_client_info": {
-          "package_name": "com.example.shoptourr"
+          "package_name": "com.shoptourr"
         }
       },
       "oauth_client": [],
