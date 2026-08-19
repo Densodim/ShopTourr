@@ -35,4 +35,5 @@ data class Purchase(
     val purchaseDate: String,
     val purchaseTime: String?,
     val pendingSync: Boolean,
+    val updatedAt: String? = null,
 )

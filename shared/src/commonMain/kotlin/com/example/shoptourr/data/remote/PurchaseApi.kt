@@ -67,9 +67,11 @@ class PurchaseApi(
         tripId: String,
         purchaseId: String,
         request: UpdatePurchaseRequest,
+        ifMatch: String? = null,
     ): PurchaseDto {
         val response: HttpResponse = client.patch("$root/trips/$tripId/purchases/$purchaseId") {
             contentType(ContentType.Application.Json)
+            ifMatch?.let { header("If-Match", "\"$it\"") }
             setBody(request)
         }
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)

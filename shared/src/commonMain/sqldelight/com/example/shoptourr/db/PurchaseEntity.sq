@@ -14,7 +14,8 @@ CREATE TABLE PurchaseEntity (
     place TEXT,
     purchase_date TEXT NOT NULL,
     purchase_time TEXT,
-    pending_sync INTEGER NOT NULL
+    pending_sync INTEGER NOT NULL,
+    updated_at TEXT
 );
 
 selectByTrip:
@@ -31,8 +32,8 @@ upsert:
 INSERT OR REPLACE INTO PurchaseEntity(
     id, trip_id, name, category, amount, currency,
     vat_net, vat_amount, vat_gross, vat_rate_percent, vat_included,
-    tax_refund_eligible, place, purchase_date, purchase_time, pending_sync
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    tax_refund_eligible, place, purchase_date, purchase_time, pending_sync, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 deleteById:
 DELETE FROM PurchaseEntity WHERE id = :id;

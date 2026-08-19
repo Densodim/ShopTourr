@@ -118,6 +118,7 @@ class PurchaseRepositoryImpl(
                 purchaseTime = draft.purchaseTime,
                 receiptMediaId = draft.receiptMediaId,
                 splitWithTravelerIds = draft.splitWithTravelerIds,
+                ifMatch = existing.updatedAt,
             )
             outbox.enqueue(
                 SyncOutboxEntry(

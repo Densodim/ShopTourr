@@ -24,5 +24,6 @@ internal fun PurchaseDto.toDomainPurchase(pendingSync: Boolean = false): Purchas
         purchaseDate = purchaseDate,
         purchaseTime = purchaseTime,
         pendingSync = pendingSync,
+        updatedAt = updatedAt,
     )
 }

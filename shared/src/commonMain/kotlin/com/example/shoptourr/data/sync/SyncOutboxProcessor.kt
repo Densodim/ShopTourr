@@ -105,6 +105,7 @@ data class UpdatePurchasePayload(
     val purchaseTime: String?,
     val receiptMediaId: String? = null,
     val splitWithTravelerIds: List<String> = emptyList(),
+    val ifMatch: String? = null,
 )
 
 @Serializable
@@ -278,6 +279,7 @@ class SyncOutboxProcessor(
                 receiptMediaId = payload.receiptMediaId,
                 splitWithTravelerIds = payload.splitWithTravelerIds,
             ),
+            ifMatch = payload.ifMatch,
         )
         purchaseLocalStore.upsert(response.toDomain(pendingSync = false))
     }
@@ -508,6 +510,7 @@ private fun com.example.shoptourr.data.remote.dto.purchase.PurchaseDto.toDomain(
         purchaseDate = purchaseDate,
         purchaseTime = purchaseTime,
         pendingSync = pendingSync,
+        updatedAt = updatedAt,
     )
 }
 

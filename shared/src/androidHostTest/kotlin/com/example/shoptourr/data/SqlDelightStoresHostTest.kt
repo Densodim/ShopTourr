@@ -103,11 +103,13 @@ class SqlDelightStoresHostTest {
                 purchaseDate = "2026-04-15",
                 purchaseTime = "10:24",
                 pendingSync = false,
+                updatedAt = "2026-04-15T12:00:00Z",
             )
         )
         val items = store.observeByTrip("lisbon").first()
         assertEquals(listOf("server-1"), items.map { it.id })
         assertEquals(false, items.single().pendingSync)
+        assertEquals("2026-04-15T12:00:00Z", items.single().updatedAt)
     }
 
     @Test

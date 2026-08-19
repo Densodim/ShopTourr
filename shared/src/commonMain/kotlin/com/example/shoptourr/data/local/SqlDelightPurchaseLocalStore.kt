@@ -37,6 +37,7 @@ class SqlDelightPurchaseLocalStore(
                 purchase_date = purchase.purchaseDate,
                 purchase_time = purchase.purchaseTime,
                 pending_sync = if (purchase.pendingSync) 1 else 0,
+                updated_at = purchase.updatedAt,
             )
         }
     }
@@ -62,6 +63,7 @@ class SqlDelightPurchaseLocalStore(
                 purchase_date = purchase.purchaseDate,
                 purchase_time = purchase.purchaseTime,
                 pending_sync = if (purchase.pendingSync) 1 else 0,
+                updated_at = purchase.updatedAt,
             )
         }
     }
@@ -107,6 +109,7 @@ class SqlDelightPurchaseLocalStore(
             purchaseDate = purchase_date,
             purchaseTime = purchase_time,
             pendingSync = pending_sync == 1L,
+            updatedAt = updated_at,
         )
     }
 }
