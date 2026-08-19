@@ -48,6 +48,9 @@ import com.example.shoptourr.ui.components.VoyageQuickAction
 import com.example.shoptourr.ui.components.VoyageQuickActions
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSectionHead
+import com.example.shoptourr.ui.components.VoyageStat
+import com.example.shoptourr.ui.components.VoyageStatStrip
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
@@ -55,6 +58,11 @@ import com.example.shoptourr.ui.i18n.t
 import com.example.shoptourr.ui.i18n.tPlural
 import com.example.shoptourr.ui.testing.VoyageTestTags
 import com.example.shoptourr.ui.util.TripDayLabel
+import com.example.shoptourr.ui.util.emoji
+import com.example.shoptourr.ui.util.formatIsoDay
+import com.example.shoptourr.ui.util.formatFxRate
+import com.example.shoptourr.ui.util.formatted
+import com.example.shoptourr.ui.util.labelKey
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -162,7 +170,7 @@ internal fun TripDetailContent(
                 vatTotal = money(detail.vatTotal(), currency),
                 refundTotal = money(detail.taxRefundTotal(), currency),
                 fxLine = trip.exchangeRate?.let { fx ->
-                    "1 ${fx.tripCurrency} = ${fx.rate} ${fx.quoteCurrency}"
+                    "1 ${fx.tripCurrency} = ${formatFxRate(fx.rate)} ${fx.quoteCurrency}"
                 },
                 onRefreshFx = { onIntent(TripDetailIntent.RefreshFx) },
                 isWorking = state.isWorking,
@@ -409,49 +417,19 @@ private fun VatSummary(
     onRefreshFx: () -> Unit,
     isWorking: Boolean,
 ) {
-    VoyageSurfaceBlock {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            VoyageEyebrow(t("vat"), modifier = Modifier.weight(1f))
-            if (fxLine != null) {
-                Text(
-                    text = fxLine,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = t("vat"),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = vatTotal,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = t("tax_refund"),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = refundTotal,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
+    // The block used to head itself "НДС" and then label its own first column
+    // "НДС" again, with the FX rate crammed onto the heading row.
+    Column(modifier = Modifier.fillMaxWidth()) {
+        VoyageSectionHead(title = t("vat"), trailing = fxLine)
+        Spacer(Modifier.height(16.dp))
+        VoyageStatStrip(
+            stats = listOf(
+                VoyageStat(label = t("vat"), value = vatTotal),
+                VoyageStat(label = t("tax_refund"), value = refundTotal, emphasised = true),
+            ),
+        )
         if (fxLine != null) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
             VoyageButton(
                 text = t("refresh_fx"),
                 onClick = onRefreshFx,
@@ -522,7 +500,7 @@ private fun DayGroup(day: TripDayGroup, currency: String, today: String) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VoyageEyebrow(
-            text = labelKey?.let { t(it) } ?: day.date,
+            text = labelKey?.let { t(it) } ?: formatIsoDay(day.date),
             modifier = Modifier.weight(1f),
         )
         Text(
@@ -586,24 +564,6 @@ private fun PurchaseRow(purchase: Purchase, currency: String) {
     }
 }
 
-private fun money(value: Money, currency: String): String =
-    "${value.toDecimalString()} $currency"
-
-/** Category glyphs mirror CATEGORIES_META in the design source. */
-private fun PurchaseCategory.emoji(): String = when (this) {
-    PurchaseCategory.FOOD -> "🍽"
-    PurchaseCategory.TRANSPORT -> "🚆"
-    PurchaseCategory.SOUVENIRS -> "🎁"
-    PurchaseCategory.HOTEL -> "🛏"
-    PurchaseCategory.CULTURE -> "🏛"
-    PurchaseCategory.OTHER -> "✦"
-}
-
-private fun PurchaseCategory.labelKey(): String = when (this) {
-    PurchaseCategory.FOOD -> "cat_food"
-    PurchaseCategory.TRANSPORT -> "cat_transport"
-    PurchaseCategory.SOUVENIRS -> "cat_souvenirs"
-    PurchaseCategory.HOTEL -> "cat_hotel"
-    PurchaseCategory.CULTURE -> "cat_culture"
-    PurchaseCategory.OTHER -> "cat_other"
-}
+/** [currency] is the trip currency the caller has already reconciled against. */
+private fun money(value: Money, @Suppress("UNUSED_PARAMETER") currency: String): String =
+    value.formatted()

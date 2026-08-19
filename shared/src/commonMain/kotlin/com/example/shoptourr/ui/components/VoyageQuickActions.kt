@@ -40,6 +40,8 @@ data class VoyageQuickAction(
 fun VoyageQuickActions(
     actions: List<VoyageQuickAction>,
     modifier: Modifier = Modifier,
+    /** Off when the caller already frames the row with its own rules. */
+    bordered: Boolean = true,
 ) {
     if (actions.isEmpty()) return
     Row(
@@ -47,7 +49,13 @@ fun VoyageQuickActions(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
             .clip(MaterialTheme.shapes.large)
-            .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large),
+            .then(
+                if (bordered) {
+                    Modifier.border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
+                } else {
+                    Modifier
+                },
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         actions.forEachIndexed { index, action ->

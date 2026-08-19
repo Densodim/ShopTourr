@@ -17,3 +17,18 @@ object DatePickerFormats {
 
     fun isValidIsoDate(iso: String): Boolean = iso.isNotBlank() && isoToEpochMillis(iso) != null
 }
+
+/**
+ * A server timestamp as a person reads it: `2026-08-19T10:54:38.031291Z` →
+ * `19.08.2026`. Falls back to the raw string when the shape is unfamiliar, so a
+ * format change upstream degrades to today's behaviour rather than to blank.
+ */
+fun formatIsoDay(raw: String): String {
+    val date = runCatching { Instant.parse(raw).toLocalDateTime(TimeZone.currentSystemDefault()).date }
+        .recoverCatching { LocalDate.parse(raw.substringBefore('T')) }
+        .getOrNull()
+        ?: return raw
+    val day = date.dayOfMonth.toString().padStart(2, '0')
+    val month = date.monthNumber.toString().padStart(2, '0')
+    return "$day.$month.${date.year}"
+}

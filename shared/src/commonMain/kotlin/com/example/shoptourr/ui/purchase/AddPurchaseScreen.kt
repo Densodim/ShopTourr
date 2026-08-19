@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,11 +28,15 @@ import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageScreen
+import com.example.shoptourr.ui.components.VoyageChip
+import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSectionHead
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.util.formatted
 import com.example.shoptourr.ui.testing.VoyageTestTags
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
@@ -113,25 +116,22 @@ internal fun AddPurchaseContent(
                 label = t("currency_pref"),
             )
             Spacer(Modifier.height(12.dp))
-            Text(t("category"), color = MaterialTheme.colorScheme.onBackground)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PurchaseCategory.entries.take(3).forEach { category ->
-                    FilterChip(
-                        selected = state.category == category,
-                        onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                        label = { Text(t(category.i18nKey())) },
-                    )
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PurchaseCategory.entries.drop(3).forEach { category ->
-                    FilterChip(
-                        selected = state.category == category,
-                        onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
-                        label = { Text(t(category.i18nKey())) },
-                    )
+            VoyageEyebrow(t("category"))
+            Spacer(Modifier.height(10.dp))
+            listOf(
+                PurchaseCategory.entries.take(3),
+                PurchaseCategory.entries.drop(3),
+            ).forEachIndexed { index, row ->
+                if (index > 0) Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { category ->
+                        VoyageChip(
+                            label = t(category.i18nKey()),
+                            selected = state.category == category,
+                            onClick = { onIntent(AddPurchaseIntent.CategoryChanged(category)) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -142,11 +142,14 @@ internal fun AddPurchaseContent(
             )
         }
         Spacer(Modifier.height(20.dp))
-        VoyageSection(title = t("vat")) {
+        VoyageSectionHead(title = t("vat"))
+        Column {
             VoyageTextField(
                 value = state.vatRatePercent,
                 onValueChange = { onIntent(AddPurchaseIntent.VatRateChanged(it)) },
-                label = t("vat"),
+                // Labelling this "НДС" under a section already headed "НДС" printed
+                // the same word twice with a blank field between them.
+                label = t("vat_rate"),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
@@ -171,19 +174,17 @@ internal fun AddPurchaseContent(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     state.travelers.forEach { traveler ->
-                        FilterChip(
+                        VoyageChip(
+                            label = "${traveler.avatarGlyph} ${traveler.name}",
                             selected = traveler.id in state.selectedTravelerIds,
                             onClick = { onIntent(AddPurchaseIntent.ToggleTraveler(traveler.id)) },
-                            label = {
-                                Text("${traveler.avatarGlyph} ${traveler.name}")
-                            },
                         )
                     }
                 }
                 state.yourShare?.let { share ->
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = "${t("your_share")}: ${share.toDecimalString()} ${share.currency}",
+                        text = "${t("your_share")}: ${share.formatted()}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
                     )

@@ -57,15 +57,75 @@ data class TripSummary(
     val exchangeRate: ExchangeRate? = null,
     val travelers: List<Traveler> = emptyList(),
 ) {
+    /** What is left of the budget; negative once the trip goes over. */
+    val remaining: Money
+        get() = Money(budget.minorUnits - spentInBudgetCurrency().minorUnits, budget.currency)
+
+    val isOverBudget: Boolean
+        get() = spentInBudgetCurrency().minorUnits > budget.minorUnits
+
+    /**
+     * Share of the budget already spent, 0..100. A trip with no budget reports 0
+     * rather than dividing by zero, and overspending saturates so a progress track
+     * cannot render past its own width.
+     */
+    fun spendPercent(): Int {
+        if (budget.minorUnits <= 0L) return 0
+        val raw = spentInBudgetCurrency().minorUnits * 100 / budget.minorUnits
+        return raw.coerceIn(0L, 100L).toInt()
+    }
+
+    /** Days still to come, today included; null when the trip has no day counter. */
+    fun daysLeft(): Int? {
+        val total = dayCount ?: return null
+        val today = currentDayNumber ?: return null
+        return (total - today + 1).coerceAtLeast(0)
+    }
+
+    /**
+     * What is left to spend per remaining day — the number that actually decides
+     * whether today's purchase is affordable. Null when the trip is over, has no
+     * day counter, or is already over budget.
+     */
+    fun dailyAllowance(): Money? {
+        val days = daysLeft()?.takeIf { it > 0 } ?: return null
+        val left = remaining.minorUnits
+        if (left <= 0L) return null
+        return Money(left / days, budget.currency)
+    }
+
+    /** Average spend per elapsed day, for pacing against [dailyAllowance]. */
+    fun averagePerDay(): Money? {
+        val elapsed = currentDayNumber?.takeIf { it > 0 } ?: return null
+        return Money(spentInBudgetCurrency().minorUnits / elapsed, budget.currency)
+    }
+
+    /**
+     * The server reports both in the trip currency, but a stale cached row could
+     * disagree; treat a mismatch as "nothing spent" rather than doing arithmetic
+     * across currencies.
+     */
+    private fun spentInBudgetCurrency(): Money =
+        if (spent.currency == budget.currency) spent else Money.zero(budget.currency)
+
     companion object {
         fun toHomeSnapshot(userName: String, trips: List<TripSummary>): HomeSnapshot {
             val current = trips.firstOrNull { it.status == TripStatus.ACTIVE }
+            val upcoming = trips
+                .filter { it.status == TripStatus.UPCOMING }
+                .sortedBy { it.startDate }
+            val archive = trips
+                .filter { it.status == TripStatus.PAST || it.status == TripStatus.ARCHIVED }
+                .sortedByDescending { it.startDate }
             return HomeSnapshot(
                 userName = userName,
                 currentTripCity = current?.city,
-                upcomingCount = trips.count { it.status == TripStatus.UPCOMING },
-                archiveCount = trips.count { it.status == TripStatus.PAST || it.status == TripStatus.ARCHIVED },
+                upcomingCount = upcoming.size,
+                archiveCount = archive.size,
                 currentTripId = current?.id,
+                currentTrip = current,
+                upcoming = upcoming,
+                archive = archive,
             )
         }
     }

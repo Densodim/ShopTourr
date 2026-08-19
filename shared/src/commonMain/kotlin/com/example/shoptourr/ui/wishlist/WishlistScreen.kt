@@ -1,12 +1,13 @@
 package com.example.shoptourr.ui.wishlist
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,9 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.shoptourr.domain.model.WishlistItem
 import com.example.shoptourr.presentation.wishlist.WishlistIntent
 import com.example.shoptourr.presentation.wishlist.WishlistUiEvent
 import com.example.shoptourr.presentation.wishlist.WishlistUiState
@@ -28,10 +36,11 @@ import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageCurrencyField
 import com.example.shoptourr.ui.components.VoyageScreen
-import com.example.shoptourr.ui.components.VoyageSection
+import com.example.shoptourr.ui.components.VoyageSectionHead
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.util.formatted
 
 @Composable
 fun WishlistScreen(
@@ -57,25 +66,50 @@ fun WishlistScreen(
     )
 }
 
+/**
+ * The list is what the tab is for, so the list comes first. The four-field add
+ * form used to open the screen, pushing every saved wish below the fold and
+ * greeting a returning user with a wall of empty inputs.
+ */
 @Composable
 internal fun WishlistContent(
     state: WishlistUiState,
     onIntent: (WishlistIntent) -> Unit,
     showBack: Boolean = true,
 ) {
+    var isAdding by remember { mutableStateOf(false) }
+
     VoyageScreen {
-        VoyageTopBar(
-            title = t("wishlist"),
-            onBack = if (showBack) {{ onIntent(WishlistIntent.Back) }} else null,
+        if (showBack) {
+            VoyageTopBar(onBack = { onIntent(WishlistIntent.Back) })
+            Spacer(Modifier.height(14.dp))
+        }
+        Text(
+            text = t("wishlist"),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = t("wishlist_sub"),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
-        Spacer(Modifier.height(12.dp))
-        VoyageSection(title = t("add")) {
+
+        state.error?.let { err ->
+            Spacer(Modifier.height(16.dp))
+            UiErrorBanner(error = err, onRetry = { onIntent(WishlistIntent.Refresh) })
+        }
+
+        Spacer(Modifier.height(26.dp))
+        VoyageSectionHead(
+            title = t("all"),
+            trailing = if (isAdding) t("dismiss") else "+  ${t("add")}",
+            onTrailingClick = { isAdding = !isAdding },
+        )
+
+        if (isAdding) {
+            Spacer(Modifier.height(18.dp))
             VoyageTextField(
                 value = state.nameDraft,
                 onValueChange = { onIntent(WishlistIntent.NameChanged(it)) },
@@ -102,59 +136,85 @@ internal fun WishlistContent(
                 onValueChange = { onIntent(WishlistIntent.CurrencyChanged(it)) },
                 label = t("currency_pref"),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
             VoyageButton(
-                text = t("add"),
+                text = t("save"),
                 onClick = { onIntent(WishlistIntent.Add) },
                 isLoading = state.isSaving,
             )
-            Spacer(Modifier.height(8.dp))
-            VoyageButton(
-                text = t("see_all"),
-                onClick = { onIntent(WishlistIntent.Refresh) },
-                variant = VoyageButtonVariant.Secondary,
-            )
+            Spacer(Modifier.height(24.dp))
         }
-        state.error?.let { err ->
-            Spacer(Modifier.height(12.dp))
-            UiErrorBanner(error = err, onRetry = { onIntent(WishlistIntent.Refresh) })
-        }
-        Spacer(Modifier.height(20.dp))
+
         when {
-            state.isLoading && state.items.isEmpty() -> LoadingBlock(label = "…")
+            state.isLoading && state.items.isEmpty() -> LoadingBlock(label = t("loading"))
             state.items.isEmpty() -> EmptyState(
-                title = t("wishlist"),
-                message = t("empty_wish"),
+                title = t("empty_wish"),
+                message = t("item_placeholder"),
+                actionLabel = if (isAdding) null else t("add"),
+                onAction = { isAdding = true },
             )
-            else -> {
-                state.items.forEach { item ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.name,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onBackground,
-                            )
-                            Text(
-                                text = "${item.city} · ${item.targetPrice.toDecimalString()} ${item.targetPrice.currency}",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        VoyageButton(
-                            text = t("delete"),
-                            onClick = { onIntent(WishlistIntent.Delete(item.id)) },
-                            enabled = !state.isSaving,
-                            variant = VoyageButtonVariant.Ghost,
-                            fillMaxWidth = false,
-                        )
-                    }
-                    HorizontalDivider()
-                }
+            else -> state.items.forEach { item ->
+                WishRow(
+                    item = item,
+                    enabled = !state.isSaving,
+                    onDelete = { onIntent(WishlistIntent.Delete(item.id)) },
+                )
             }
         }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun WishRow(
+    item: WishlistItem,
+    enabled: Boolean,
+    onDelete: () -> Unit,
+) {
+    val deleteLabel = t("delete")
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (item.city.isNotBlank()) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = item.city.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = item.targetPrice.formatted(),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+            )
+            Spacer(Modifier.width(14.dp))
+            Text(
+                // A word-wide "Удалить" button on every row competed with the price
+                // it sits next to; the cross carries the same action at label size.
+                text = "✕",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .semantics { contentDescription = deleteLabel }
+                    .clickable(enabled = enabled, onClick = onDelete)
+                    .padding(6.dp),
+            )
+        }
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
     }
 }

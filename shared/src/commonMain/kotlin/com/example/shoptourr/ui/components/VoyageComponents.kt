@@ -3,6 +3,7 @@ package com.example.shoptourr.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +23,8 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -48,6 +53,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.shoptourr.presentation.error.UiError
 import com.example.shoptourr.ui.i18n.t
 import com.example.shoptourr.ui.theme.VoyageTokens
@@ -476,5 +482,184 @@ fun FullScreenLoading() {
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+/**
+ * `.section-head` — an eyebrow closed by a hairline, with an optional trailing
+ * count or link. Sections used to be a bare eyebrow floating over their content;
+ * the rule is what makes a long scroll read as separate blocks.
+ */
+@Composable
+fun VoyageSectionHead(
+    title: String,
+    modifier: Modifier = Modifier,
+    trailing: String? = null,
+    onTrailingClick: (() -> Unit)? = null,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            VoyageEyebrow(title)
+            if (trailing != null) {
+                Text(
+                    text = trailing.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (onTrailingClick != null) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = if (onTrailingClick != null) {
+                        Modifier.clickable(onClick = onTrailingClick)
+                    } else {
+                        Modifier
+                    },
+                )
+            }
+        }
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outline)
+    }
+}
+
+/** `.budget-track` / `.budget-fill` — a 2dp rule that fills with the accent. */
+@Composable
+fun VoyageProgressTrack(
+    percent: Int,
+    modifier: Modifier = Modifier,
+    overBudget: Boolean = false,
+) {
+    val clamped = percent.coerceIn(0, 100)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(2.dp)
+            .background(MaterialTheme.colorScheme.outline),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(clamped / 100f)
+                .height(2.dp)
+                .background(
+                    if (overBudget) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                ),
+        )
+    }
+}
+
+/** One column of a [VoyageStatStrip]. */
+data class VoyageStat(
+    val label: String,
+    val value: String,
+    val caption: String? = null,
+    val emphasised: Boolean = false,
+)
+
+/**
+ * `.stats-strip` — figures side by side on bare paper, split by hairlines.
+ * Three numbers in the height one boxed [VoyageSurfaceBlock] used to take.
+ */
+@Composable
+fun VoyageStatStrip(
+    stats: List<VoyageStat>,
+    modifier: Modifier = Modifier,
+) {
+    if (stats.isEmpty()) return
+    Row(
+        modifier = modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        verticalAlignment = Alignment.Top,
+    ) {
+        stats.forEachIndexed { index, stat ->
+            if (index > 0) {
+                Box(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(
+                        start = if (index == 0) 0.dp else 14.dp,
+                        end = if (index == stats.lastIndex) 0.dp else 14.dp,
+                    ),
+            ) {
+                Text(
+                    text = stat.label.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // A label that wraps would otherwise push its own figure below
+                    // the neighbours'; reserve both lines for every column.
+                    minLines = 2,
+                    maxLines = 2,
+                )
+                Spacer(Modifier.height(7.dp))
+                Text(
+                    text = stat.value,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = if (stat.emphasised) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onBackground
+                    },
+                    maxLines = 1,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = 13.sp,
+                        maxFontSize = MaterialTheme.typography.headlineSmall.fontSize,
+                    ),
+                )
+                if (stat.caption != null) {
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        text = stat.caption,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** `.avatar` — the initial in a hairline circle, the way into the profile. */
+@Composable
+fun VoyageAvatar(
+    name: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+) {
+    val initial = name.trim().firstOrNull()?.uppercase() ?: "•"
+    Box(
+        modifier = modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .then(
+                if (contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = initial,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }

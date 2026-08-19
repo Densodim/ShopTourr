@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +23,7 @@ import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.ui.components.LoadingBlock
 import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
+import com.example.shoptourr.ui.components.VoyageChip
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSection
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
@@ -64,16 +64,16 @@ internal fun ExportContent(
         VoyageSection(title = t("format")) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (state.pdfEnabled) {
-                    FilterChip(
+                    VoyageChip(
+                        label = "PDF",
                         selected = state.format == ExportFormat.PDF,
                         onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.PDF)) },
-                        label = { Text("PDF") },
                     )
                 }
-                FilterChip(
+                VoyageChip(
+                    label = "CSV",
                     selected = state.format == ExportFormat.CSV,
                     onClick = { onIntent(ExportIntent.FormatChanged(ExportFormat.CSV)) },
-                    label = { Text("CSV") },
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

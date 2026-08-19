@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,6 +25,7 @@ import com.example.shoptourr.ui.components.UiErrorBanner
 import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageCurrencyField
+import com.example.shoptourr.ui.components.VoyageChip
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageListRow
 import com.example.shoptourr.ui.components.VoyageScreen
@@ -89,13 +89,13 @@ internal fun SettingsContent(
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("ru" to "RU", "en" to "EN").forEach { (tag, label) ->
-                    FilterChip(
+                    VoyageChip(
+                        label = label,
                         selected = state.localeDraft.trim().lowercase().startsWith(tag),
                         onClick = {
                             onIntent(ProfileIntent.LocaleChanged(tag))
                             onIntent(ProfileIntent.SavePreferences)
                         },
-                        label = { Text(label) },
                     )
                 }
             }
@@ -113,13 +113,13 @@ internal fun SettingsContent(
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ThemeMode.entries.forEach { theme ->
-                    FilterChip(
+                    VoyageChip(
+                        label = theme.name.lowercase(),
                         selected = state.themeDraft == theme,
                         onClick = {
                             onIntent(ProfileIntent.ThemeChanged(theme))
                             onIntent(ProfileIntent.SavePreferences)
                         },
-                        label = { Text(theme.name.lowercase()) },
                     )
                 }
             }

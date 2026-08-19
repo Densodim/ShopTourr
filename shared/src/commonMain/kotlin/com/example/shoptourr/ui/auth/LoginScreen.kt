@@ -22,6 +22,7 @@ import com.example.shoptourr.ui.components.VoyageButtonVariant
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageTextField
+import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
 import com.example.shoptourr.ui.testing.VoyageTestTags
 
@@ -30,6 +31,7 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onLoggedIn: () -> Unit,
     onForgotPassword: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -43,6 +45,7 @@ fun LoginScreen(
         state = state,
         onIntent = viewModel::onIntent,
         onForgotPassword = onForgotPassword,
+        onBack = onBack,
     )
 }
 
@@ -51,8 +54,15 @@ internal fun LoginContent(
     state: AuthUiState,
     onIntent: (AuthIntent) -> Unit,
     onForgotPassword: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     VoyageScreen {
+        if (onBack != null) {
+            // Arriving from Welcome with no way back left the only exit as the
+            // system gesture, which quits the app from the auth stack's root.
+            VoyageTopBar(onBack = onBack)
+            Spacer(Modifier.height(14.dp))
+        }
         VoyageEyebrow("Voyage")
         Spacer(Modifier.height(12.dp))
         Text(
@@ -66,13 +76,9 @@ internal fun LoginContent(
             style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(28.dp))
-        Text(
-            text = if (state.isRegisterMode) t("signup") else t("signin"),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(Modifier.height(16.dp))
+        // The page title already says which mode this is ("С возвращением" /
+        // "Привет"); a second heading under it just repeated itself.
+        Spacer(Modifier.height(34.dp))
         if (state.isRegisterMode) {
             VoyageTextField(
                 value = state.displayName,

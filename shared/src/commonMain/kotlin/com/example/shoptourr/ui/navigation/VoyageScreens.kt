@@ -77,6 +77,7 @@ data class LoginVoyageScreen(val registerMode: Boolean = false) : Screen {
             viewModel = viewModel,
             onLoggedIn = { navigator.replaceAll(MainShellVoyageScreen) },
             onForgotPassword = { navigator.push(ForgotPasswordVoyageScreen) },
+            onBack = if (navigator.canPop) {{ navigator.pop() }} else null,
         )
     }
 }
@@ -137,6 +138,7 @@ object MainShellVoyageScreen : Screen {
                             onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
                             onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
                             onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
+                            onOpenProfile = { tab = VoyageTab.Profile.name },
                         )
                     }
                     VoyageTab.Wishlist -> {

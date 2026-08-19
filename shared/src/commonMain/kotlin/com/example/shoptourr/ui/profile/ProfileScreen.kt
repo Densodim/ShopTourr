@@ -21,10 +21,13 @@ import com.example.shoptourr.ui.components.VoyageButton
 import com.example.shoptourr.ui.components.VoyageEyebrow
 import com.example.shoptourr.ui.components.VoyageListRow
 import com.example.shoptourr.ui.components.VoyageScreen
-import com.example.shoptourr.ui.components.VoyageSurfaceBlock
+import com.example.shoptourr.ui.components.VoyageSectionHead
+import com.example.shoptourr.ui.components.VoyageStat
+import com.example.shoptourr.ui.components.VoyageStatStrip
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.util.formatIsoDay
 
 @Composable
 fun ProfileScreen(
@@ -86,29 +89,24 @@ internal fun ProfileContent(
             style = MaterialTheme.typography.bodyMedium,
         )
         state.profile?.memberSince?.let { since ->
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
-                text = "${t("member_since")} $since",
+                // The API sends a full ISO instant; printing it verbatim put
+                // "2026-08-19T10:54:38.031291Z" under the user's own name.
+                text = "${t("member_since")} ${formatIsoDay(since)}".uppercase(),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
             )
         }
         state.profile?.stats?.let { stats ->
-            Spacer(Modifier.height(16.dp))
-            VoyageSurfaceBlock {
-                Text(
-                    text = "${t("trips_count")}: ${stats.tripsCount}",
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = "${t("countries")}: ${stats.countriesCount}",
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = "${t("wishlist")}: ${stats.wishlistCount}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Spacer(Modifier.height(28.dp))
+            VoyageStatStrip(
+                stats = listOf(
+                    VoyageStat(label = t("trips_count"), value = stats.tripsCount.toString()),
+                    VoyageStat(label = t("countries"), value = stats.countriesCount.toString()),
+                    VoyageStat(label = t("wishlist"), value = stats.wishlistCount.toString()),
+                ),
+            )
         }
 
         if (state.isLoading && state.profile == null) {
@@ -133,39 +131,28 @@ internal fun ProfileContent(
                 isLoading = state.isSaving,
             )
         } else {
+            Spacer(Modifier.height(32.dp))
+            // Rows sit on bare paper and close on their own hairline; the boxed
+            // panels around them doubled every rule and stacked card on card.
+            VoyageSectionHead(title = t("account"))
+            VoyageListRow(
+                title = t("premium"),
+                detail = state.profile?.premiumPlan?.name ?: "FREE",
+                onClick = if (state.profile?.isPremium == true) {
+                    null
+                } else {
+                    { onIntent(ProfileIntent.ActivatePlus) }
+                },
+            )
+            VoyageListRow(title = t("edit_profile"), onClick = onEditProfile)
+            VoyageListRow(title = t("settings"), onClick = onOpenSettings)
+            VoyageListRow(title = t("support"), onClick = onOpenSupport)
+            VoyageListRow(
+                title = t("logout"),
+                onClick = { onIntent(ProfileIntent.Logout) },
+                destructive = true,
+            )
             Spacer(Modifier.height(24.dp))
-            VoyageSurfaceBlock {
-                Text(
-                    text = "${t("premium")}: ${state.profile?.premiumPlan?.name ?: "FREE"}",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                if (state.profile?.isPremium != true) {
-                    Spacer(Modifier.height(12.dp))
-                    VoyageButton(
-                        text = t("premium"),
-                        onClick = { onIntent(ProfileIntent.ActivatePlus) },
-                        enabled = !state.isSaving,
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            VoyageSurfaceBlock {
-                VoyageListRow(title = t("edit_profile"), onClick = onEditProfile)
-                HorizontalDivider()
-                VoyageListRow(title = t("settings"), onClick = onOpenSettings)
-                HorizontalDivider()
-                VoyageListRow(title = t("support"), onClick = onOpenSupport)
-            }
-            Spacer(Modifier.height(16.dp))
-            VoyageSurfaceBlock {
-                VoyageListRow(
-                    title = t("logout"),
-                    onClick = { onIntent(ProfileIntent.Logout) },
-                    destructive = true,
-                )
-            }
-            Spacer(Modifier.height(20.dp))
             Text(
                 text = "VOYAGE · v2.1.0",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
