@@ -30,10 +30,10 @@ class VoyageDatabaseHostTest {
     }
 
     @Test
-    fun `schema version is 2 and migrate from 1 is a no-op on a fresh create`() {
+    fun `schema version is 3 and migrate from 3 is a no-op on a fresh create`() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         VoyageDatabase.Schema.create(driver)
-        assertEquals(2L, VoyageDatabase.Schema.version)
-        VoyageDatabase.Schema.migrate(driver, oldVersion = 2, newVersion = 2)
+        assertEquals(3L, VoyageDatabase.Schema.version)
+        VoyageDatabase.Schema.migrate(driver, oldVersion = 3, newVersion = 3)
     }
 }

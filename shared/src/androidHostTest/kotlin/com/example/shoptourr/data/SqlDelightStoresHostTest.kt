@@ -110,6 +110,9 @@ class SqlDelightStoresHostTest {
         assertEquals(listOf("server-1"), items.map { it.id })
         assertEquals(false, items.single().pendingSync)
         assertEquals("2026-04-15T12:00:00Z", items.single().updatedAt)
+        assertEquals(listOf("server-1"), store.searchByTrip("lisbon", "belem").map { it.id })
+        assertEquals(listOf("server-1"), store.searchByTrip("lisbon", "Pasteis").map { it.id })
+        assertTrue(store.searchByTrip("lisbon", "tram").isEmpty())
     }
 
     @Test
@@ -178,6 +181,7 @@ class SqlDelightStoresHostTest {
         )
         val days = store.observe("lisbon").first()
         assertEquals(listOf("2026-04-16", "2026-04-15"), days.map { it.date })
+        assertEquals(listOf("d1"), store.search("lisbon", "pasteis").map { it.id })
         store.removeEntry("lisbon", "d1")
         assertEquals(1, store.observe("lisbon").first().single().entries.size)
     }

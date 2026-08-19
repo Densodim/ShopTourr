@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 
 interface DiaryLocalStore {
     fun observe(tripId: String): Flow<List<DiaryDayGroup>>
+    fun search(tripId: String, query: String): List<DiaryEntry>
     suspend fun replaceDays(tripId: String, days: List<DiaryDayGroup>)
     suspend fun upsertEntry(entry: DiaryEntry)
     suspend fun replaceId(oldId: String, entry: DiaryEntry)
@@ -23,6 +24,13 @@ class InMemoryDiaryLocalStore : DiaryLocalStore {
 
     override fun observe(tripId: String): Flow<List<DiaryDayGroup>> =
         byTrip.map { it[tripId].orEmpty() }
+
+    override fun search(tripId: String, query: String): List<DiaryEntry> {
+        val needle = query.trim()
+        val entries = byTrip.value[tripId].orEmpty().flatMap { it.entries }
+        if (needle.isEmpty()) return entries
+        return entries.filter { it.text.contains(needle, ignoreCase = true) }
+    }
 
     override suspend fun replaceDays(tripId: String, days: List<DiaryDayGroup>) {
         byTrip.value = byTrip.value + (tripId to days)

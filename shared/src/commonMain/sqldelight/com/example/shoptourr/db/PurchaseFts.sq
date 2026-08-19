@@ -1,0 +1,22 @@
+CREATE VIRTUAL TABLE PurchaseFts USING fts5(
+    purchase_id UNINDEXED,
+    trip_id UNINDEXED,
+    name,
+    place
+);
+
+insert:
+INSERT INTO PurchaseFts(purchase_id, trip_id, name, place)
+VALUES (?, ?, ?, ?);
+
+deleteByPurchaseId:
+DELETE FROM PurchaseFts WHERE purchase_id = :id;
+
+deleteAll:
+DELETE FROM PurchaseFts;
+
+searchIdsByTrip:
+SELECT purchase_id
+FROM PurchaseFts
+WHERE trip_id = :tripId
+  AND PurchaseFts MATCH :needle;

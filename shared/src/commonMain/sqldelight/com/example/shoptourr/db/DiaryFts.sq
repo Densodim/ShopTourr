@@ -1,0 +1,24 @@
+CREATE VIRTUAL TABLE DiaryFts USING fts5(
+    entry_id UNINDEXED,
+    trip_id UNINDEXED,
+    text
+);
+
+insert:
+INSERT INTO DiaryFts(entry_id, trip_id, text)
+VALUES (?, ?, ?);
+
+deleteByEntryId:
+DELETE FROM DiaryFts WHERE entry_id = :id;
+
+deleteByTrip:
+DELETE FROM DiaryFts WHERE trip_id = :tripId;
+
+deleteAll:
+DELETE FROM DiaryFts;
+
+searchIdsByTrip:
+SELECT entry_id
+FROM DiaryFts
+WHERE trip_id = :tripId
+  AND DiaryFts MATCH :needle;

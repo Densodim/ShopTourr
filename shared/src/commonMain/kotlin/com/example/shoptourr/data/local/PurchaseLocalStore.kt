@@ -1,6 +1,7 @@
 package com.example.shoptourr.data.local
 
 import com.example.shoptourr.domain.model.Purchase
+import com.example.shoptourr.domain.model.PurchaseSearch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -13,6 +14,7 @@ interface PurchaseLocalStore {
     suspend fun clearAll()
     fun observeByTrip(tripId: String): Flow<List<Purchase>>
     fun getById(id: String): Purchase?
+    fun searchByTrip(tripId: String, query: String): List<Purchase>
 }
 
 class InMemoryPurchaseLocalStore : PurchaseLocalStore {
@@ -40,4 +42,9 @@ class InMemoryPurchaseLocalStore : PurchaseLocalStore {
         items.map { map -> map.values.filter { it.tripId == tripId }.sortedByDescending { it.purchaseDate } }
 
     override fun getById(id: String): Purchase? = items.value[id]
+
+    override fun searchByTrip(tripId: String, query: String): List<Purchase> {
+        val inTrip = items.value.values.filter { it.tripId == tripId }
+        return PurchaseSearch.filter(inTrip, query)
+    }
 }
