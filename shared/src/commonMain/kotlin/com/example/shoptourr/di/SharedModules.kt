@@ -3,7 +3,7 @@ package com.example.shoptourr.di
 import com.example.shoptourr.data.connectivity.AlwaysOnlineConnectivityMonitor
 import com.example.shoptourr.data.hash.createDefaultContentChecksum
 import com.example.shoptourr.data.media.FileKitReceiptImageCompressor
-import com.example.shoptourr.data.media.InMemoryUploadCheckpointStore
+import com.example.shoptourr.data.media.SettingsUploadCheckpointStore
 import com.example.shoptourr.data.media.UploadCheckpointStore
 import com.example.shoptourr.data.push.InMemoryRegisteredPushDeviceStore
 import com.example.shoptourr.data.push.RegisteredPushDeviceStore
@@ -260,6 +260,7 @@ val dataModule = module {
             outbox = get(),
             analyticsQueue = getOrNull<AnalyticsEventQueue>(),
             pendingDeepLinks = get(),
+            uploadCheckpoints = get(),
         )
     }
     single<InMemoryLocalCacheInventory>() bind LocalCacheInventory::class
@@ -274,7 +275,7 @@ val dataModule = module {
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
     single<InMemoryRegisteredPushDeviceStore>() bind RegisteredPushDeviceStore::class
-    single<InMemoryUploadCheckpointStore>() bind UploadCheckpointStore::class
+    single<SettingsUploadCheckpointStore> { SettingsUploadCheckpointStore(get()) } bind UploadCheckpointStore::class
     single<AuthTokenCache> { KtorAuthTokenCache(get()) }
 
     single {

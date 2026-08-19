@@ -4,6 +4,7 @@ interface UploadCheckpointStore {
     fun offsetBytes(mediaId: String): Long
     fun save(mediaId: String, offsetBytes: Long)
     fun clear(mediaId: String)
+    fun clearAll()
 }
 
 class InMemoryUploadCheckpointStore : UploadCheckpointStore {
@@ -17,5 +18,9 @@ class InMemoryUploadCheckpointStore : UploadCheckpointStore {
 
     override fun clear(mediaId: String) {
         offsets.remove(mediaId)
+    }
+
+    override fun clearAll() {
+        offsets.clear()
     }
 }

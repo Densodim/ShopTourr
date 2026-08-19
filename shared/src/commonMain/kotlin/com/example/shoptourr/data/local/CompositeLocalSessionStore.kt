@@ -2,6 +2,7 @@ package com.example.shoptourr.data.local
 
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.data.media.VoyageImageCaches
+import com.example.shoptourr.data.media.UploadCheckpointStore
 import com.example.shoptourr.data.push.DevicePushTokenHolder
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.domain.repository.LocalSessionStore
@@ -21,6 +22,7 @@ class CompositeLocalSessionStore(
     private val outbox: SyncOutbox,
     private val analyticsQueue: AnalyticsEventQueue? = null,
     private val pendingDeepLinks: PendingDeepLinkStore? = null,
+    private val uploadCheckpoints: UploadCheckpointStore? = null,
 ) : LocalSessionStore {
 
     override suspend fun clearUserData() {
@@ -37,6 +39,7 @@ class CompositeLocalSessionStore(
         analyticsQueue?.clearAll()
         userLocalStore.clear()
         pendingDeepLinks?.clear()
+        uploadCheckpoints?.clearAll()
         DevicePushTokenHolder.update(null)
         VoyageImageCaches.clear()
     }

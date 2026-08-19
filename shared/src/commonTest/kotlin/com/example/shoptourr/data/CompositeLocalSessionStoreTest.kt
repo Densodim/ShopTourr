@@ -30,6 +30,7 @@ import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.navigation.VoyageNavigationTarget
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -50,6 +51,7 @@ class CompositeLocalSessionStoreTest {
         val outbox = InMemorySyncOutbox()
         val analytics = InMemoryAnalyticsEventQueue()
         val deepLinks = PendingDeepLinkStore()
+        val checkpoints = com.example.shoptourr.data.media.InMemoryUploadCheckpointStore()
         val vat = VatCalculator.breakdown(Money.parse("4.50", "EUR"), "23", true)
 
         trips.replaceAll(
@@ -122,6 +124,7 @@ class CompositeLocalSessionStoreTest {
         )
         deepLinks.offer(VoyageNavigationTarget.TripDetail("lisbon"))
         DevicePushTokenHolder.update("fcm-token")
+        checkpoints.save("media-1", 128L)
 
         CompositeLocalSessionStore(
             userLocalStore = user,
@@ -137,6 +140,7 @@ class CompositeLocalSessionStoreTest {
             outbox = outbox,
             analyticsQueue = analytics,
             pendingDeepLinks = deepLinks,
+            uploadCheckpoints = checkpoints,
         ).clearUserData()
 
         assertTrue(trips.all().isEmpty())
@@ -147,5 +151,6 @@ class CompositeLocalSessionStoreTest {
         assertNull(user.profile())
         assertNull(deepLinks.consume())
         assertNull(DevicePushTokenHolder.token)
+        assertEquals(0L, checkpoints.offsetBytes("media-1"))
     }
 }
