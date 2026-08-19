@@ -20,12 +20,24 @@ class FcmPushTokenProvider(
     override suspend fun currentToken(): String? {
         DevicePushTokenHolder.token?.let { return it }
         return suspendCancellableCoroutine { cont ->
-            FirebaseMessaging.getInstance().token
-                .addOnCompleteListener { task ->
-                    val value = task.result?.takeIf { task.isSuccessful }
-                    if (value != null) DevicePushTokenHolder.update(value)
-                    if (cont.isActive) cont.resume(value)
+            // `getInstance()` and `task.result` both throw when Firebase is not
+            // configured — a debug build ships a placeholder key — and the listener
+            // runs on the main thread, so an escaping throw kills the process right
+            // after sign-in. Push is best-effort: no token simply means no push.
+            val messaging = runCatching { FirebaseMessaging.getInstance() }.getOrNull()
+            if (messaging == null) {
+                cont.resume(null)
+                return@suspendCancellableCoroutine
+            }
+            messaging.token.addOnCompleteListener { task ->
+                val value = if (task.isSuccessful) {
+                    runCatching { task.result }.getOrNull()
+                } else {
+                    null
                 }
+                if (value != null) DevicePushTokenHolder.update(value)
+                if (cont.isActive) cont.resume(value)
+            }
         }
     }
 }
