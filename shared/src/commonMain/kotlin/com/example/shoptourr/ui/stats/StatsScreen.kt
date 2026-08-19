@@ -105,7 +105,7 @@ internal fun StatsContent(
                 actionLabel = t("refresh"),
                 onAction = { onIntent(StatsIntent.Refresh) },
             )
-            else -> StatsBody(stats = state.stats!!)
+            else -> StatsBody(stats = state.stats)
         }
         Spacer(Modifier.height(16.dp))
     }

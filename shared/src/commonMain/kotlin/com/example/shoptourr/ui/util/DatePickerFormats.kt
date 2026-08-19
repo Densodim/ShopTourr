@@ -28,7 +28,8 @@ fun formatIsoDay(raw: String): String {
         .recoverCatching { LocalDate.parse(raw.substringBefore('T')) }
         .getOrNull()
         ?: return raw
-    val day = date.dayOfMonth.toString().padStart(2, '0')
-    val month = date.monthNumber.toString().padStart(2, '0')
-    return "$day.$month.${date.year}"
+    // LocalDate.toString() is ISO by contract — reversing its parts beats reading
+    // the day/month accessors, which have churned across kotlinx-datetime releases.
+    val (year, month, day) = date.toString().split('-')
+    return "$day.$month.$year"
 }
