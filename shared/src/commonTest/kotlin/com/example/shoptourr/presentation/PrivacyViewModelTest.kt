@@ -1,6 +1,8 @@
 package com.example.shoptourr.presentation
 
 import app.cash.turbine.test
+import com.example.shoptourr.analytics.InMemoryAnalyticsConsentStore
+import com.example.shoptourr.analytics.NoOpAnalytics
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.AuthSession
 import com.example.shoptourr.domain.model.User
@@ -40,7 +42,11 @@ class PrivacyViewModelTest {
         auth: FakeAuthRepository = FakeAuthRepository(
             session = AuthSession("a", "r", 1, 1, User("u1", "Mila", "m@v.app", "ru")),
         ),
-    ) = PrivacyViewModel(DeleteAccountUseCase(users, LogoutUseCase(auth)))
+    ) = PrivacyViewModel(
+        DeleteAccountUseCase(users, LogoutUseCase(auth)),
+        InMemoryAnalyticsConsentStore(),
+        NoOpAnalytics,
+    )
 
     @Test
     fun `confirm delete emits account deleted`() = runTest {
@@ -63,6 +69,28 @@ class PrivacyViewModelTest {
         viewModel.onIntent(PrivacyIntent.ConfirmDeleteAccount)
         assertTrue(viewModel.state.value.error != null)
         assertEquals(1, users.deleteAccountCalls)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `toggle analytics consent persists on the store`() = runTest {
+        val consent = InMemoryAnalyticsConsentStore(granted = false)
+        val viewModel = PrivacyViewModel(
+            DeleteAccountUseCase(
+                FakeUserRepository(),
+                LogoutUseCase(
+                    FakeAuthRepository(
+                        session = AuthSession("a", "r", 1, 1, User("u1", "Mila", "m@v.app", "ru")),
+                    ),
+                ),
+            ),
+            consent,
+            NoOpAnalytics,
+        )
+        assertEquals(false, viewModel.state.value.analyticsEnabled)
+        viewModel.onIntent(PrivacyIntent.ToggleAnalyticsConsent)
+        assertEquals(true, viewModel.state.value.analyticsEnabled)
+        assertEquals(true, consent.isGranted())
         viewModel.onCleared()
     }
 }

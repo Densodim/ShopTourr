@@ -50,6 +50,12 @@ fun PrivacyScreen(
             Spacer(Modifier.height(12.dp))
             UiErrorBanner(error = err)
         }
+        Spacer(Modifier.height(16.dp))
+        VoyageButton(
+            text = if (state.analyticsEnabled) t("analytics_consent_on") else t("analytics_consent_off"),
+            onClick = { viewModel.onIntent(PrivacyIntent.ToggleAnalyticsConsent) },
+            variant = VoyageButtonVariant.Secondary,
+        )
         Spacer(Modifier.height(20.dp))
         if (state.confirmDelete) {
             Text(

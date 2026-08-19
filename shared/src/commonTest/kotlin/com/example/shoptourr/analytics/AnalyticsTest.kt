@@ -33,6 +33,7 @@ class AnalyticsTest {
             isOnline = { online },
             clock = { 1_700_000_000_000L },
             idGenerator = { "evt-1" },
+            consent = { true },
         )
 
         analytics.track("home_opened", mapOf("tab" to "home"))
@@ -56,6 +57,7 @@ class AnalyticsTest {
             isOnline = { true },
             clock = { 42L },
             idGenerator = { "evt-fail" },
+            consent = { true },
         )
         analytics.track("export_tapped")
         analytics.flush()
@@ -70,8 +72,47 @@ class AnalyticsTest {
             sink = sink,
             isOnline = { true },
             clock = { 1L },
+            consent = { true },
         )
         analytics.identify("u-9")
+        analytics.flush()
+        assertEquals("u-9", sink.lastUserId)
+    }
+
+    @Test
+    fun `without consent events are not queued and identify is not sent`() = runTest {
+        val sink = RecordingAnalyticsSink()
+        val analytics = QueuedAnalytics(
+            queue = InMemoryAnalyticsEventQueue(),
+            sink = sink,
+            isOnline = { true },
+            clock = { 1L },
+            idGenerator = { "evt-denied" },
+            consent = { false },
+        )
+        analytics.track("home_opened")
+        analytics.identify("u-9")
+        analytics.flush()
+        assertEquals(0, analytics.pendingCount())
+        assertEquals(0, sink.batches.size)
+        assertEquals(null, sink.lastUserId)
+    }
+
+    @Test
+    fun `granting consent later forwards a pending identify`() = runTest {
+        val sink = RecordingAnalyticsSink()
+        var granted = false
+        val analytics = QueuedAnalytics(
+            queue = InMemoryAnalyticsEventQueue(),
+            sink = sink,
+            isOnline = { true },
+            clock = { 1L },
+            consent = { granted },
+        )
+        analytics.identify("u-9")
+        analytics.flush()
+        assertEquals(null, sink.lastUserId)
+        granted = true
         analytics.flush()
         assertEquals("u-9", sink.lastUserId)
     }

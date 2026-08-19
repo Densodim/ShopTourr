@@ -2,6 +2,7 @@ package com.example.shoptourr
 
 import androidx.compose.ui.window.ComposeUIViewController
 import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.AnalyticsSink
 import com.example.shoptourr.analytics.NoOpAnalyticsSink
@@ -78,6 +79,7 @@ private val iosDatabaseModule = module {
             sink = get(),
             isOnline = { get<ConnectivityMonitor>().currentIsOnline() },
             clock = { epochMillis() },
+            consent = { get<AnalyticsConsentStore>().isGranted() },
         )
     } bind Analytics::class
     single { IosConnectivityMonitor() } bind ConnectivityMonitor::class

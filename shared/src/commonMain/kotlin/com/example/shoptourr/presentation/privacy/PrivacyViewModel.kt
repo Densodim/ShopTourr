@@ -1,5 +1,7 @@
 package com.example.shoptourr.presentation.privacy
 
+import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.usecase.DeleteAccountUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -12,6 +14,7 @@ import kotlinx.coroutines.launch
 data class PrivacyUiState(
     val isWorking: Boolean = false,
     val confirmDelete: Boolean = false,
+    val analyticsEnabled: Boolean = false,
     val error: UiError? = null,
 ) : UiState
 
@@ -20,6 +23,7 @@ sealed interface PrivacyIntent {
     data object RequestDeleteAccount : PrivacyIntent
     data object ConfirmDeleteAccount : PrivacyIntent
     data object CancelDelete : PrivacyIntent
+    data object ToggleAnalyticsConsent : PrivacyIntent
 }
 
 sealed interface PrivacyUiEvent : UiEvent {
@@ -29,7 +33,11 @@ sealed interface PrivacyUiEvent : UiEvent {
 
 class PrivacyViewModel(
     private val deleteAccount: DeleteAccountUseCase,
-) : BaseViewModel<PrivacyUiState, PrivacyUiEvent>(PrivacyUiState()) {
+    private val consentStore: AnalyticsConsentStore,
+    private val analytics: Analytics,
+) : BaseViewModel<PrivacyUiState, PrivacyUiEvent>(
+    PrivacyUiState(analyticsEnabled = consentStore.isGranted()),
+) {
 
     fun onIntent(intent: PrivacyIntent) {
         when (intent) {
@@ -39,7 +47,15 @@ class PrivacyViewModel(
             PrivacyIntent.CancelDelete ->
                 updateState { copy(confirmDelete = false, error = null) }
             PrivacyIntent.ConfirmDeleteAccount -> delete()
+            PrivacyIntent.ToggleAnalyticsConsent -> toggleConsent()
         }
+    }
+
+    private fun toggleConsent() {
+        val granted = !consentStore.isGranted()
+        consentStore.setGranted(granted)
+        updateState { copy(analyticsEnabled = granted, error = null) }
+        launch { analytics.flush() }
     }
 
     private fun delete() {

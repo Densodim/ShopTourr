@@ -83,11 +83,13 @@ class QueuedAnalytics(
     private val isOnline: () -> Boolean,
     private val clock: () -> Long,
     private val idGenerator: () -> String = ::newAnalyticsEventId,
+    private val consent: () -> Boolean = { false },
 ) : Analytics {
     private var pendingUserId: String? = null
     private var hasPendingIdentify: Boolean = false
 
     override suspend fun track(name: String, properties: Map<String, String>) {
+        if (!consent()) return
         queue.enqueue(
             AnalyticsEvent(
                 id = idGenerator(),
@@ -104,6 +106,10 @@ class QueuedAnalytics(
     }
 
     override suspend fun flush() {
+        if (!consent()) {
+            queue.clearAll()
+            return
+        }
         if (!isOnline()) return
         if (hasPendingIdentify) {
             sink.identify(pendingUserId)

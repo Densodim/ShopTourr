@@ -36,6 +36,7 @@ import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.privacy.SecureScreenCapture
 import com.example.shoptourr.ui.util.formatted
 import com.example.shoptourr.ui.testing.VoyageTestTags
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -92,6 +93,7 @@ internal fun AddPurchaseContent(
     }
 
     VoyageScreen {
+        SecureScreenCapture(enabled = true)
         VoyageTopBar(title = t("new_purchase"), onBack = onBack)
         Spacer(Modifier.height(16.dp))
         // No section eyebrow here: the field below already carries this exact label.

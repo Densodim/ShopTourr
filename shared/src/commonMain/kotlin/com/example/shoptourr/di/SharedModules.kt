@@ -58,8 +58,10 @@ import com.example.shoptourr.observability.Observability
 import com.example.shoptourr.observability.ObservabilityFactory
 import com.example.shoptourr.observability.createDefaultTracer
 import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.NoOpAnalytics
+import com.example.shoptourr.analytics.SettingsAnalyticsConsentStore
 import com.example.shoptourr.security.CertificatePinConfig
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
@@ -269,6 +271,7 @@ val dataModule = module {
     single<Observability> { ObservabilityFactory.create(get<AppConfig>().sentryDsn) }
     single<AppTracer> { createDefaultTracer() }
     single { NoOpAnalytics } bind Analytics::class
+    single<SettingsAnalyticsConsentStore> { SettingsAnalyticsConsentStore(get()) } bind AnalyticsConsentStore::class
     single<AlwaysOnlineConnectivityMonitor>() bind ConnectivityMonitor::class
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }

@@ -3,6 +3,7 @@ package com.example.shoptourr
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import com.example.shoptourr.analytics.Analytics
+import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.AnalyticsSink
 import com.example.shoptourr.analytics.NoOpAnalyticsSink
@@ -106,6 +107,7 @@ private val androidDatabaseModule = module {
             sink = get(),
             isOnline = { get<ConnectivityMonitor>().currentIsOnline() },
             clock = { System.currentTimeMillis() },
+            consent = { get<AnalyticsConsentStore>().isGranted() },
         )
     }
     single<ConnectivityMonitor> { AndroidConnectivityMonitor(androidContext()) }
