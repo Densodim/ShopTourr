@@ -78,6 +78,7 @@ fun TripDetailScreen(
     onOpenExport: (tripId: String) -> Unit = {},
     onLoggedOut: () -> Unit = {},
     onBack: () -> Unit,
+    showBack: Boolean = true,
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -97,13 +98,14 @@ fun TripDetailScreen(
         }
     }
 
-    TripDetailContent(state = state, onIntent = viewModel::onIntent)
+    TripDetailContent(state = state, onIntent = viewModel::onIntent, showBack = showBack)
 }
 
 @Composable
 internal fun TripDetailContent(
     state: TripDetailUiState,
     onIntent: (TripDetailIntent) -> Unit,
+    showBack: Boolean = true,
 ) {
     if (state.isLoading && state.detail == null) {
         FullScreenLoading()
@@ -113,7 +115,7 @@ internal fun TripDetailContent(
     val detail = state.detail
     if (detail == null) {
         VoyageScreen(scrollable = false) {
-            VoyageTopBar(onBack = { onIntent(TripDetailIntent.Back) })
+            VoyageTopBar(onBack = if (showBack) {{ onIntent(TripDetailIntent.Back) }} else null)
             Spacer(Modifier.height(16.dp))
             EmptyState(
                 title = state.error?.let { t(it.titleKey) } ?: t("error_not_found_title"),
@@ -129,7 +131,7 @@ internal fun TripDetailContent(
     VoyageScreen {
         VoyageTopBar(
             title = trip.city,
-            onBack = { onIntent(TripDetailIntent.Back) },
+            onBack = if (showBack) {{ onIntent(TripDetailIntent.Back) }} else null,
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { onIntent(TripDetailIntent.OpenMap) }) {

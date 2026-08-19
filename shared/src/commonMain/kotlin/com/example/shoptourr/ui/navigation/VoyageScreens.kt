@@ -2,7 +2,10 @@ package com.example.shoptourr.ui.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -14,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.example.shoptourr.presentation.alerts.AlertsViewModel
 import com.example.shoptourr.presentation.auth.AuthIntent
@@ -37,10 +41,13 @@ import com.example.shoptourr.ui.auth.ForgotPasswordScreen
 import com.example.shoptourr.ui.auth.ResetPasswordScreen
 import com.example.shoptourr.ui.auth.LoginScreen
 import com.example.shoptourr.ui.auth.WelcomeScreen
+import com.example.shoptourr.ui.components.EmptyState
 import com.example.shoptourr.ui.components.VoyageTabBar
 import com.example.shoptourr.ui.diary.DiaryScreen
 import com.example.shoptourr.ui.export.ExportScreen
 import com.example.shoptourr.ui.home.HomeScreen
+import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.layout.voyageWindowWidthClass
 import com.example.shoptourr.ui.legal.AboutScreen
 import com.example.shoptourr.ui.legal.PrivacyScreen
 import com.example.shoptourr.ui.legal.SupportScreen
@@ -120,49 +127,88 @@ object MainShellVoyageScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         var tab by rememberSaveable { mutableStateOf(VoyageTab.Home.name) }
         val current = VoyageTab.entries.firstOrNull { it.name == tab } ?: VoyageTab.Home
+        var selectedTripId by rememberSaveable { mutableStateOf<String?>(null) }
 
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(VoyageTokens.bg),
         ) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                val homeViewModel = rememberVoyageViewModel<HomeViewModel>()
-                val wishlistViewModel = rememberVoyageViewModel<WishlistViewModel>()
-                val profileViewModel = rememberVoyageViewModel<ProfileViewModel>()
-                when (current) {
-                    VoyageTab.Home -> {
-                        HomeScreen(
-                            viewModel = homeViewModel,
-                            onCreateTrip = { navigator.push(NewTripVoyageScreen) },
-                            onOpenTrip = { tripId -> navigator.push(TripDetailVoyageScreen(tripId)) },
-                            onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
-                            onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
-                            onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
-                            onOpenProfile = { tab = VoyageTab.Profile.name },
-                        )
-                    }
-                    VoyageTab.Wishlist -> {
-                        WishlistScreen(
-                            viewModel = wishlistViewModel,
-                            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
-                        )
-                    }
-                    VoyageTab.Profile -> {
-                        ProfileScreen(
-                            viewModel = profileViewModel,
-                            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
-                            onOpenSettings = { navigator.push(SettingsVoyageScreen) },
-                            onOpenSupport = { navigator.push(SupportVoyageScreen) },
-                            onEditProfile = { navigator.push(EditProfileVoyageScreen) },
-                        )
+            val twoPane = voyageWindowWidthClass(maxWidth.value).showsTripListDetailPane &&
+                current == VoyageTab.Home
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    val homeViewModel = rememberVoyageViewModel<HomeViewModel>()
+                    val wishlistViewModel = rememberVoyageViewModel<WishlistViewModel>()
+                    val profileViewModel = rememberVoyageViewModel<ProfileViewModel>()
+                    when {
+                        twoPane -> {
+                            Row(modifier = Modifier.fillMaxSize()) {
+                                Box(modifier = Modifier.weight(0.42f).fillMaxHeight()) {
+                                    HomeScreen(
+                                        viewModel = homeViewModel,
+                                        onCreateTrip = { navigator.push(NewTripVoyageScreen) },
+                                        onOpenTrip = { tripId -> selectedTripId = tripId },
+                                        onAddPurchase = { tripId ->
+                                            navigator.push(AddPurchaseVoyageScreen(tripId))
+                                        },
+                                        onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
+                                        onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
+                                        onOpenProfile = { tab = VoyageTab.Profile.name },
+                                    )
+                                }
+                                Box(modifier = Modifier.weight(0.58f).fillMaxHeight()) {
+                                    val tripId = selectedTripId
+                                    if (tripId == null) {
+                                        EmptyState(
+                                            title = t("pane_pick_trip"),
+                                            message = t("pane_pick_trip_sub"),
+                                        )
+                                    } else {
+                                        TripDetailHost(
+                                            tripId = tripId,
+                                            navigator = navigator,
+                                            showBack = false,
+                                            onBack = { selectedTripId = null },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        current == VoyageTab.Home -> {
+                            HomeScreen(
+                                viewModel = homeViewModel,
+                                onCreateTrip = { navigator.push(NewTripVoyageScreen) },
+                                onOpenTrip = { tripId -> navigator.push(TripDetailVoyageScreen(tripId)) },
+                                onAddPurchase = { tripId -> navigator.push(AddPurchaseVoyageScreen(tripId)) },
+                                onOpenMap = { tripId -> navigator.push(RouteVoyageScreen(tripId)) },
+                                onOpenStats = { tripId -> navigator.push(StatsVoyageScreen(tripId)) },
+                                onOpenProfile = { tab = VoyageTab.Profile.name },
+                            )
+                        }
+                        current == VoyageTab.Wishlist -> {
+                            WishlistScreen(
+                                viewModel = wishlistViewModel,
+                                onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+                            )
+                        }
+                        current == VoyageTab.Profile -> {
+                            ProfileScreen(
+                                viewModel = profileViewModel,
+                                onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+                                onOpenSettings = { navigator.push(SettingsVoyageScreen) },
+                                onOpenSupport = { navigator.push(SupportVoyageScreen) },
+                                onEditProfile = { navigator.push(EditProfileVoyageScreen) },
+                            )
+                        }
                     }
                 }
+                VoyageTabBar(
+                    current = current,
+                    onChange = { tab = it.name },
+                )
             }
-            VoyageTabBar(
-                current = current,
-                onChange = { tab = it.name },
-            )
         }
     }
 }
@@ -281,20 +327,36 @@ data class TripDetailVoyageScreen(val tripId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = rememberVoyageViewModel<TripDetailViewModel>(tripId)
-        TripDetailScreen(
-            viewModel = viewModel,
-            onAddPurchase = { id -> navigator.push(AddPurchaseVoyageScreen(id)) },
-            onOpenDiary = { id -> navigator.push(DiaryVoyageScreen(id)) },
-            onOpenTaxFree = { id -> navigator.push(TaxFreeVoyageScreen(id)) },
-            onOpenAlerts = { id -> navigator.push(AlertsVoyageScreen(id)) },
-            onOpenMap = { id -> navigator.push(RouteVoyageScreen(id)) },
-            onOpenStats = { id -> navigator.push(StatsVoyageScreen(id)) },
-            onOpenExport = { id -> navigator.push(ExportVoyageScreen(id)) },
-            onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+        TripDetailHost(
+            tripId = tripId,
+            navigator = navigator,
+            showBack = true,
             onBack = { navigator.pop() },
         )
     }
+}
+
+@Composable
+private fun TripDetailHost(
+    tripId: String,
+    navigator: Navigator,
+    showBack: Boolean,
+    onBack: () -> Unit,
+) {
+    val viewModel = rememberVoyageViewModel<TripDetailViewModel>(tripId)
+    TripDetailScreen(
+        viewModel = viewModel,
+        onAddPurchase = { id -> navigator.push(AddPurchaseVoyageScreen(id)) },
+        onOpenDiary = { id -> navigator.push(DiaryVoyageScreen(id)) },
+        onOpenTaxFree = { id -> navigator.push(TaxFreeVoyageScreen(id)) },
+        onOpenAlerts = { id -> navigator.push(AlertsVoyageScreen(id)) },
+        onOpenMap = { id -> navigator.push(RouteVoyageScreen(id)) },
+        onOpenStats = { id -> navigator.push(StatsVoyageScreen(id)) },
+        onOpenExport = { id -> navigator.push(ExportVoyageScreen(id)) },
+        onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
+        onBack = onBack,
+        showBack = showBack,
+    )
 }
 
 data class AddPurchaseVoyageScreen(val tripId: String) : Screen {
