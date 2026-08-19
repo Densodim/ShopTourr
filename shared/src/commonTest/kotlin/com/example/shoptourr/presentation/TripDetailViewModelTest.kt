@@ -136,30 +136,54 @@ class TripDetailViewModelTest {
     }
 
     @Test
-    fun `load more requests the next purchase page`() = runTest {
+    fun `prefetch requests the next keyset page after the first fetch`() = runTest {
         val trips = tripRepo(sampleTrip)
         val purchases = FakePurchaseRepository()
-        purchases.create("lisbon", draft("One", PurchaseCategory.FOOD, "1.00"))
-        purchases.create("lisbon", draft("Two", PurchaseCategory.FOOD, "2.00"))
-        purchases.create("lisbon", draft("Three", PurchaseCategory.FOOD, "3.00"))
+        purchases.create("lisbon", dated("One", "2026-08-15"))
+        purchases.create("lisbon", dated("Two", "2026-08-14"))
+        purchases.create("lisbon", dated("Three", "2026-08-13"))
+        purchases.create("lisbon", dated("Four", "2026-08-12"))
+        purchases.create("lisbon", dated("Five", "2026-08-11"))
         val viewModel = vm(trips, purchases, pageSize = 2)
 
         viewModel.state.test {
             var state = awaitItem()
-            while (state.isLoading || purchases.refreshPageCalls == 0) {
-                state = awaitItem()
-            }
-            assertEquals(1, purchases.refreshPageCalls)
-            assertEquals(0, purchases.lastRefreshRequest?.page)
-            assertTrue(state.hasMorePurchases)
-
-            viewModel.onIntent(TripDetailIntent.LoadMore)
-            state = awaitItem()
-            while (state.isLoadingMore) {
+            while (state.isLoading || purchases.refreshPageCalls < 2) {
                 state = awaitItem()
             }
             assertEquals(2, purchases.refreshPageCalls)
-            assertEquals(1, purchases.lastRefreshRequest?.page)
+            assertEquals(null, purchases.refreshRequests[0].afterId)
+            assertEquals("p-2", purchases.refreshRequests[1].afterId)
+            assertEquals("2026-08-14", purchases.refreshRequests[1].afterDate)
+            assertTrue(state.hasMorePurchases)
+            cancelAndIgnoreRemainingEvents()
+        }
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `load more continues from the prefetched keyset cursor`() = runTest {
+        val trips = tripRepo(sampleTrip)
+        val purchases = FakePurchaseRepository()
+        purchases.create("lisbon", dated("One", "2026-08-15"))
+        purchases.create("lisbon", dated("Two", "2026-08-14"))
+        purchases.create("lisbon", dated("Three", "2026-08-13"))
+        purchases.create("lisbon", dated("Four", "2026-08-12"))
+        purchases.create("lisbon", dated("Five", "2026-08-11"))
+        val viewModel = vm(trips, purchases, pageSize = 2)
+
+        viewModel.state.test {
+            var state = awaitItem()
+            while (state.isLoading || purchases.refreshPageCalls < 2) {
+                state = awaitItem()
+            }
+            viewModel.onIntent(TripDetailIntent.LoadMore)
+            state = awaitItem()
+            while (state.isLoadingMore || purchases.refreshPageCalls < 3) {
+                state = awaitItem()
+            }
+            assertEquals(3, purchases.refreshPageCalls)
+            assertEquals("p-4", purchases.lastRefreshRequest?.afterId)
             assertTrue(!state.hasMorePurchases)
             cancelAndIgnoreRemainingEvents()
         }
@@ -173,6 +197,16 @@ class TripDetailViewModelTest {
         vatIncluded = true,
         vatRatePercent = "23",
         place = null,
+    )
+
+    private fun dated(name: String, date: String) = PurchaseDraft(
+        name = name,
+        category = PurchaseCategory.FOOD,
+        amount = Money.parse("1.00", "EUR"),
+        vatIncluded = true,
+        vatRatePercent = "23",
+        place = null,
+        purchaseDate = date,
     )
 
     @Test

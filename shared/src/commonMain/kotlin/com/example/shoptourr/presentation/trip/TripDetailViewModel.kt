@@ -3,6 +3,7 @@ package com.example.shoptourr.presentation.trip
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.PurchaseCategory
+import com.example.shoptourr.domain.model.Purchase
 import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.TripDayGroup
 import com.example.shoptourr.domain.model.TripDetail
@@ -21,6 +22,8 @@ import com.example.shoptourr.presentation.error.UiErrorAction
 import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class TripDetailUiState(
     val tripId: String,
@@ -31,7 +34,8 @@ data class TripDetailUiState(
     val travelerNameDraft: String = "",
     val inviteEmailDraft: String = "",
     val lastInvite: TripInvite? = null,
-    val nextPurchasePage: Int = 0,
+    val purchaseCursorDate: String? = null,
+    val purchaseCursorId: String? = null,
     val hasMorePurchases: Boolean = false,
     val isLoadingMore: Boolean = false,
     val error: UiError? = null,
@@ -84,6 +88,8 @@ class TripDetailViewModel(
     private val refreshPurchases: RefreshPurchasesUseCase? = null,
     private val purchasePageSize: Int = DEFAULT_PURCHASE_PAGE_SIZE,
 ) : BaseViewModel<TripDetailUiState, TripDetailUiEvent>(TripDetailUiState(tripId = tripId)) {
+
+    private val pagingMutex = Mutex()
 
     init {
         launch {
@@ -138,47 +144,91 @@ class TripDetailViewModel(
 
     private fun refresh() {
         launch {
-            updateState { copy(isLoading = true, error = null) }
-            refreshTrip(state.value.tripId)
-                .onSuccess {
-                    val page = fetchPurchasePage(page = 0) ?: emptyList()
-                    updateState {
-                        copy(
-                            isLoading = false,
-                            nextPurchasePage = 1,
-                            hasMorePurchases = page.size >= purchasePageSize,
-                            isLoadingMore = false,
-                        )
-                    }
+            pagingMutex.withLock {
+                updateState {
+                    copy(
+                        isLoading = true,
+                        error = null,
+                        purchaseCursorDate = null,
+                        purchaseCursorId = null,
+                        hasMorePurchases = false,
+                    )
                 }
-                .onFailure { handleFailure(it) }
+                refreshTrip(state.value.tripId)
+                    .onSuccess {
+                        val page = fetchPurchasePage(
+                            PurchasePageRequest(page = 0, size = purchasePageSize),
+                        ) ?: emptyList()
+                        commitPurchasePage(page)
+                    }
+                    .onFailure { handleFailure(it) }
+            }
+            prefetchIfNeeded()
         }
     }
 
     private fun loadMore() {
-        val snapshot = state.value
-        if (snapshot.isLoadingMore || !snapshot.hasMorePurchases || refreshPurchases == null) return
+        if (!state.value.hasMorePurchases || refreshPurchases == null) return
         launch {
-            updateState { copy(isLoadingMore = true, error = null) }
-            val page = fetchPurchasePage(page = snapshot.nextPurchasePage)
-            if (page == null) {
-                updateState { copy(isLoadingMore = false) }
-                return@launch
+            pagingMutex.withLock {
+                if (!state.value.hasMorePurchases) return@withLock
+                updateState { copy(isLoadingMore = true, error = null) }
+                val request = nextPurchaseRequest() ?: run {
+                    updateState { copy(isLoadingMore = false, hasMorePurchases = false) }
+                    return@withLock
+                }
+                val page = fetchPurchasePage(request)
+                if (page == null) {
+                    updateState { copy(isLoadingMore = false) }
+                    return@withLock
+                }
+                commitPurchasePage(page)
             }
-            updateState {
-                copy(
-                    isLoadingMore = false,
-                    nextPurchasePage = snapshot.nextPurchasePage + 1,
-                    hasMorePurchases = page.size >= purchasePageSize,
-                )
+            prefetchIfNeeded()
+        }
+    }
+
+    private fun prefetchIfNeeded() {
+        if (!state.value.hasMorePurchases || refreshPurchases == null) return
+        launch {
+            pagingMutex.withLock {
+                if (!state.value.hasMorePurchases) return@withLock
+                val request = nextPurchaseRequest() ?: return@withLock
+                val page = fetchPurchasePage(request) ?: return@withLock
+                commitPurchasePage(page)
             }
         }
     }
 
-    private suspend fun fetchPurchasePage(page: Int) =
+    private fun nextPurchaseRequest(): PurchasePageRequest? {
+        val snapshot = state.value
+        val date = snapshot.purchaseCursorDate ?: return null
+        val id = snapshot.purchaseCursorId ?: return null
+        return PurchasePageRequest(
+            page = 0,
+            size = purchasePageSize,
+            afterDate = date,
+            afterId = id,
+        )
+    }
+
+    private fun commitPurchasePage(page: List<Purchase>) {
+        val last = page.lastOrNull()
+        updateState {
+            copy(
+                isLoading = false,
+                isLoadingMore = false,
+                purchaseCursorDate = last?.purchaseDate ?: purchaseCursorDate,
+                purchaseCursorId = last?.id ?: purchaseCursorId,
+                hasMorePurchases = page.size >= purchasePageSize,
+            )
+        }
+    }
+
+    private suspend fun fetchPurchasePage(request: PurchasePageRequest) =
         refreshPurchases?.invoke(
             state.value.tripId,
-            PurchasePageRequest(page = page, size = purchasePageSize),
+            request,
         )?.onFailure { handleFailure(it) }?.getOrNull()
 
     private fun addLocalTraveler() {

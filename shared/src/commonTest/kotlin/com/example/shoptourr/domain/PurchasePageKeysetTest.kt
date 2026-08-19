@@ -52,4 +52,22 @@ class PurchasePageKeysetTest {
         )
         assertEquals(listOf("b", "a"), page.map { it.id })
     }
+
+    @Test
+    fun `next request is null when the page was short`() {
+        val items = listOf(purchase("c", "2026-08-13"))
+        assertEquals(null, PurchasePageKeyset.nextRequest(items, size = 2))
+    }
+
+    @Test
+    fun `next request uses the last row as the keyset cursor`() {
+        val page = listOf(
+            purchase("c", "2026-08-13"),
+            purchase("b", "2026-08-12"),
+        )
+        val next = PurchasePageKeyset.nextRequest(page, size = 2)
+        assertEquals("2026-08-12", next?.afterDate)
+        assertEquals("b", next?.afterId)
+        assertEquals(0, next?.page)
+    }
 }

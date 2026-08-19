@@ -9,7 +9,12 @@ data class PurchasePageRequest(
     init {
         require(page >= 0) { "page must be >= 0" }
         require(size in 1..100) { "size must be 1..100" }
+        require((afterDate == null) == (afterId == null)) {
+            "afterDate and afterId must be used together"
+        }
     }
+
+    val usesKeyset: Boolean get() = afterDate != null && afterId != null
 }
 
 object PurchasePageKeyset {
@@ -28,5 +33,17 @@ object PurchasePageKeyset {
         }
         val from = if (start < 0) 0 else start + 1
         return sorted.drop(from).take(request.size)
+    }
+
+    /** Next keyset request after a fetched page, or null when that page was short. */
+    fun nextRequest(page: List<Purchase>, size: Int): PurchasePageRequest? {
+        if (page.size < size) return null
+        val last = page.last()
+        return PurchasePageRequest(
+            page = 0,
+            size = size,
+            afterDate = last.purchaseDate,
+            afterId = last.id,
+        )
     }
 }

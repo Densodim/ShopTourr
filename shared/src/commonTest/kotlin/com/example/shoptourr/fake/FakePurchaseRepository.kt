@@ -22,6 +22,7 @@ class FakePurchaseRepository(
         private set
     var lastRefreshRequest: PurchasePageRequest? = null
         private set
+    val refreshRequests: MutableList<PurchasePageRequest> = mutableListOf()
     var refreshPageCalls: Int = 0
         private set
 
@@ -86,6 +87,7 @@ class FakePurchaseRepository(
         request: PurchasePageRequest,
     ): Result<List<Purchase>> {
         lastRefreshRequest = request
+        refreshRequests += request
         refreshPageCalls += 1
         val forTrip = items.value.filter { it.tripId == tripId }
         return Result.success(PurchasePageKeyset.slice(forTrip, request))
