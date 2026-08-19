@@ -24,6 +24,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
+import com.example.shoptourr.i18n.VoyageI18n
 import com.example.shoptourr.observability.NoOpObservability
 import com.example.shoptourr.observability.Observability
 import com.example.shoptourr.security.CertificatePinConfig
@@ -90,6 +91,7 @@ fun createVoyageHttpClient(
     enableLogging: Boolean = false,
     observability: Observability = NoOpObservability,
     retryDelayMillis: Long? = null,
+    acceptLanguage: () -> String = { VoyageI18n.currentLocale.tag },
 ): HttpClient = HttpClient(engine) {
     expectSuccess = false
     install(ContentNegotiation) {
@@ -125,6 +127,7 @@ fun createVoyageHttpClient(
     defaultRequest {
         url.takeFrom(baseUrl.trimEnd('/') + "/")
         header(HttpHeaders.Accept, ContentType.Application.Json.toString())
+        header(HttpHeaders.AcceptLanguage, acceptLanguage())
     }
     // Retry before timeout so timed-out GET/HEAD can be retried (Ktor plugin order).
     installVoyageSafeRetry(retryDelayMillis)

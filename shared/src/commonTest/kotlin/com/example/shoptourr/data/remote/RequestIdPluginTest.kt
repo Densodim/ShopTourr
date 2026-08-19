@@ -4,6 +4,7 @@ import com.example.shoptourr.observability.RecordingObservability
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.request.get
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -48,5 +49,22 @@ class RequestIdPluginTest {
         assertEquals(1, obs.breadcrumbs.size)
         assertEquals("http", obs.breadcrumbs.single().category)
         assertTrue(obs.breadcrumbs.single().data["request_id"].orEmpty().isNotBlank())
+    }
+
+    @Test
+    fun `http client sends Accept-Language from the active locale`() = runTest {
+        val seen = mutableListOf<String?>()
+        val engine = MockEngine { request ->
+            seen += request.headers[HttpHeaders.AcceptLanguage]
+            respond("", status = HttpStatusCode.NoContent)
+        }
+        val client = createVoyageHttpClient(
+            baseUrl = "https://api.test",
+            engine = engine,
+            tokenProvider = { null },
+            acceptLanguage = { "en" },
+        )
+        client.get("https://api.test/ping")
+        assertEquals("en", seen.single())
     }
 }
