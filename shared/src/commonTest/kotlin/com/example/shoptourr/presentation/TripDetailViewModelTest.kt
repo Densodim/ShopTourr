@@ -230,4 +230,34 @@ class TripDetailViewModelTest {
         assertEquals(1, trips.inviteCalls)
         viewModel.onCleared()
     }
+
+    @Test
+    fun `share sends a trip card to the share sheet`() = runTest {
+        val trips = tripRepo(sampleTrip)
+        val purchases = FakePurchaseRepository()
+        purchases.create("lisbon", draft("Pasteis", PurchaseCategory.FOOD, "4.50"))
+        val sent = mutableListOf<String>()
+        val viewModel = TripDetailViewModel(
+            tripId = "lisbon",
+            observeTripDetail = ObserveTripDetailUseCase(trips, purchases),
+            refreshTrip = RefreshTripUseCase(trips),
+            addTraveler = AddTravelerUseCase(trips),
+            inviteTraveler = InviteTravelerUseCase(trips),
+            refreshExchangeRate = RefreshExchangeRateUseCase(trips),
+            refreshPurchases = RefreshPurchasesUseCase(purchases),
+            shareSheet = { text -> sent += text },
+        )
+
+        viewModel.state.test {
+            var state = awaitItem()
+            if (state.detail == null) state = awaitItem()
+            viewModel.onIntent(TripDetailIntent.Share)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        assertEquals(1, sent.size)
+        assertTrue(sent.first().contains("Lisbon, Portugal"))
+        assertTrue(sent.first().contains("4.50"))
+        viewModel.onCleared()
+    }
 }

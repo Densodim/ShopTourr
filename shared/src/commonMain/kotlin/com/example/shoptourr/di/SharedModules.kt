@@ -71,7 +71,9 @@ import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.push.createNotificationPermissionGate
+import com.example.shoptourr.data.share.createShareSheet
 import com.example.shoptourr.domain.push.NotificationPermissionGate
+import com.example.shoptourr.domain.share.ShareSheet
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AnalyticsApi
 import com.example.shoptourr.data.remote.AuthApi
@@ -287,6 +289,7 @@ val dataModule = module {
     single<AlwaysOnlineConnectivityMonitor>() bind ConnectivityMonitor::class
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<NotificationPermissionGate> { createNotificationPermissionGate() }
+    single<ShareSheet> { createShareSheet() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
@@ -544,6 +547,7 @@ val presentationModule = module {
             inviteTraveler = get(),
             refreshExchangeRate = get(),
             refreshPurchases = get(),
+            shareSheet = get(),
         )
     }
     factory { params ->

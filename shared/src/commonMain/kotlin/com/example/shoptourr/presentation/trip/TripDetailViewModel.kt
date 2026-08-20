@@ -8,6 +8,8 @@ import com.example.shoptourr.domain.model.PurchasePageRequest
 import com.example.shoptourr.domain.model.TripDayGroup
 import com.example.shoptourr.domain.model.TripDetail
 import com.example.shoptourr.domain.model.TripInvite
+import com.example.shoptourr.domain.share.ShareSheet
+import com.example.shoptourr.domain.share.TripShareText
 import com.example.shoptourr.domain.usecase.AddTravelerUseCase
 import com.example.shoptourr.domain.usecase.InviteTravelerUseCase
 import com.example.shoptourr.domain.usecase.ObserveTripDetailUseCase
@@ -58,6 +60,7 @@ sealed interface TripDetailIntent {
     data object OpenMap : TripDetailIntent
     data object OpenStats : TripDetailIntent
     data object OpenExport : TripDetailIntent
+    data object Share : TripDetailIntent
     data class TravelerNameChanged(val value: String) : TripDetailIntent
     data object AddTraveler : TripDetailIntent
     data class InviteEmailChanged(val value: String) : TripDetailIntent
@@ -87,6 +90,7 @@ class TripDetailViewModel(
     private val refreshExchangeRate: RefreshExchangeRateUseCase,
     private val refreshPurchases: RefreshPurchasesUseCase? = null,
     private val purchasePageSize: Int = DEFAULT_PURCHASE_PAGE_SIZE,
+    private val shareSheet: ShareSheet = ShareSheet { },
 ) : BaseViewModel<TripDetailUiState, TripDetailUiEvent>(TripDetailUiState(tripId = tripId)) {
 
     private val pagingMutex = Mutex()
@@ -126,6 +130,7 @@ class TripDetailViewModel(
             TripDetailIntent.OpenMap -> emitEvent(TripDetailUiEvent.NavigateMap(tripId))
             TripDetailIntent.OpenStats -> emitEvent(TripDetailUiEvent.NavigateStats(tripId))
             TripDetailIntent.OpenExport -> emitEvent(TripDetailUiEvent.NavigateExport(tripId))
+            TripDetailIntent.Share -> shareTrip()
             is TripDetailIntent.CategoryFilterChanged ->
                 updateState {
                     // Re-tapping the active chip clears the filter.
@@ -265,6 +270,11 @@ class TripDetailViewModel(
                 .onSuccess { updateState { copy(isWorking = false) } }
                 .onFailure { handleFailure(it, working = true) }
         }
+    }
+
+    private fun shareTrip() {
+        val detail = state.value.detail ?: return
+        shareSheet.shareText(TripShareText.of(detail))
     }
 
     private fun handleFailure(throwable: Throwable, working: Boolean = false) {

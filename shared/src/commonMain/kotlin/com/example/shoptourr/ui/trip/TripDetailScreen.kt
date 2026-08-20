@@ -134,6 +134,12 @@ internal fun TripDetailContent(
             onBack = if (showBack) {{ onIntent(TripDetailIntent.Back) }} else null,
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        onClick = { onIntent(TripDetailIntent.Share) },
+                        modifier = Modifier.testTag(VoyageTestTags.TRIP_SHARE),
+                    ) {
+                        Text(t("share"), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     TextButton(onClick = { onIntent(TripDetailIntent.OpenMap) }) {
                         Text(t("map"), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }

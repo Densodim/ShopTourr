@@ -165,6 +165,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | CI/CD | GitHub Actions: shared host tests, iOS sim tests, APK size; Fastlane `assemble` / `size` lanes | Wired |
 | App size | Budget 40 MiB APK (`scripts/check-app-size.sh`); iOS `.ipa` (`scripts/check-ipa-size.sh`) when an archive exists | Wired |
 | RTL | `VoyageLocaleProvider` sets `LocalLayoutDirection` from `AppLocale.isRtl` (RU/EN LTR) | Wired |
+| Share trip | System share sheet with a plain-text budget card (`ShareSheet` expect/actual) | Wired |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
 | E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
