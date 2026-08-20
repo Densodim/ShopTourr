@@ -10,6 +10,10 @@ local.properties
 captures
 .externalNativeBuild
 .cxx
+*.jks
+*.keystore
+play-service-account.json
+AuthKey_*.p8
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/

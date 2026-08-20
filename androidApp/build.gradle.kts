@@ -67,6 +67,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    val uploadKeystore = System.getenv("ANDROID_KEYSTORE_FILE").orEmpty()
+    if (uploadKeystore.isNotBlank()) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(uploadKeystore)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD").orEmpty()
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS").orEmpty()
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD").orEmpty()
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -75,6 +86,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (uploadKeystore.isNotBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

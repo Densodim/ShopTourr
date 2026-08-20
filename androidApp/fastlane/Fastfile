@@ -11,4 +11,20 @@ platform :android do
     assemble
     sh("../scripts/check-app-size.sh")
   end
+
+  desc "Build a signed AAB and upload to Play internal testing (draft)"
+  lane :internal do
+    sh("../scripts/check-release-secrets.sh android")
+    gradle(task: ":androidApp:bundleRelease")
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      aab: File.expand_path("../build/outputs/bundle/release/androidApp-release.aab", __dir__),
+      json_key: ENV.fetch("PLAY_JSON_KEY_FILE"),
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
 end

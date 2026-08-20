@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.shoptourr"],
+        "components": [
+          { "/": "/trips/*" },
+          { "/": "/home" }
+        ]
+      }
+    ]
+  }
+}

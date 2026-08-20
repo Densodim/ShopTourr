@@ -168,7 +168,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
 | E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
-| CI/CD | GitHub Actions `ci.yml`: host tests + iOS sim + APK size + Maestro welcome on PR; Fastlane/ASC later | Wired (unit + a11y) |
+| CI/CD | GitHub Actions `ci.yml` (tests, size, 16 KB, Maestro welcome). `release.yml` `workflow_dispatch` → Fastlane Play internal draft / TestFlight when repo secrets exist. Host `docs/well-known/*.example` on `voyage.app/.well-known/` | Wired (upload gated on secrets) |
 | App size | Budget 40 MiB (`AppSizeBudget` + `scripts/check-app-size.sh`); ABI splits + release minify/shrink; arm64 `.so` 16 KB ELF check (`scripts/check-16kb-elf.sh`) | Wired |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
 | Social Google (Android) | Credential Manager: one-tap authorized → all accounts → `GetSignInWithGoogleOption` (explicit SiWG). Nonce on every step. | Wired |
