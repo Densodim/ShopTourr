@@ -40,6 +40,7 @@ android {
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
         buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
+        manifestPlaceholders["MAPS_API_KEY"] = System.getenv("MAPS_API_KEY").orEmpty()
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }

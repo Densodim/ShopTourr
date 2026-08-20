@@ -106,6 +106,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.androidx.security.crypto)
             implementation(libs.androidx.tracing)
+            implementation(libs.play.services.maps)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

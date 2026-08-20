@@ -89,8 +89,8 @@ jobs:
         run: ./gradlew :shared:iosSimulatorArm64Test --stacktrace
 
   maestro:
-    name: maestro e2e (manual)
-    if: github.event_name == 'workflow_dispatch'
+    name: maestro welcome a11y
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -102,6 +102,9 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Install Maestro
         run: curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -118,7 +121,7 @@ jobs:
             export PATH="$PATH:$HOME/.maestro/bin"
             APK=$(find androidApp/build/outputs/apk -name '*.apk' | head -n 1)
             adb install -r "$APK"
-            maestro test maestro/flows/tab_bar_a11y.yaml
+            maestro test maestro/flows/welcome_a11y.yaml
 
   ios-size:
     name: iOS ipa size budget (when archived)

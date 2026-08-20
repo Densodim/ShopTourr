@@ -5,8 +5,9 @@ import androidx.compose.ui.Modifier
 import com.example.shoptourr.domain.model.RouteStop
 
 /**
- * Honors the `nativeMaps` remote flag. Native SDKs stay off the classpath to keep
- * the 40 MiB budget; the expect/actual slot currently renders [RouteMapCanvas].
+ * Honors the `nativeMaps` remote flag. Native SDKs: MapKit on iOS, Google Maps
+ * on Android only when `MAPS_API_KEY` is set. MapLibre stays off the classpath
+ * to keep the 40 MiB budget. Missing geo or maps key falls back to [RouteMapCanvas].
  */
 @Composable
 fun VoyageMapHost(

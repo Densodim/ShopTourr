@@ -160,15 +160,15 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Account deletion | `DELETE /api/me` soft-deletes (`deleted_at`) and revokes refresh tokens; Privacy screen confirms then logs out | Wired |
 | App identity | Android `applicationId` / iOS bundle `com.shoptourr` (re-download `google-services.json` from Firebase after registering that package). Kotlin sources stay `com.example.shoptourr`. | Wired |
 | Local search | Purchase/diary FTS5 (`PurchaseFts` / `DiaryFts`) with LIKE fallback when the prefix is empty | Wired |
-| Maps | `nativeMaps` flag selects `VoyageNativeMap` expect/actual; actuals render canvas until MapLibre fits 40 MiB | Wired (slot) |
-| E2E | Maestro flows under `maestro/flows/`; CI `workflow_dispatch` installs debug APK and runs flows on an emulator | Wired |
+| Maps | `nativeMaps` flag selects `VoyageNativeMap`. iOS MapKit (`MKMapView`); Android Google Maps when `MAPS_API_KEY` + Play services, else canvas. No geo → canvas. MapLibre stays off the classpath for the 40 MiB budget | Wired |
+| E2E | Maestro flows under `maestro/flows/`; PR CI runs `welcome_a11y` on an emulator. Login/tab flows stay local / `workflow_dispatch` | Wired |
 | CI/CD | GitHub Actions: shared host tests, iOS sim tests, APK size; Fastlane `assemble` / `size` lanes | Wired |
 | App size | Budget 40 MiB APK (`scripts/check-app-size.sh`); iOS `.ipa` (`scripts/check-ipa-size.sh`) when an archive exists | Wired |
 | RTL | `VoyageLocaleProvider` sets `LocalLayoutDirection` from `AppLocale.isRtl` (RU/EN LTR) | Wired |
 | Biometrics | Optional unlock after login via Keychain/Keystore `accessControl` | Deferred P3 |
-| E2E | Maestro flows under `maestro/flows/`: auth → trip → purchase (+ tab a11y); local device gate | Wired (flows) |
-| A11y | Compose `testTag` + `contentDescription` on fields/tabs; TalkBack smoke via Maestro tab flow | Partial |
-| CI/CD | GitHub Actions `ci.yml`: `:shared:testAndroidHostTest` on push/PR; Fastlane/ASC later | Wired (unit) |
+| E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
+| A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
+| CI/CD | GitHub Actions `ci.yml`: host tests + iOS sim + APK size + Maestro welcome on PR; Fastlane/ASC later | Wired (unit + a11y) |
 | App size | Budget 40 MiB (`AppSizeBudget` + `scripts/check-app-size.sh`); ABI splits + release minify/shrink | Wired |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
 

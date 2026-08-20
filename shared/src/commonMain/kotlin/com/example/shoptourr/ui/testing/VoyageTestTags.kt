@@ -34,4 +34,6 @@ object VoyageTestTags {
     const val TAB_HOME = "tab_home"
     const val TAB_WISHLIST = "tab_wishlist"
     const val TAB_PROFILE = "tab_profile"
+
+    const val ROUTE_MAP = "route_map"
 }

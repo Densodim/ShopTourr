@@ -1,0 +1,14 @@
+appId: com.shoptourr
+name: Welcome a11y smoke
+tags:
+  - smoke
+  - a11y
+  - welcome
+---
+# Cold start with a clean session — no credentials required. Safe for PR CI.
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: welcome_sign_in
+- assertVisible:
+    id: welcome_sign_up

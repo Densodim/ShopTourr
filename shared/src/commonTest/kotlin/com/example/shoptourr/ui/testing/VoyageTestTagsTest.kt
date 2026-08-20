@@ -19,6 +19,8 @@ class VoyageTestTagsTest {
             VoyageTestTags.HOME_CURRENT_TRIP,
             VoyageTestTags.NEW_TRIP_SUBMIT,
             VoyageTestTags.ADD_PURCHASE_SUBMIT,
+            VoyageTestTags.WELCOME_SIGN_UP,
+            VoyageTestTags.ROUTE_MAP,
         )
         critical.forEach { tag ->
             assertTrue(tag.isNotBlank())
