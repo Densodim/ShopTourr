@@ -21,7 +21,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Self.configureSentry()
         IosSocialAuthCoordinator.shared.configure()
         Self.configurePushPermission()
+        if let shortcut = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
+            DeepLinkIntakeKt.offerPendingShortcut(type: shortcut.type)
+            return false
+        }
         return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        DeepLinkIntakeKt.offerPendingShortcut(type: shortcutItem.type)
+        completionHandler(true)
     }
 
     static func configurePushPermission() {

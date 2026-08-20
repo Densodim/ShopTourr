@@ -10,6 +10,7 @@ sealed class VoyageNavigationTarget {
     data class TripAlerts(val tripId: String) : VoyageNavigationTarget()
     data class TripTaxFree(val tripId: String) : VoyageNavigationTarget()
     data class TripRoute(val tripId: String) : VoyageNavigationTarget()
+    data class AddPurchase(val tripId: String?) : VoyageNavigationTarget()
 }
 
 object PushDeepLinkExtractor {
@@ -26,6 +27,7 @@ object PushDeepLinkExtractor {
             "alerts", "alert" -> "/alerts"
             "tax-free", "taxfree", "tax_free" -> "/tax-free"
             "route", "map" -> "/route"
+            "purchase", "purchases", "add-purchase", "add_purchase" -> "/purchases"
             "detail", "trip", null, "" -> ""
             else -> ""
         }
@@ -40,6 +42,7 @@ object VoyageDeepLinkRouter {
         is VoyageDeepLink.TripAlerts -> VoyageNavigationTarget.TripAlerts(link.tripId)
         is VoyageDeepLink.TripTaxFree -> VoyageNavigationTarget.TripTaxFree(link.tripId)
         is VoyageDeepLink.TripRoute -> VoyageNavigationTarget.TripRoute(link.tripId)
+        is VoyageDeepLink.AddPurchase -> VoyageNavigationTarget.AddPurchase(link.tripId)
     }
 
     fun resolveUri(uri: String): VoyageNavigationTarget? =

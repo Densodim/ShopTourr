@@ -48,5 +48,18 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.shoptourr.addPurchase</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Add purchase</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Log a spend on the current trip</string>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeAdd</string>
+		</dict>
+	</array>
 </dict>
 </plist>

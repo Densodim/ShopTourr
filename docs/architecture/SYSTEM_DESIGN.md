@@ -144,7 +144,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Rate limit:** login 10/min/IP; write APIs 120/min/user.
 - **Privacy:** receipt photos private; export jobs expire 24h.
 - **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO. OS notification permission is requested **after login** (`RegisterPushDeviceUseCase` → `NotificationPermissionGate`), not on cold start.
-- **Deep links:** FCM data / `voyage://` VIEW intents / `https://voyage.app/trips/…` (Android App Links + iOS `applinks:voyage.app`) → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens.
+- **Deep links:** FCM data / `voyage://` VIEW intents / `https://voyage.app/trips/…` (Android App Links + iOS `applinks:voyage.app`) → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens. Home-screen shortcut `voyage://purchases/new` opens add-purchase for the current trip.
 - **Media upload:** `ResumableMediaUploader` tus-lite: HEAD `Upload-Offset` then PATCH chunks; local checkpoints survive process death. Full PUT still accepted.
 
 ### 6.1 Standard blocks (mobile-system-design ch.10) — decisions
@@ -167,6 +167,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | RTL | `VoyageLocaleProvider` sets `LocalLayoutDirection` from `AppLocale.isRtl` (RU/EN LTR) | Wired |
 | Share trip | System share sheet with a plain-text budget card (`ShareSheet` expect/actual) | Wired |
 | Biometrics | Optional app lock after login: Face ID / fingerprint / device code (`BiometricAuthenticator` expect/actual, local preference) | Wired |
+| Home shortcut | Long-press icon → «Add purchase» / «Добавить покупку» → `voyage://purchases/new` (Android static shortcut + iOS `UIApplicationShortcutItem`) | Wired |
 | E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
 | CI/CD | GitHub Actions `ci.yml` (tests, size, 16 KB, Maestro welcome). `release.yml` `workflow_dispatch` → Fastlane Play internal draft / TestFlight when repo secrets exist. Host `docs/well-known/*.example` on `voyage.app/.well-known/` | Wired (upload gated on secrets) |

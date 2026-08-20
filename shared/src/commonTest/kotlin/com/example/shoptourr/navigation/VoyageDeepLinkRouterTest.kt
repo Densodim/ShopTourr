@@ -54,4 +54,27 @@ class VoyageDeepLinkRouterTest {
             VoyageDeepLinkRouter.resolvePushData(mapOf("url" to "voyage://home")),
         )
     }
+
+    @Test
+    fun `maps shortcut uri to add purchase for the current trip`() {
+        val target = VoyageDeepLinkRouter.resolveUri("voyage://purchases/new")
+        assertIs<VoyageNavigationTarget.AddPurchase>(target)
+        assertNull(target.tripId)
+    }
+
+    @Test
+    fun `maps trip purchase path to add purchase`() {
+        val target = VoyageDeepLinkRouter.resolveUri("voyage://trips/lisbon/purchases")
+        assertIs<VoyageNavigationTarget.AddPurchase>(target)
+        assertEquals("lisbon", target.tripId)
+    }
+
+    @Test
+    fun `maps purchase screen from push data`() {
+        val target = VoyageDeepLinkRouter.resolvePushData(
+            mapOf("trip_id" to "oslo", "screen" to "purchase"),
+        )
+        assertIs<VoyageNavigationTarget.AddPurchase>(target)
+        assertEquals("oslo", target.tripId)
+    }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutId="add_purchase"
+        android:shortcutLongLabel="@string/shortcut_add_purchase_long"
+        android:shortcutShortLabel="@string/shortcut_add_purchase">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="voyage://purchases/new"
+            android:targetClass="com.example.shoptourr.MainActivity"
+            android:targetPackage="com.shoptourr" />
+    </shortcut>
+</shortcuts>

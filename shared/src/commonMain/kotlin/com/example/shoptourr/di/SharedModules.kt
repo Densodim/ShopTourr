@@ -45,6 +45,7 @@ import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
+import com.example.shoptourr.navigation.flushPendingDeepLinkUris
 import com.example.shoptourr.data.local.InMemoryLocalCacheInventory
 import com.example.shoptourr.data.local.LocalCacheInventory
 import com.example.shoptourr.data.sync.BackgroundSyncScheduler
@@ -169,6 +170,7 @@ import com.example.shoptourr.domain.usecase.RefreshDiaryUseCase
 import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
+import com.example.shoptourr.domain.usecase.ResolveAddPurchaseDeepLinkUseCase
 import com.example.shoptourr.domain.usecase.RefreshPreferencesUseCase
 import com.example.shoptourr.domain.usecase.RefreshProfileUseCase
 import com.example.shoptourr.domain.usecase.RefreshRouteUseCase
@@ -486,6 +488,7 @@ val domainModule = module {
     factory<ObserveHomeUseCase>()
     factory<DrainSyncOutboxUseCase>()
     factory<RefreshHomeUseCase>()
+    factory<ResolveAddPurchaseDeepLinkUseCase>()
     factory<CreatePurchaseUseCase>()
     factory<UploadReceiptUseCase>()
     factory<FetchReceiptOcrUseCase>()
@@ -647,4 +650,6 @@ fun initKoin(
     if (extraModules.isNotEmpty()) {
         modules(extraModules)
     }
+}.also {
+    flushPendingDeepLinkUris()
 }

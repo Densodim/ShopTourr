@@ -29,6 +29,27 @@ class VoyageDeepLinkParserTest {
     }
 
     @Test
+    fun `parses add-purchase shortcut without a trip`() {
+        val link = VoyageDeepLinkParser.parse("voyage://purchases/new")
+        assertIs<VoyageDeepLink.AddPurchase>(link)
+        assertNull(link.tripId)
+    }
+
+    @Test
+    fun `parses add-purchase alias`() {
+        val link = VoyageDeepLinkParser.parse("voyage://add-purchase")
+        assertIs<VoyageDeepLink.AddPurchase>(link)
+        assertNull(link.tripId)
+    }
+
+    @Test
+    fun `parses add purchase on a known trip`() {
+        val link = VoyageDeepLinkParser.parse("voyage://trips/lisbon/purchases")
+        assertIs<VoyageDeepLink.AddPurchase>(link)
+        assertEquals("lisbon", link.tripId)
+    }
+
+    @Test
     fun `rejects blank`() {
         assertNull(VoyageDeepLinkParser.parse("   "))
     }

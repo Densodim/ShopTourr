@@ -4,8 +4,10 @@ import com.example.shoptourr.domain.model.HomeSnapshot
 import com.example.shoptourr.domain.repository.AuthRepository
 import com.example.shoptourr.domain.repository.TripRepository
 import com.example.shoptourr.domain.repository.UserRepository
+import com.example.shoptourr.navigation.VoyageNavigationTarget
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 
 class ObserveHomeUseCase(
@@ -49,5 +51,17 @@ class RefreshHomeUseCase(
     suspend operator fun invoke(): Result<Unit> {
         drainSyncOutbox?.invoke()
         return tripRepository.refreshTrips()
+    }
+}
+
+class ResolveAddPurchaseDeepLinkUseCase(
+    private val observeHome: ObserveHomeUseCase,
+) {
+    suspend operator fun invoke(target: VoyageNavigationTarget): VoyageNavigationTarget {
+        if (target !is VoyageNavigationTarget.AddPurchase) return target
+        val id = target.tripId?.trim().orEmpty().ifEmpty {
+            observeHome().first().currentTripId?.trim().orEmpty()
+        }
+        return if (id.isEmpty()) VoyageNavigationTarget.Home else VoyageNavigationTarget.AddPurchase(id)
     }
 }
