@@ -14,7 +14,6 @@ import com.example.shoptourr.domain.usecase.UploadReceiptUseCase
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.engine.mock.respondOk
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -33,14 +32,14 @@ class MediaUploadIntentIntegrationTest {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true; explicitNulls = false }
 
     @Test
-    fun `upload receipt flows intent put confirm with checksum and idempotency`() = runTest {
+    fun `upload receipt flows intent patch confirm with checksum and idempotency`() = runTest {
         val bytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xD9.toByte())
         val checksum = "b".repeat(64)
         var intentPosted = 0
         var putPosted = 0
         var confirmPosted = 0
         var seenIdempotency: String? = null
-        var putContentType: String? = null
+        var patchContentType: String? = null
 
         val apiEngine = MockEngine { request ->
             when {
@@ -85,12 +84,26 @@ class MediaUploadIntentIntegrationTest {
             }
         }
         val uploadEngine = MockEngine { request ->
-            assertEquals(HttpMethod.Put, request.method)
-            assertEquals("https://cdn.test/upload/media-42", request.url.toString())
-            putPosted += 1
-            putContentType = request.body.contentType?.toString()
-                ?: request.headers[HttpHeaders.ContentType]
-            respondOk()
+            when (request.method) {
+                HttpMethod.Head -> {
+                    respond(
+                        content = ByteReadChannel(byteArrayOf()),
+                        status = HttpStatusCode.NoContent,
+                        headers = headersOf("Upload-Offset", "0"),
+                    )
+                }
+                HttpMethod.Patch -> {
+                    putPosted += 1
+                    patchContentType = request.body.contentType?.toString()
+                        ?: request.headers[HttpHeaders.ContentType]
+                    respond(
+                        content = ByteReadChannel(byteArrayOf()),
+                        status = HttpStatusCode.NoContent,
+                        headers = headersOf("Upload-Offset", bytes.size.toString()),
+                    )
+                }
+                else -> error("Unexpected upload ${request.method} ${request.url}")
+            }
         }
 
         val apiClient = createVoyageHttpClient(
@@ -119,6 +132,6 @@ class MediaUploadIntentIntegrationTest {
         assertEquals(1, putPosted)
         assertEquals(1, confirmPosted)
         assertEquals("idem-media-1", seenIdempotency)
-        assertEquals("image/jpeg", putContentType)
+        assertEquals("application/offset+octet-stream", patchContentType)
     }
 }

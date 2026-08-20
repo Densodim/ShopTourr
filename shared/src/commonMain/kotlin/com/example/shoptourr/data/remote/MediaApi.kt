@@ -8,7 +8,9 @@ import com.example.shoptourr.data.remote.dto.media.ReceiptOcrResultDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.head
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -59,6 +61,30 @@ class MediaApi(
         }
     }
 
+    suspend fun probeUploadOffset(uploadUrl: String): Long {
+        val response: HttpResponse = uploadClient.head(uploadUrl) {
+            header(TUS_RESUMABLE, TUS_VERSION)
+        }
+        if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {
+            throw mapHttpStatus(response.status)
+        }
+        return response.headers[UPLOAD_OFFSET]?.toLongOrNull()?.coerceAtLeast(0L) ?: 0L
+    }
+
+    suspend fun patchUpload(uploadUrl: String, offset: Long, chunk: ByteArray): Long {
+        val response: HttpResponse = uploadClient.patch(uploadUrl) {
+            header(TUS_RESUMABLE, TUS_VERSION)
+            header(UPLOAD_OFFSET, offset.toString())
+            contentType(ContentType.parse(TUS_OFFSET_CONTENT_TYPE))
+            setBody(chunk)
+        }
+        if (!response.status.isSuccess() && response.status != HttpStatusCode.NoContent) {
+            throw mapHttpStatus(response.status)
+        }
+        return response.headers[UPLOAD_OFFSET]?.toLongOrNull()
+            ?: (offset + chunk.size)
+    }
+
     suspend fun confirm(mediaId: String, request: ConfirmMediaUploadRequest = ConfirmMediaUploadRequest()): MediaAssetDto {
         val response: HttpResponse = client.post("$root/media/$mediaId/confirm") {
             contentType(ContentType.Application.Json)
@@ -78,5 +104,12 @@ class MediaApi(
         val response: HttpResponse = client.get("$root/media/$mediaId/ocr")
         if (!response.status.isSuccess()) throw mapHttpStatus(response.status)
         return response.body()
+    }
+
+    companion object {
+        const val TUS_RESUMABLE = "Tus-Resumable"
+        const val TUS_VERSION = "1.0.0"
+        const val UPLOAD_OFFSET = "Upload-Offset"
+        const val TUS_OFFSET_CONTENT_TYPE = "application/offset+octet-stream"
     }
 }

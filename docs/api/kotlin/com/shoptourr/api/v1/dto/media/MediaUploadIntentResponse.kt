@@ -6,7 +6,7 @@ import java.util.UUID
 data class MediaUploadIntentResponse(
     val mediaId: UUID,
     val uploadUrl: String,
-    /** Extra headers client must send on PUT (e.g. Content-Type). */
+    /** Extra headers the client sends on a full PUT (e.g. Content-Type). PATCH uses tus offset headers. */
     val requiredHeaders: Map<String, String>?,
     val uploadExpiresAt: Instant,
     val status: MediaStatus,

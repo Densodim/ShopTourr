@@ -77,6 +77,9 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 | POST | `/media/{mediaId}/confirm` | `ConfirmMediaUploadRequest` | `MediaAssetDto` |
 | GET | `/media/{mediaId}` | — | `MediaAssetDto` |
 | GET | `/media/{mediaId}/ocr` | — | `ReceiptOcrResultDto` (P2) |
+| HEAD | `/dev-uploads/{mediaId}` (public) | — | 204 + `Upload-Offset` |
+| PATCH | `/dev-uploads/{mediaId}` (public) | chunk + `Upload-Offset` | 204 + `Upload-Offset` |
+| PUT | `/dev-uploads/{mediaId}` (public) | full object | 204 |
 
 ## Shared trips / FX / Premium (P3)
 | Method | Path | Request | Response |

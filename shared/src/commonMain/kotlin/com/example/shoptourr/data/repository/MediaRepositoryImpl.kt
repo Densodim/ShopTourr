@@ -1,7 +1,8 @@
 package com.example.shoptourr.data.repository
 
-import com.example.shoptourr.data.media.PresignedPutMediaUploader
 import com.example.shoptourr.data.media.ResumableMediaUploader
+import com.example.shoptourr.data.media.TusOffsetMediaUploader
+import com.example.shoptourr.data.media.UploadCheckpointStore
 import com.example.shoptourr.data.remote.MediaApi
 import com.example.shoptourr.data.remote.dto.media.CreateMediaUploadIntentRequest
 import com.example.shoptourr.data.remote.dto.media.MediaAssetDto
@@ -22,10 +23,11 @@ import com.example.shoptourr.domain.repository.MediaRepository
 class MediaRepositoryImpl(
     private val api: MediaApi,
     private val idempotencyKey: () -> String,
-    private val uploader: ResumableMediaUploader = PresignedPutMediaUploader(
-        put = { url, bytes, headers ->
-            api.uploadBytes(uploadUrl = url, bytes = bytes, requiredHeaders = headers)
-        },
+    checkpoints: UploadCheckpointStore? = null,
+    private val uploader: ResumableMediaUploader = TusOffsetMediaUploader(
+        probeOffset = { url -> api.probeUploadOffset(url) },
+        patch = { url, offset, chunk -> api.patchUpload(url, offset, chunk) },
+        checkpoints = checkpoints,
     ),
 ) : MediaRepository {
     override suspend fun createReceiptUploadIntent(draft: ReceiptUploadDraft): Result<MediaUploadIntent> =

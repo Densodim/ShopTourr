@@ -145,7 +145,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Privacy:** receipt photos private; export jobs expire 24h.
 - **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO.
 - **Deep links:** FCM data / `voyage://` VIEW intents → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens.
-- **Media upload:** `ResumableMediaUploader` (v1 pre-signed PUT; tus/multipart resume later).
+- **Media upload:** `ResumableMediaUploader` tus-lite: HEAD `Upload-Offset` then PATCH chunks; local checkpoints survive process death. Full PUT still accepted.
 
 ### 6.1 Standard blocks (mobile-system-design ch.10) — decisions
 

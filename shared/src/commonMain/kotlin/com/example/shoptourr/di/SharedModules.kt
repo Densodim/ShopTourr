@@ -404,6 +404,7 @@ val dataModule = module {
         MediaRepositoryImpl(
             api = get(),
             idempotencyKey = { "m-${epochMillis()}-${Random.nextInt(100000, 999999)}" },
+            checkpoints = get(),
         )
     } bind MediaRepository::class
     single<PushRepositoryImpl>() bind PushRepository::class
