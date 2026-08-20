@@ -121,7 +121,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Alerts | `GET /trips/{id}/alerts` |
 | Tax Free | `GET /trips/{id}/tax-free` |
 | Export | `POST /trips/{id}/exports` → poll job |
-| Wishlist (tab) | `GET/POST/DELETE /wishlist` |
+| Wishlist (tab) | `GET/POST/DELETE /wishlist`. If the current trip is in the same city, «Купил» posts a souvenir purchase then deletes the wish |
 | Profile (tab) / Settings / Privacy / About / Support | `GET/PATCH /me`, `DELETE /me`, `GET/PATCH /me/preferences` |
 
 ---

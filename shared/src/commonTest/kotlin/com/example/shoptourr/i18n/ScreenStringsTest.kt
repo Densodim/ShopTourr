@@ -25,6 +25,8 @@ class ScreenStringsTest {
         // diary
         "mood", "mood_good", "mood_love", "mood_ok", "mood_sad", "mood_mad", "mood_tired",
         "entry", "diary_empty", "diary_empty_sub",
+        // wishlist
+        "wish_bought",
     )
 
     @Test

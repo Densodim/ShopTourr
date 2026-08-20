@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +41,7 @@ import com.example.shoptourr.ui.components.VoyageSectionHead
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 import com.example.shoptourr.ui.util.formatted
 
 @Composable
@@ -157,6 +159,8 @@ internal fun WishlistContent(
                 WishRow(
                     item = item,
                     enabled = !state.isSaving,
+                    canBuy = state.canBuy(item),
+                    onBought = { onIntent(WishlistIntent.Bought(item.id)) },
                     onDelete = { onIntent(WishlistIntent.Delete(item.id)) },
                 )
             }
@@ -169,9 +173,12 @@ internal fun WishlistContent(
 private fun WishRow(
     item: WishlistItem,
     enabled: Boolean,
+    canBuy: Boolean,
+    onBought: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val deleteLabel = t("delete")
+    val boughtLabel = t("wish_bought")
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
@@ -192,6 +199,18 @@ private fun WishRow(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
+                    )
+                }
+                if (canBuy) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = boughtLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .testTag(VoyageTestTags.WISHLIST_BUY)
+                            .semantics { contentDescription = boughtLabel }
+                            .clickable(enabled = enabled, onClick = onBought),
                     )
                 }
             }

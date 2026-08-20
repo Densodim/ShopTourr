@@ -141,6 +141,7 @@ import com.example.shoptourr.domain.usecase.CreateExportUseCase
 import com.example.shoptourr.domain.usecase.CreatePurchaseUseCase
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.ConvertWishlistItemToPurchaseUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
@@ -500,6 +501,7 @@ val domainModule = module {
     factory<RefreshWishlistUseCase>()
     factory<CreateWishlistItemUseCase>()
     factory<DeleteWishlistItemUseCase>()
+    factory<ConvertWishlistItemToPurchaseUseCase>()
     factory<ObserveDiaryUseCase>()
     factory<RefreshDiaryUseCase>()
     factory<CreateDiaryEntryUseCase>()

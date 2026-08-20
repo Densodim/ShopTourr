@@ -46,4 +46,6 @@ object VoyageTestTags {
 
     const val DIARY_MOODS = "diary_moods"
     const val DIARY_MOOD = "diary_mood"
+
+    const val WISHLIST_BUY = "wishlist_buy"
 }

@@ -2,6 +2,9 @@ package com.example.shoptourr.domain.usecase
 
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.CreateWishlistDraft
+import com.example.shoptourr.domain.model.Purchase
+import com.example.shoptourr.domain.model.PurchaseCategory
+import com.example.shoptourr.domain.model.PurchaseDraft
 import com.example.shoptourr.domain.model.WishlistItem
 import com.example.shoptourr.domain.repository.WishlistRepository
 import com.example.shoptourr.domain.validation.FieldRules
@@ -62,6 +65,41 @@ class DeleteWishlistItemUseCase(
         if (id.isBlank()) return Result.failure(AppError.Validation("id"))
         return wishlistRepository.delete(id).onSuccess {
             drainSyncOutbox?.invoke()
+        }
+    }
+}
+
+fun canConvertWishlistItem(item: WishlistItem, tripCity: String?): Boolean {
+    val city = tripCity?.trim().orEmpty()
+    return city.isNotEmpty() && item.city.trim().equals(city, ignoreCase = true)
+}
+
+class ConvertWishlistItemToPurchaseUseCase(
+    private val createPurchase: CreatePurchaseUseCase,
+    private val deleteWishlistItem: DeleteWishlistItemUseCase,
+) {
+    suspend operator fun invoke(
+        item: WishlistItem,
+        tripId: String?,
+        tripCity: String?,
+    ): Result<Purchase> {
+        val id = tripId?.trim().orEmpty()
+        if (id.isEmpty()) return Result.failure(AppError.Validation("tripId"))
+        if (!canConvertWishlistItem(item, tripCity)) {
+            return Result.failure(AppError.Validation("city"))
+        }
+        return createPurchase(
+            id,
+            PurchaseDraft(
+                name = item.name,
+                category = PurchaseCategory.SOUVENIRS,
+                amount = item.targetPrice,
+                vatIncluded = true,
+                vatRatePercent = "0",
+                place = item.city.trim(),
+            ),
+        ).onSuccess {
+            deleteWishlistItem(item.id)
         }
     }
 }

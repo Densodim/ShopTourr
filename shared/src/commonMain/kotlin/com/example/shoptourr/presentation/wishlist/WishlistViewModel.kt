@@ -5,10 +5,13 @@ import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateWishlistDraft
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.WishlistItem
+import com.example.shoptourr.domain.usecase.ConvertWishlistItemToPurchaseUseCase
 import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
+import com.example.shoptourr.domain.usecase.ObserveHomeUseCase
 import com.example.shoptourr.domain.usecase.ObserveWishlistUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
+import com.example.shoptourr.domain.usecase.canConvertWishlistItem
 import com.example.shoptourr.domain.validation.FieldRules
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
@@ -35,9 +38,13 @@ data class WishlistUiState(
     val cityDraft: String = "",
     val priceDraft: String = "",
     val currencyDraft: String = "EUR",
+    val currentTripId: String? = null,
+    val currentTripCity: String? = null,
     val fieldErrors: WishlistFieldErrors = WishlistFieldErrors(),
     val error: UiError? = null,
-) : UiState
+) : UiState {
+    fun canBuy(item: WishlistItem): Boolean = canConvertWishlistItem(item, currentTripCity)
+}
 
 sealed interface WishlistIntent {
     data object Refresh : WishlistIntent
@@ -46,6 +53,7 @@ sealed interface WishlistIntent {
     data class PriceChanged(val value: String) : WishlistIntent
     data class CurrencyChanged(val value: String) : WishlistIntent
     data object Add : WishlistIntent
+    data class Bought(val id: String) : WishlistIntent
     data class Delete(val id: String) : WishlistIntent
     data object Back : WishlistIntent
 }
@@ -60,12 +68,24 @@ class WishlistViewModel(
     private val refreshWishlist: RefreshWishlistUseCase,
     private val createItem: CreateWishlistItemUseCase,
     private val deleteItem: DeleteWishlistItemUseCase,
+    private val convertToPurchase: ConvertWishlistItemToPurchaseUseCase,
+    private val observeHome: ObserveHomeUseCase,
 ) : BaseViewModel<WishlistUiState, WishlistUiEvent>(WishlistUiState()) {
 
     init {
         launch {
             observeWishlist().collectLatest { items ->
                 updateState { copy(items = items, isLoading = false) }
+            }
+        }
+        launch {
+            observeHome().collectLatest { home ->
+                updateState {
+                    copy(
+                        currentTripId = home.currentTripId,
+                        currentTripCity = home.currentTripCity,
+                    )
+                }
             }
         }
         onIntent(WishlistIntent.Refresh)
@@ -104,6 +124,7 @@ class WishlistViewModel(
                     )
                 }
             WishlistIntent.Add -> add()
+            is WishlistIntent.Bought -> markBought(intent.id)
             is WishlistIntent.Delete -> remove(intent.id)
             WishlistIntent.Back -> emitEvent(WishlistUiEvent.NavigateBack)
         }
@@ -168,6 +189,21 @@ class WishlistViewModel(
                                 else -> fieldErrors
                             },
                         )
+                    }
+                }
+        }
+    }
+
+    private fun markBought(id: String) {
+        val current = state.value
+        val item = current.items.firstOrNull { it.id == id } ?: return
+        launch {
+            updateState { copy(isSaving = true, error = null) }
+            convertToPurchase(item, current.currentTripId, current.currentTripCity)
+                .onSuccess { updateState { copy(isSaving = false) } }
+                .onFailure { throwable ->
+                    updateState {
+                        copy(isSaving = false, error = throwable.asAppError().toUiError())
                     }
                 }
         }
