@@ -168,6 +168,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Share trip | System share sheet with a plain-text budget card (`ShareSheet` expect/actual) | Wired |
 | Biometrics | Optional app lock after login: Face ID / fingerprint / device code (`BiometricAuthenticator` expect/actual, local preference) | Wired |
 | Home shortcut | Long-press icon → «Add purchase» / «Добавить покупку» → `voyage://purchases/new` (Android static shortcut + iOS `UIApplicationShortcutItem`) | Wired |
+| Home widget | Remaining budget of the current trip. Shared snapshot JSON; Android Glance + iOS WidgetKit (App Group `group.com.shoptourr`) | Wired |
 | E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
 | CI/CD | GitHub Actions `ci.yml` (tests, size, 16 KB, Maestro welcome). `release.yml` `workflow_dispatch` → Fastlane Play internal draft / TestFlight when repo secrets exist. Host `docs/well-known/*.example` on `voyage.app/.well-known/` | Wired (upload gated on secrets) |

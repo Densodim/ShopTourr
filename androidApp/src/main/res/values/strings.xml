@@ -2,4 +2,5 @@
     <string name="app_name">ShopTourr</string>
     <string name="shortcut_add_purchase">Add purchase</string>
     <string name="shortcut_add_purchase_long">Log a spend on the current trip</string>
+    <string name="widget_budget_description">Remaining trip budget</string>
 </resources>

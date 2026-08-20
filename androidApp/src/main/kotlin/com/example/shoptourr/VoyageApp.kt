@@ -41,6 +41,10 @@ import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.BackgroundSyncScheduler
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.data.widget.AndroidBudgetWidgetRefresher
+import com.example.shoptourr.data.widget.AndroidBudgetWidgetStore
+import com.example.shoptourr.domain.widget.BudgetWidgetRefresher
+import com.example.shoptourr.domain.widget.BudgetWidgetStore
 import com.example.shoptourr.sync.AndroidBackgroundSyncScheduler
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
@@ -123,6 +127,8 @@ private val androidDatabaseModule = module {
     single<RegisteredPushDeviceStore> { SecureRegisteredPushDeviceStore(get()) }
     single<PushTokenProvider> { FcmPushTokenProvider(androidContext()) }
     single<BackgroundSyncScheduler> { AndroidBackgroundSyncScheduler(androidContext()) }
+    single<BudgetWidgetStore> { AndroidBudgetWidgetStore(androidContext()) }
+    single<BudgetWidgetRefresher> { AndroidBudgetWidgetRefresher(androidContext()) }
     single<AppBuildInfo> {
         val context = androidContext()
         val buildNumber = runCatching {

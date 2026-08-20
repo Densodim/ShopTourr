@@ -27,6 +27,8 @@ class ScreenStringsTest {
         "entry", "diary_empty", "diary_empty_sub",
         // wishlist
         "wish_bought",
+        // widget
+        "widget_no_trip", "widget_no_trip_sub",
     )
 
     @Test

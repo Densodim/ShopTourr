@@ -44,6 +44,9 @@ import com.example.shoptourr.data.local.TaxFreeLocalStore
 import com.example.shoptourr.data.local.TripLocalStore
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.local.WishlistLocalStore
+import com.example.shoptourr.data.widget.SettingsBudgetWidgetStore
+import com.example.shoptourr.domain.widget.BudgetWidgetRefresher
+import com.example.shoptourr.domain.widget.BudgetWidgetStore
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.navigation.flushPendingDeepLinkUris
 import com.example.shoptourr.data.local.InMemoryLocalCacheInventory
@@ -170,6 +173,7 @@ import com.example.shoptourr.domain.usecase.RefreshDiaryUseCase
 import com.example.shoptourr.domain.usecase.RefreshExchangeRateUseCase
 import com.example.shoptourr.domain.usecase.RefreshExportJobUseCase
 import com.example.shoptourr.domain.usecase.RefreshHomeUseCase
+import com.example.shoptourr.domain.usecase.PublishBudgetWidgetUseCase
 import com.example.shoptourr.domain.usecase.ResolveAddPurchaseDeepLinkUseCase
 import com.example.shoptourr.domain.usecase.RefreshPreferencesUseCase
 import com.example.shoptourr.domain.usecase.RefreshProfileUseCase
@@ -269,6 +273,9 @@ val dataModule = module {
     single<InMemoryExportLocalStore>() bind ExportLocalStore::class
     single<ClientRemoteConfigStore> { SettingsClientRemoteConfigStore(get()) }
     single<PendingDeepLinkStore>()
+    single<BudgetWidgetStore> { SettingsBudgetWidgetStore(get()) }
+    single<BudgetWidgetRefresher> { BudgetWidgetRefresher { } }
+    factory<PublishBudgetWidgetUseCase>()
     single<LocalSessionStore> {
         CompositeLocalSessionStore(
             userLocalStore = get(),

@@ -40,6 +40,10 @@ import com.example.shoptourr.data.settings.SettingsTokenStore
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
+import com.example.shoptourr.data.widget.IosAppGroupBudgetWidgetStore
+import com.example.shoptourr.data.widget.IosBudgetWidgetRefresher
+import com.example.shoptourr.domain.widget.BudgetWidgetRefresher
+import com.example.shoptourr.domain.widget.BudgetWidgetStore
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
 import com.example.shoptourr.domain.auth.SocialAuthClient
@@ -92,6 +96,8 @@ private val iosDatabaseModule = module {
         )
     } bind TokenStore::class
     single { SecureRegisteredPushDeviceStore(get()) } bind RegisteredPushDeviceStore::class
+    single { IosAppGroupBudgetWidgetStore() } bind BudgetWidgetStore::class
+    single { IosBudgetWidgetRefresher() } bind BudgetWidgetRefresher::class
     single {
         val raw = NSBundle.mainBundle.objectForInfoDictionaryKey("CFBundleVersion") as? String
         val buildNumber = raw?.toIntOrNull()?.coerceAtLeast(1) ?: 1

@@ -3,6 +3,7 @@ import UIKit
 import Foundation
 import UserNotifications
 import BackgroundTasks
+import WidgetKit
 import Shared
 import Sentry
 
@@ -21,6 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         Self.configureSentry()
         IosSocialAuthCoordinator.shared.configure()
         Self.configurePushPermission()
+        Self.configureWidgetReload()
         if let shortcut = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem {
             DeepLinkIntakeKt.offerPendingShortcut(type: shortcut.type)
             return false
@@ -35,6 +37,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         DeepLinkIntakeKt.offerPendingShortcut(type: shortcutItem.type)
         completionHandler(true)
+    }
+
+    static func configureWidgetReload() {
+        IosWidgetBridge.shared.reloader = IosWidgetTimelineReloader {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     static func configurePushPermission() {

@@ -24,6 +24,7 @@ dependencies {
 
     implementation(libs.androidx.browser)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.glance.appwidget)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

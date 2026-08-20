@@ -18,6 +18,7 @@ import coil3.network.ktor3.KtorNetworkFetcherFactory
 import com.example.shoptourr.data.media.VoyageImageCaches
 import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
+import com.example.shoptourr.domain.usecase.PublishBudgetWidgetUseCase
 import com.example.shoptourr.domain.usecase.ResolveAddPurchaseDeepLinkUseCase
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.presentation.forceupdate.ForceUpdateViewModel
@@ -57,9 +58,11 @@ fun App() {
         val pendingDeepLinks = koinInject<PendingDeepLinkStore>()
         val isLoggedIn = koinInject<IsLoggedInUseCase>()
         val resolveAddPurchase = koinInject<ResolveAddPurchaseDeepLinkUseCase>()
+        val publishBudgetWidget = koinInject<PublishBudgetWidgetUseCase>()
         val appScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             syncScheduler.start(appScope)
+            publishBudgetWidget.start(appScope)
         }
 
         VoyageLocaleProvider {

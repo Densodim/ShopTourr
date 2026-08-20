@@ -29,6 +29,6 @@
     @org.koin.core.annotation.* <methods>;
 }
 
-# Firebase Messaging
--keep class com.google.firebase.** { *; }
--dontwarn com.google.firebase.**
+# Glance widgets
+-keep class com.example.shoptourr.widget.** { *; }
+-dontwarn androidx.glance.**

@@ -1,4 +1,5 @@
 <resources>
     <string name="shortcut_add_purchase">Добавить покупку</string>
     <string name="shortcut_add_purchase_long">Записать трату в текущей поездке</string>
+    <string name="widget_budget_description">Остаток бюджета поездки</string>
 </resources>
