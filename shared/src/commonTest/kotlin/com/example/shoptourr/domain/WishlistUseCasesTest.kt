@@ -32,6 +32,16 @@ class WishlistUseCasesTest {
     }
 
     @Test
+    fun `create rejects a city of only symbols`() = runTest {
+        assertEquals(
+            AppError.Validation("city"),
+            CreateWishlistItemUseCase(FakeWishlistRepository())(
+                CreateWishlistDraft("Pastel", "@@@", Money.parse("10.00", "EUR")),
+            ).exceptionOrNull(),
+        )
+    }
+
+    @Test
     fun `create persists trimmed item`() = runTest {
         val repo = FakeWishlistRepository()
         val item = CreateWishlistItemUseCase(repo)(

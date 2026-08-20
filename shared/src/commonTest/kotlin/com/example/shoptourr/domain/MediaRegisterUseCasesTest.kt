@@ -25,6 +25,16 @@ class MediaRegisterUseCasesTest {
     }
 
     @Test
+    fun `upload receipt rejects a non image content type`() = runTest {
+        assertEquals(
+            AppError.Validation("contentType"),
+            UploadReceiptUseCase(FakeMediaRepository())
+                .invoke(ReceiptUploadDraft(contentType = "text/html", bytes = byteArrayOf(1)))
+                .exceptionOrNull(),
+        )
+    }
+
+    @Test
     fun `upload receipt runs intent upload confirm`() = runTest {
         val repo = FakeMediaRepository()
         val asset = UploadReceiptUseCase(repo)(

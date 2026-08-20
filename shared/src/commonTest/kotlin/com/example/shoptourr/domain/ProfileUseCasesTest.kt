@@ -61,6 +61,32 @@ class ProfileUseCasesTest {
     }
 
     @Test
+    fun `update preferences rejects a lowercase or unknown currency code`() = runTest {
+        val repo = FakeUserRepository(
+            preferences = UserPreferences("ru", "EUR", ThemeMode.DARK, true, true),
+        )
+        assertEquals(
+            AppError.Validation("preferredCurrency"),
+            UpdatePreferencesUseCase(repo)(
+                UpdatePreferencesDraft(preferredCurrency = "eur"),
+            ).exceptionOrNull(),
+        )
+        assertEquals(
+            AppError.Validation("preferredCurrency"),
+            UpdatePreferencesUseCase(repo)(
+                UpdatePreferencesDraft(preferredCurrency = "XXX"),
+            ).exceptionOrNull(),
+        )
+    }
+
+    @Test
+    fun `update profile rejects a display name of only symbols`() = runTest {
+        val repo = FakeUserRepository(profile = sampleProfile)
+        val result = UpdateProfileUseCase(repo)(UpdateProfileDraft("@@@"))
+        assertEquals(AppError.Validation("displayName"), result.exceptionOrNull())
+    }
+
+    @Test
     fun `update preferences rejects unsupported locale`() = runTest {
         val repo = FakeUserRepository(
             preferences = UserPreferences("ru", "EUR", ThemeMode.DARK, true, true),

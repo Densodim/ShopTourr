@@ -18,7 +18,7 @@ import io.valix.runtime.valixDsl
  */
 
 /** The DSL has `minLength` but no upper bound, so length ceilings go through `rule`. */
-private fun PropertyValidationBuilder<String>.maxLength(limit: Int) =
+internal fun PropertyValidationBuilder<String>.maxLength(limit: Int) =
     rule("MAX_LENGTH", "maximum length is $limit") { it.length <= limit }
 
 data class LoginForm(val email: String, val password: String)
@@ -49,8 +49,8 @@ val LoginFormValidator = valixDsl<LoginForm> {
 }
 
 /**
- * Server: `RegisterRequest` — displayName 2..80, email `@Email` max 254, password 6..128,
- * locale 2..5.
+ * Server: `RegisterRequest` — displayName 2..80 letters, email `@Email` max 254, password 6..128,
+ * locale `en` or `ru`.
  *
  * [PASSWORD_MIN_REGISTER] stays at the app's own stricter 8 rather than the server's 6: that is
  * existing product behaviour and tightening a password floor on sign-up is a deliberate choice,
@@ -61,6 +61,7 @@ val RegisterFormValidator = valixDsl<RegisterForm> {
         notBlank()
         minLength(DISPLAY_NAME_MIN)
         maxLength(DISPLAY_NAME_MAX)
+        rule("PATTERN", "letters, spaces, hyphen or apostrophe") { FieldRules.isPersonName(it) }
     }
     field("email", RegisterForm::email) {
         notBlank()
@@ -73,8 +74,7 @@ val RegisterFormValidator = valixDsl<RegisterForm> {
         maxLength(PASSWORD_MAX)
     }
     field("locale", RegisterForm::locale) {
-        minLength(LOCALE_MIN)
-        maxLength(LOCALE_MAX)
+        rule("LOCALE", "must be en or ru") { FieldRules.isLocale(it) }
     }
 }
 
@@ -122,5 +122,3 @@ internal const val PASSWORD_MIN_RESET = 6
 internal const val PASSWORD_MAX = 128
 internal const val TOKEN_MIN = 16
 internal const val TOKEN_MAX = 128
-internal const val LOCALE_MIN = 2
-internal const val LOCALE_MAX = 5

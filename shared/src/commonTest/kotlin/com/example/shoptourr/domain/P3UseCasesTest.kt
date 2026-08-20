@@ -44,6 +44,32 @@ class P3UseCasesTest {
     }
 
     @Test
+    fun `invite traveler rejects a malformed email`() = runTest {
+        assertEquals(
+            AppError.Validation("email"),
+            InviteTravelerUseCase(FakeTripRepository(trips = listOf(trip)))
+                .invoke("lisbon", "not-an-email")
+                .exceptionOrNull(),
+        )
+        assertEquals(
+            AppError.Validation("email"),
+            InviteTravelerUseCase(FakeTripRepository(trips = listOf(trip)))
+                .invoke("lisbon", "friend@")
+                .exceptionOrNull(),
+        )
+    }
+
+    @Test
+    fun `add traveler rejects a name of only symbols`() = runTest {
+        assertEquals(
+            AppError.Validation("name"),
+            AddTravelerUseCase(FakeTripRepository(trips = listOf(trip)))
+                .invoke("lisbon", CreateTravelerDraft(name = "@@@"))
+                .exceptionOrNull(),
+        )
+    }
+
+    @Test
     fun `invite traveler returns pending invite`() = runTest {
         val repo = FakeTripRepository(trips = listOf(trip))
         val invite = InviteTravelerUseCase(repo)("lisbon", "friend@voyage.app").getOrThrow()

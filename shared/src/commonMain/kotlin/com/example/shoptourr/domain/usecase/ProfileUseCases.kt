@@ -10,6 +10,7 @@ import com.example.shoptourr.domain.repository.LocalSessionStore
 import com.example.shoptourr.domain.repository.UserRepository
 import com.example.shoptourr.domain.session.AuthTokenCache
 import com.example.shoptourr.domain.session.NoOpAuthTokenCache
+import com.example.shoptourr.domain.validation.FieldRules
 import kotlinx.coroutines.flow.Flow
 
 class ObserveProfileUseCase(
@@ -40,10 +41,11 @@ class UpdateProfileUseCase(
     private val userRepository: UserRepository,
 ) {
     suspend operator fun invoke(draft: UpdateProfileDraft): Result<UserProfile> {
-        if (draft.displayName.trim().isEmpty()) {
+        val displayName = draft.displayName.trim()
+        if (!FieldRules.isPersonName(displayName)) {
             return Result.failure(AppError.Validation("displayName"))
         }
-        return userRepository.updateProfile(draft.copy(displayName = draft.displayName.trim()))
+        return userRepository.updateProfile(draft.copy(displayName = displayName))
     }
 }
 
@@ -59,7 +61,7 @@ class UpdatePreferencesUseCase(
                 else -> return Result.failure(AppError.Validation("locale"))
             }
         }
-        if (draft.preferredCurrency != null && draft.preferredCurrency.length != 3) {
+        if (draft.preferredCurrency != null && !FieldRules.isSupportedCurrency(draft.preferredCurrency)) {
             return Result.failure(AppError.Validation("preferredCurrency"))
         }
         return userRepository.updatePreferences(draft.copy(locale = normalizedLocale))

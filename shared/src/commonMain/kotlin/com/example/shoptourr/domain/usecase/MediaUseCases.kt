@@ -8,6 +8,7 @@ import com.example.shoptourr.domain.model.MediaAsset
 import com.example.shoptourr.domain.model.ReceiptOcrResult
 import com.example.shoptourr.domain.model.ReceiptUploadDraft
 import com.example.shoptourr.domain.repository.MediaRepository
+import com.example.shoptourr.domain.validation.FieldRules
 
 class UploadReceiptUseCase(
     private val mediaRepository: MediaRepository,
@@ -15,10 +16,19 @@ class UploadReceiptUseCase(
     private val compressor: ReceiptImageCompressor = PassthroughReceiptImageCompressor,
 ) {
     suspend operator fun invoke(draft: ReceiptUploadDraft): Result<MediaAsset> {
-        if (draft.contentType.isBlank()) return Result.failure(AppError.Validation("contentType"))
+        if (!FieldRules.isReceiptImageContentType(draft.contentType)) {
+            return Result.failure(AppError.Validation("contentType"))
+        }
         if (draft.bytes.isEmpty()) return Result.failure(AppError.Validation("bytes"))
         val compressed = compressor.compress(draft.bytes, draft.contentType)
         if (compressed.bytes.isEmpty()) return Result.failure(AppError.Validation("bytes"))
+        if (!FieldRules.isReceiptImageContentType(compressed.contentType)) {
+            return Result.failure(AppError.Validation("contentType"))
+        }
+        val sha256 = draft.sha256Hex?.takeIf { it.isNotBlank() }
+        if (sha256 != null && !FieldRules.isSha256Hex(sha256)) {
+            return Result.failure(AppError.Validation("sha256Hex"))
+        }
         val prepared = ReceiptUploadDraft(
             contentType = compressed.contentType,
             bytes = compressed.bytes,

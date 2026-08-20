@@ -44,6 +44,50 @@ class CreateTripUseCaseTest {
     }
 
     @Test
+    fun `rejects a city that is only symbols`() = runTest {
+        val result = CreateTripUseCase(FakeTripRepository())(
+            CreateTripDraft(
+                city = "@@@",
+                country = "Portugal",
+                startDate = "2026-04-12",
+                endDate = "2026-04-19",
+                budget = Money.parse("100.00", "EUR"),
+            )
+        )
+        assertEquals(AppError.Validation("city"), result.exceptionOrNull())
+    }
+
+    @Test
+    fun `rejects a lowercase country code and a non ISO date`() = runTest {
+        val repo = FakeTripRepository()
+        assertEquals(
+            AppError.Validation("countryCode"),
+            CreateTripUseCase(repo)(
+                CreateTripDraft(
+                    city = "Lisbon",
+                    country = "Portugal",
+                    startDate = "2026-04-12",
+                    endDate = "2026-04-19",
+                    budget = Money.parse("100.00", "EUR"),
+                    countryCode = "pt",
+                )
+            ).exceptionOrNull(),
+        )
+        assertEquals(
+            AppError.Validation("startDate"),
+            CreateTripUseCase(repo)(
+                CreateTripDraft(
+                    city = "Lisbon",
+                    country = "Portugal",
+                    startDate = "12.04.2026",
+                    endDate = "2026-04-19",
+                    budget = Money.parse("100.00", "EUR"),
+                )
+            ).exceptionOrNull(),
+        )
+    }
+
+    @Test
     fun `rejects end before start`() = runTest {
         val result = CreateTripUseCase(FakeTripRepository())(
             CreateTripDraft(

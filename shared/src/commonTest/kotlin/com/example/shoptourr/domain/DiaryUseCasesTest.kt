@@ -28,6 +28,17 @@ class DiaryUseCasesTest {
     }
 
     @Test
+    fun `create rejects punctuation-only mood`() = runTest {
+        assertEquals(
+            AppError.Validation("mood"),
+            CreateDiaryEntryUseCase(FakeDiaryRepository())(
+                "t1",
+                CreateDiaryDraft(mood = "!!!!!!!!", text = "Walked the city"),
+            ).exceptionOrNull(),
+        )
+    }
+
+    @Test
     fun `create persists trimmed entry`() = runTest {
         val repo = FakeDiaryRepository()
         val entry = CreateDiaryEntryUseCase(repo)(

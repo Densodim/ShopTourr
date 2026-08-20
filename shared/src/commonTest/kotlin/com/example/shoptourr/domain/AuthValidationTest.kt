@@ -80,6 +80,23 @@ class AuthValidationTest {
     }
 
     @Test
+    fun `registration rejects a display name that is only symbols`() {
+        assertEquals("displayName", register(displayName = "@@@"))
+        assertEquals("displayName", register(displayName = "Ada!!!"))
+        assertNull(register(displayName = "O'Brien"))
+        assertNull(register(displayName = "Мария"))
+    }
+
+    @Test
+    fun `registration accepts only en and ru locales`() {
+        assertNull(register(locale = "en"))
+        assertNull(register(locale = "ru"))
+        assertEquals("locale", register(locale = "en-US"))
+        assertEquals("locale", register(locale = "de"))
+        assertEquals("locale", register(locale = "@@@@"))
+    }
+
+    @Test
     fun `registration rejects an email past the server maximum`() {
         val longEmail = "a".repeat(250) + "@voyage.app"
         assertEquals("email", register(email = longEmail))

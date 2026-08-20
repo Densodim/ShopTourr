@@ -6,6 +6,7 @@ import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.usecase.CreateTripUseCase
+import com.example.shoptourr.domain.validation.FieldRules
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
 import com.example.shoptourr.presentation.base.UiState
@@ -91,7 +92,7 @@ class NewTripViewModel(
                 updateState { copy(travelerDraft = intent.value, error = null) }
             NewTripIntent.AddTraveler -> {
                 val name = state.value.travelerDraft.trim()
-                if (name.isEmpty()) return
+                if (!FieldRules.isTravelerName(name)) return
                 updateState {
                     copy(
                         travelers = travelers + CreateTravelerDraft(name = name),
@@ -142,18 +143,26 @@ class NewTripViewModel(
     }
 
     private fun mapValidationField(fieldKey: String?): NewTripFieldErrors = when (fieldKey) {
-        "city" -> NewTripFieldErrors(city = "validation_city_required")
-        "country" -> NewTripFieldErrors(country = "validation_country_required")
-        "startDate" -> NewTripFieldErrors(startDate = "validation_start_date_required")
-        "endDate" -> NewTripFieldErrors(endDate = "validation_end_date_required")
+        "city" -> NewTripFieldErrors(city = "validation_city_invalid")
+        "country" -> NewTripFieldErrors(country = "validation_country_invalid")
+        "startDate" -> NewTripFieldErrors(startDate = "validation_date_invalid")
+        "endDate" -> NewTripFieldErrors(endDate = "validation_date_invalid")
         "dates" -> NewTripFieldErrors(endDate = "validation_dates_order")
         "budget" -> NewTripFieldErrors(budget = "validation_amount_positive")
         else -> NewTripFieldErrors()
     }
 
     private fun validateFields(state: NewTripUiState): NewTripFieldErrors {
-        val city = if (state.city.trim().isEmpty()) "validation_city_required" else null
-        val country = if (state.country.trim().isEmpty()) "validation_country_required" else null
+        val city = when {
+            state.city.trim().isEmpty() -> "validation_city_required"
+            !FieldRules.isPlaceName(state.city.trim()) -> "validation_city_invalid"
+            else -> null
+        }
+        val country = when {
+            state.country.trim().isEmpty() -> "validation_country_required"
+            !FieldRules.isPlaceName(state.country.trim()) -> "validation_country_invalid"
+            else -> null
+        }
         val startDate = when {
             state.startDate.isBlank() -> "validation_start_date_required"
             !DatePickerFormats.isValidIsoDate(state.startDate) -> "validation_date_invalid"

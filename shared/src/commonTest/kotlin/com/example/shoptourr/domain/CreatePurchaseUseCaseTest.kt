@@ -57,6 +57,22 @@ class CreatePurchaseUseCaseTest {
     }
 
     @Test
+    fun `rejects a name that is only symbols`() = runTest {
+        val result = CreatePurchaseUseCase(FakePurchaseRepository())(
+            tripId = "lisbon",
+            draft = PurchaseDraft(
+                name = "@@@",
+                category = PurchaseCategory.FOOD,
+                amount = Money.parse("1.00", "EUR"),
+                vatIncluded = true,
+                vatRatePercent = "23",
+                place = null,
+            ),
+        )
+        assertEquals(AppError.Validation("name"), result.exceptionOrNull())
+    }
+
+    @Test
     fun `rejects non-positive amount`() = runTest {
         val result = CreatePurchaseUseCase(FakePurchaseRepository())(
             tripId = "lisbon",

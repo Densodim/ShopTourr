@@ -12,7 +12,7 @@ data class Money(
     val currency: String,
 ) {
     init {
-        require(currency.length == 3) { "currency must be ISO-4217" }
+        require(currency.length == 3 && currency.all { it in 'A'..'Z' }) { "currency must be ISO-4217" }
     }
 
     fun toDecimalString(): String {

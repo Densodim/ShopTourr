@@ -9,6 +9,7 @@ import com.example.shoptourr.domain.usecase.CreateWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.DeleteWishlistItemUseCase
 import com.example.shoptourr.domain.usecase.ObserveWishlistUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
+import com.example.shoptourr.domain.validation.FieldRules
 import com.example.shoptourr.presentation.base.BaseViewModel
 import com.example.shoptourr.presentation.base.UiEvent
 import com.example.shoptourr.presentation.base.UiState
@@ -161,8 +162,8 @@ class WishlistViewModel(
                             isSaving = false,
                             error = if (fieldKey == null) appError.toUiError() else null,
                             fieldErrors = when (fieldKey) {
-                                "name" -> fieldErrors.copy(name = "validation_name_required")
-                                "city" -> fieldErrors.copy(city = "validation_city_required")
+                                "name" -> fieldErrors.copy(name = "validation_name_invalid")
+                                "city" -> fieldErrors.copy(city = "validation_city_invalid")
                                 "targetPrice" -> fieldErrors.copy(price = "validation_amount_positive")
                                 else -> fieldErrors
                             },
@@ -186,8 +187,16 @@ class WishlistViewModel(
     }
 
     private fun validateFields(state: WishlistUiState): WishlistFieldErrors {
-        val name = if (state.nameDraft.trim().isEmpty()) "validation_name_required" else null
-        val city = if (state.cityDraft.trim().isEmpty()) "validation_city_required" else null
+        val name = when {
+            state.nameDraft.trim().isEmpty() -> "validation_name_required"
+            !FieldRules.isItemName(state.nameDraft.trim()) -> "validation_name_invalid"
+            else -> null
+        }
+        val city = when {
+            state.cityDraft.trim().isEmpty() -> "validation_city_required"
+            !FieldRules.isPlaceName(state.cityDraft.trim()) -> "validation_city_invalid"
+            else -> null
+        }
         val price = when {
             state.priceDraft.isBlank() -> "validation_amount_required"
             else -> {

@@ -9,6 +9,8 @@ import com.example.shoptourr.domain.model.TaxFreeSummary
 import com.example.shoptourr.domain.repository.AlertsRepository
 import com.example.shoptourr.domain.repository.DiaryRepository
 import com.example.shoptourr.domain.repository.TaxFreeRepository
+import com.example.shoptourr.domain.validation.DIARY_TEXT_MAX
+import com.example.shoptourr.domain.validation.FieldRules
 import kotlinx.coroutines.flow.Flow
 
 class ObserveDiaryUseCase(
@@ -30,11 +32,19 @@ class CreateDiaryEntryUseCase(
 ) {
     suspend operator fun invoke(tripId: String, draft: CreateDiaryDraft): Result<DiaryEntry> {
         if (tripId.isBlank()) return Result.failure(AppError.Validation("tripId"))
-        if (draft.mood.trim().isEmpty()) return Result.failure(AppError.Validation("mood"))
-        if (draft.text.trim().isEmpty()) return Result.failure(AppError.Validation("text"))
+        val mood = draft.mood.trim()
+        val text = draft.text.trim()
+        if (!FieldRules.isMood(mood)) return Result.failure(AppError.Validation("mood"))
+        if (!FieldRules.isFreeText(text, max = DIARY_TEXT_MAX)) {
+            return Result.failure(AppError.Validation("text"))
+        }
+        val entryDate = draft.entryDate
+        if (entryDate != null && !FieldRules.isIsoDate(entryDate)) {
+            return Result.failure(AppError.Validation("entryDate"))
+        }
         return diaryRepository.create(
             tripId,
-            draft.copy(mood = draft.mood.trim(), text = draft.text.trim()),
+            draft.copy(mood = mood, text = text),
         ).onSuccess {
             drainSyncOutbox?.invoke()
         }
