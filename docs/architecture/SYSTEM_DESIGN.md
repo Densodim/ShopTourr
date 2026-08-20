@@ -143,8 +143,8 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 - **Idempotency / tracing:** `Idempotency-Key`, `X-Request-Id` (echo).
 - **Rate limit:** login 10/min/IP; write APIs 120/min/user.
 - **Privacy:** receipt photos private; export jobs expire 24h.
-- **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO.
-- **Deep links:** FCM data / `voyage://` VIEW intents → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens.
+- **Push:** trip budget alerts via `POST /me/devices` (FCM/APNs token); prefs flag already in DTO. OS notification permission is requested **after login** (`RegisterPushDeviceUseCase` → `NotificationPermissionGate`), not on cold start.
+- **Deep links:** FCM data / `voyage://` VIEW intents / `https://voyage.app/trips/…` (Android App Links + iOS `applinks:voyage.app`) → `VoyageDeepLinkRouter` + `PendingDeepLinkStore` → Voyager screens.
 - **Media upload:** `ResumableMediaUploader` tus-lite: HEAD `Upload-Offset` then PATCH chunks; local checkpoints survive process death. Full PUT still accepted.
 
 ### 6.1 Standard blocks (mobile-system-design ch.10) — decisions
@@ -169,8 +169,11 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | E2E | Maestro flows under `maestro/flows/`: welcome a11y on PR CI; auth → trip → purchase (+ tab a11y) locally | Wired (flows) |
 | A11y | Compose `testTag` + `contentDescription` on fields/tabs/map; TalkBack smoke via Maestro welcome flow on PR | Partial |
 | CI/CD | GitHub Actions `ci.yml`: host tests + iOS sim + APK size + Maestro welcome on PR; Fastlane/ASC later | Wired (unit + a11y) |
-| App size | Budget 40 MiB (`AppSizeBudget` + `scripts/check-app-size.sh`); ABI splits + release minify/shrink | Wired |
+| App size | Budget 40 MiB (`AppSizeBudget` + `scripts/check-app-size.sh`); ABI splits + release minify/shrink; arm64 `.so` 16 KB ELF check (`scripts/check-16kb-elf.sh`) | Wired |
 | Modularization | Keep `shared` monolith until backend + 2nd team; then `feature-*` + contract modules | Deferred |
+| Social Google (Android) | Credential Manager: one-tap authorized → all accounts → `GetSignInWithGoogleOption` (explicit SiWG). Nonce on every step. | Wired |
+| Predictive back | `android:enableOnBackInvokedCallback=true` | Wired |
+| iOS privacy manifest | `iosApp/PrivacyInfo.xcprivacy` (crash + product interaction; UserDefaults / file timestamp / boot time reasons) | Wired |
 
 ---
 

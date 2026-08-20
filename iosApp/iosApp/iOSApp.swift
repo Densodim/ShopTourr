@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Foundation
 import UserNotifications
 import BackgroundTasks
 import Shared
@@ -13,19 +14,42 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-            guard granted else { return }
-            DispatchQueue.main.async {
-                application.registerForRemoteNotifications()
-            }
-        }
         BGTaskScheduler.shared.register(forTaskWithIdentifier: Self.syncTaskId, using: nil) { task in
             Self.handleSync(task: task)
         }
         Self.scheduleSync()
         Self.configureSentry()
         IosSocialAuthCoordinator.shared.configure()
+        Self.configurePushPermission()
         return true
+    }
+
+    static func configurePushPermission() {
+        IosNotificationPermissionKt.registerIosNotificationPermission(
+            impl: IosNotificationPermission { callback in
+                let center = UNUserNotificationCenter.current()
+                center.getNotificationSettings { settings in
+                    switch settings.authorizationStatus {
+                    case .authorized, .provisional, .ephemeral:
+                        DispatchQueue.main.async {
+                            UIApplication.shared.registerForRemoteNotifications()
+                        }
+                        callback(true)
+                    case .denied:
+                        callback(false)
+                    default:
+                        center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+                            if granted {
+                                DispatchQueue.main.async {
+                                    UIApplication.shared.registerForRemoteNotifications()
+                                }
+                            }
+                            callback(granted)
+                        }
+                    }
+                }
+            }
+        )
     }
 
     static func configureSentry() {
@@ -98,6 +122,11 @@ struct iOSApp: App {
             ContentView()
                 .onOpenURL { url in
                     DeepLinkIntakeKt.offerPendingDeepLinkUri(uri: url.absoluteString)
+                }
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                    if let url = activity.webpageURL {
+                        DeepLinkIntakeKt.offerPendingDeepLinkUri(uri: url.absoluteString)
+                    }
                 }
         }
     }

@@ -1,10 +1,7 @@
 package com.example.shoptourr
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -13,10 +10,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat
 import androidx.browser.auth.AuthTabIntent
 import com.example.shoptourr.data.auth.AndroidAuthHost
 import com.example.shoptourr.data.auth.AndroidSocialAuthClient
+import com.example.shoptourr.data.push.AndroidNotificationPermissionHost
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.navigation.VoyageDeepLinkRouter
 import java.lang.ref.WeakReference
@@ -26,7 +23,9 @@ class MainActivity : ComponentActivity() {
     private val pendingDeepLinks: PendingDeepLinkStore by inject()
 
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* best-effort */ }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            AndroidNotificationPermissionHost.complete(granted)
+        }
 
     private val authTabLauncher = AuthTabIntent.registerActivityResultLauncher(this) { result ->
         when (result.resultCode) {
@@ -43,7 +42,6 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-        requestNotificationPermissionIfNeeded()
         offerDeepLinkFromIntent(intent)
 
         setContent {
@@ -55,12 +53,16 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         AndroidAuthHost.activity = WeakReference(this)
         AndroidAuthHost.authTabLauncher = authTabLauncher
+        AndroidNotificationPermissionHost.launcher = { permission ->
+            notificationPermissionLauncher.launch(permission)
+        }
     }
 
     override fun onPause() {
         if (AndroidAuthHost.currentActivity() === this) {
             AndroidAuthHost.activity = null
             AndroidAuthHost.authTabLauncher = null
+            AndroidNotificationPermissionHost.launcher = null
         }
         super.onPause()
     }
@@ -83,17 +85,6 @@ class MainActivity : ComponentActivity() {
         }
         intent.dataString?.let { uri ->
             VoyageDeepLinkRouter.resolveUri(uri)?.let(pendingDeepLinks::offer)
-        }
-    }
-
-    private fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        val granted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.POST_NOTIFICATIONS,
-        ) == PackageManager.PERMISSION_GRANTED
-        if (!granted) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

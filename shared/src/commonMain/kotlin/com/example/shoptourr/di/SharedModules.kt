@@ -70,6 +70,8 @@ import com.example.shoptourr.security.CertificatePinConfig
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
+import com.example.shoptourr.data.push.createNotificationPermissionGate
+import com.example.shoptourr.domain.push.NotificationPermissionGate
 import com.example.shoptourr.data.remote.AlertsApi
 import com.example.shoptourr.data.remote.AnalyticsApi
 import com.example.shoptourr.data.remote.AuthApi
@@ -284,6 +286,7 @@ val dataModule = module {
     single<SettingsAnalyticsConsentStore> { SettingsAnalyticsConsentStore(get()) } bind AnalyticsConsentStore::class
     single<AlwaysOnlineConnectivityMonitor>() bind ConnectivityMonitor::class
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
+    single<NotificationPermissionGate> { createNotificationPermissionGate() }
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }

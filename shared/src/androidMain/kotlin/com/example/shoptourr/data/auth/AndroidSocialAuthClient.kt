@@ -14,7 +14,11 @@ import com.example.shoptourr.domain.auth.SocialAuthClient
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.SocialCredentials
 import com.example.shoptourr.domain.model.SocialProvider
+import com.example.shoptourr.domain.auth.GoogleSignInRetry
+import com.example.shoptourr.domain.auth.GoogleSignInSequence
+import com.example.shoptourr.domain.auth.GoogleSignInStep
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -43,11 +47,43 @@ class AndroidSocialAuthClient(
         }
         val activity = AndroidAuthHost.currentActivity()
             ?: throw AppError.Validation("Google Sign-In needs an activity.")
-        val option = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(serverClientId)
-            .setNonce(nonce)
-            .build()
+        var step: GoogleSignInStep? = GoogleSignInSequence.first
+        var lastMissing: Throwable? = null
+        while (step != null) {
+            try {
+                return requestGoogle(activity, serverClientId, nonce, step)
+            } catch (cancelled: GetCredentialCancellationException) {
+                throw cancelled
+            } catch (missing: NoCredentialException) {
+                lastMissing = missing
+                step = GoogleSignInSequence.next(step, GoogleSignInRetry.NoCredential)
+            }
+        }
+        throw lastMissing ?: AppError.Validation("No Google account available on this device.")
+    }
+
+    private suspend fun requestGoogle(
+        activity: android.app.Activity,
+        serverClientId: String,
+        nonce: String,
+        step: GoogleSignInStep,
+    ): SocialCredentials {
+        val option = when (step) {
+            GoogleSignInStep.OneTapAuthorized -> GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(true)
+                .setAutoSelectEnabled(true)
+                .setServerClientId(serverClientId)
+                .setNonce(nonce)
+                .build()
+            GoogleSignInStep.AccountPicker -> GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(serverClientId)
+                .setNonce(nonce)
+                .build()
+            GoogleSignInStep.SignInButton -> GetSignInWithGoogleOption.Builder(serverClientId)
+                .setNonce(nonce)
+                .build()
+        }
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(option)
             .build()

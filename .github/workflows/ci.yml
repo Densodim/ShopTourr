@@ -160,3 +160,8 @@ jobs:
         run: |
           chmod +x scripts/check-app-size.sh
           ./scripts/check-app-size.sh
+
+      - name: Enforce 16 KB ELF alignment
+        run: |
+          chmod +x scripts/check-16kb-elf.sh
+          ./scripts/check-16kb-elf.sh
