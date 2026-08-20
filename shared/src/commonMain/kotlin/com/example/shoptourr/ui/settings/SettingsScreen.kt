@@ -14,8 +14,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.domain.model.ThemeMode
+import com.example.shoptourr.presentation.lock.AppLockIntent
+import com.example.shoptourr.presentation.lock.AppLockUiState
+import com.example.shoptourr.presentation.lock.AppLockViewModel
 import com.example.shoptourr.presentation.profile.ProfileIntent
 import com.example.shoptourr.presentation.profile.ProfileUiEvent
 import com.example.shoptourr.presentation.profile.ProfileUiState
@@ -32,10 +36,12 @@ import com.example.shoptourr.ui.components.VoyageScreen
 import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun SettingsScreen(
     viewModel: ProfileViewModel,
+    appLockViewModel: AppLockViewModel,
     onBack: () -> Unit,
     onLoggedOut: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -44,6 +50,7 @@ fun SettingsScreen(
     onEditProfile: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
+    val lockState by appLockViewModel.state.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -56,7 +63,9 @@ fun SettingsScreen(
 
     SettingsContent(
         state = state,
+        lockState = lockState,
         onIntent = viewModel::onIntent,
+        onLockIntent = appLockViewModel::onIntent,
         onOpenPrivacy = onOpenPrivacy,
         onOpenAbout = onOpenAbout,
         onOpenSupport = onOpenSupport,
@@ -67,7 +76,9 @@ fun SettingsScreen(
 @Composable
 internal fun SettingsContent(
     state: ProfileUiState,
+    lockState: AppLockUiState,
     onIntent: (ProfileIntent) -> Unit,
+    onLockIntent: (AppLockIntent) -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenSupport: () -> Unit,
@@ -123,6 +134,17 @@ internal fun SettingsContent(
                     )
                 }
             }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.testTag(VoyageTestTags.SETTINGS_APP_LOCK),
+            ) {
+                Checkbox(
+                    checked = lockState.enabled,
+                    enabled = (lockState.available || lockState.enabled) && !lockState.authenticating,
+                    onCheckedChange = { onLockIntent(AppLockIntent.SetEnabled(it)) },
+                )
+                Text(t("app_lock"), color = MaterialTheme.colorScheme.onBackground)
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = state.pushDraft,
@@ -159,7 +181,7 @@ internal fun SettingsContent(
             VoyageListRow(title = t("support"), onClick = onOpenSupport)
         }
 
-        state.error?.let { err ->
+        (state.error ?: lockState.error)?.let { err ->
             Spacer(Modifier.height(12.dp))
             UiErrorBanner(error = err)
         }

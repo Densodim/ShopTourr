@@ -10,7 +10,7 @@ class FakeAuthRepository(
     var session: AuthSession? = null,
     var error: AppError? = null,
     var logoutError: AppError? = null,
-    private val loggedInOverride: Boolean? = null,
+    var loggedInOverride: Boolean? = null,
 ) : AuthRepository {
     var loginCalls: Int = 0
         private set

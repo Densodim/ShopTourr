@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.sentry.android)
 
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.biometric)
 
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)

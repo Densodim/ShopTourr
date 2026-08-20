@@ -20,7 +20,9 @@ import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.usecase.IsLoggedInUseCase
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.presentation.forceupdate.ForceUpdateViewModel
+import com.example.shoptourr.presentation.lock.AppLockViewModel
 import com.example.shoptourr.ui.forceupdate.ForceUpdateGate
+import com.example.shoptourr.ui.lock.AppLockGate
 import com.example.shoptourr.ui.i18n.VoyageLocaleProvider
 import com.example.shoptourr.ui.navigation.MainShellVoyageScreen
 import com.example.shoptourr.ui.navigation.WelcomeVoyageScreen
@@ -50,6 +52,7 @@ fun App() {
         VoyageTestTagRoot {
         val syncScheduler = koinInject<SyncScheduler>()
         val forceUpdateViewModel = rememberVoyageViewModel<ForceUpdateViewModel>()
+        val appLockViewModel = koinInject<AppLockViewModel>()
         val pendingDeepLinks = koinInject<PendingDeepLinkStore>()
         val isLoggedIn = koinInject<IsLoggedInUseCase>()
         val appScope = rememberCoroutineScope()
@@ -59,6 +62,7 @@ fun App() {
 
         VoyageLocaleProvider {
             ForceUpdateGate(viewModel = forceUpdateViewModel) {
+            AppLockGate(viewModel = appLockViewModel) {
                 CompositionLocalProvider(
                     LocalNavigatorScreenLifecycleProvider provides NoScreenLifecycleProvider,
                 ) {
@@ -76,6 +80,7 @@ fun App() {
                         SlideTransition(navigator)
                     }
                 }
+            }
             }
         }
         }

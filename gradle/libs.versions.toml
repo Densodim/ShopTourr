@@ -38,6 +38,7 @@ sentry = "8.21.1"
 androidx-credentials = "1.5.0"
 googleid = "1.1.1"
 androidx-browser = "1.9.0"
+androidx-biometric = "1.1.0"
 play-services-maps = "19.2.0"
 spring-boot = "4.1.0"
 
@@ -113,6 +114,7 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
 
 valix-core = { module = "com.developersyndicate.valix:valix-core", version.ref = "valix" }
 valix-runtime = { module = "com.developersyndicate.valix:valix-runtime", version.ref = "valix" }

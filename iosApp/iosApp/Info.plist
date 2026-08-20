@@ -9,6 +9,8 @@
 	<string>Light</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Voyage needs camera access to photograph receipts.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Voyage uses Face ID to unlock the app after you leave.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Voyage needs photo library access to attach receipt images.</string>
 	<key>CFBundleURLTypes</key>

@@ -27,6 +27,7 @@ import com.example.shoptourr.presentation.auth.ResetPasswordViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.lock.AppLockViewModel
 import com.example.shoptourr.presentation.map.RouteViewModel
 import com.example.shoptourr.presentation.privacy.PrivacyViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
@@ -61,6 +62,7 @@ import com.example.shoptourr.ui.theme.VoyageTokens
 import com.example.shoptourr.ui.trip.NewTripScreen
 import com.example.shoptourr.ui.trip.TripDetailScreen
 import com.example.shoptourr.ui.wishlist.WishlistScreen
+import org.koin.compose.koinInject
 
 object WelcomeVoyageScreen : Screen {
     @Composable
@@ -239,8 +241,10 @@ object SettingsVoyageScreen : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = rememberVoyageViewModel<ProfileViewModel>()
+        val appLockViewModel = koinInject<AppLockViewModel>()
         SettingsScreen(
             viewModel = viewModel,
+            appLockViewModel = appLockViewModel,
             onBack = { navigator.pop() },
             onLoggedOut = { navigator.replaceAll(WelcomeVoyageScreen) },
             onOpenPrivacy = { navigator.push(PrivacyVoyageScreen) },

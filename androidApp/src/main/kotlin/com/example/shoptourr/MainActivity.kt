@@ -3,7 +3,7 @@ package com.example.shoptourr
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,7 +19,7 @@ import com.example.shoptourr.navigation.VoyageDeepLinkRouter
 import java.lang.ref.WeakReference
 import org.koin.android.ext.android.inject
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val pendingDeepLinks: PendingDeepLinkStore by inject()
 
     private val notificationPermissionLauncher =
@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        bindAndroidHosts()
         offerDeepLinkFromIntent(intent)
 
         setContent {
@@ -51,20 +52,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        AndroidAuthHost.activity = WeakReference(this)
-        AndroidAuthHost.authTabLauncher = authTabLauncher
-        AndroidNotificationPermissionHost.launcher = { permission ->
-            notificationPermissionLauncher.launch(permission)
-        }
+        bindAndroidHosts()
     }
 
-    override fun onPause() {
+    override fun onDestroy() {
         if (AndroidAuthHost.currentActivity() === this) {
             AndroidAuthHost.activity = null
             AndroidAuthHost.authTabLauncher = null
             AndroidNotificationPermissionHost.launcher = null
         }
-        super.onPause()
+        super.onDestroy()
+    }
+
+    private fun bindAndroidHosts() {
+        AndroidAuthHost.activity = WeakReference(this)
+        AndroidAuthHost.authTabLauncher = authTabLauncher
+        AndroidNotificationPermissionHost.launcher = { permission ->
+            notificationPermissionLauncher.launch(permission)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

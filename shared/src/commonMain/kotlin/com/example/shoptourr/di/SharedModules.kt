@@ -69,9 +69,13 @@ import com.example.shoptourr.analytics.SettingsAnalyticsConsentStore
 import com.example.shoptourr.security.CertificatePinConfig
 import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
+import com.example.shoptourr.data.lock.SettingsAppLockStore
+import com.example.shoptourr.data.lock.createBiometricAuthenticator
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.push.createNotificationPermissionGate
 import com.example.shoptourr.data.share.createShareSheet
+import com.example.shoptourr.domain.lock.AppLockStore
+import com.example.shoptourr.domain.lock.BiometricAuthenticator
 import com.example.shoptourr.domain.push.NotificationPermissionGate
 import com.example.shoptourr.domain.share.ShareSheet
 import com.example.shoptourr.data.remote.AlertsApi
@@ -191,6 +195,7 @@ import com.example.shoptourr.presentation.auth.ResetPasswordViewModel
 import com.example.shoptourr.presentation.diary.DiaryViewModel
 import com.example.shoptourr.presentation.export.ExportViewModel
 import com.example.shoptourr.presentation.home.HomeViewModel
+import com.example.shoptourr.presentation.lock.AppLockViewModel
 import com.example.shoptourr.presentation.map.RouteViewModel
 import com.example.shoptourr.presentation.privacy.PrivacyViewModel
 import com.example.shoptourr.presentation.profile.ProfileViewModel
@@ -290,6 +295,8 @@ val dataModule = module {
     single<PushTokenProvider> { createDefaultPushTokenProvider() }
     single<NotificationPermissionGate> { createNotificationPermissionGate() }
     single<ShareSheet> { createShareSheet() }
+    single<BiometricAuthenticator> { createBiometricAuthenticator() }
+    single<SettingsAppLockStore> { SettingsAppLockStore(get()) } bind AppLockStore::class
     single<AppBuildInfo> { createDefaultAppBuildInfo() }
     single<ContentChecksum> { createDefaultContentChecksum() }
     single<ReceiptImageCompressor> { FileKitReceiptImageCompressor() }
@@ -533,6 +540,7 @@ val presentationModule = module {
     factory<ForgotPasswordViewModel>()
     factory<ResetPasswordViewModel>()
     factory<ForceUpdateViewModel>()
+    single<AppLockViewModel>()
     factory<HomeViewModel>()
     factory<NewTripViewModel>()
     factory<ProfileViewModel>()

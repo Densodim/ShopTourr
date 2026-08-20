@@ -111,6 +111,7 @@ kotlin {
             implementation(libs.androidx.credentials.play)
             implementation(libs.googleid)
             implementation(libs.androidx.browser)
+            implementation(libs.androidx.biometric)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
