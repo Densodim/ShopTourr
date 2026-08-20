@@ -6,6 +6,8 @@ import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.QueuedAnalytics
 import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
+import com.example.shoptourr.data.auth.GoogleOidcTokenExchanger
+import com.example.shoptourr.data.auth.IosSocialAuthClient
 import com.example.shoptourr.data.connectivity.IosConnectivityMonitor
 import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DatabaseDriverFactory
@@ -40,6 +42,7 @@ import com.example.shoptourr.data.sync.SqlDelightSyncOutbox
 import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
+import com.example.shoptourr.domain.auth.SocialAuthClient
 import com.example.shoptourr.data.platform.StaticAppBuildInfo
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.example.shoptourr.domain.model.ClientPlatform
@@ -57,6 +60,8 @@ import platform.UIKit.UIViewController
 private val iosDatabaseModule = module {
     single { IosKeychainSecureStore() } bind SecureKeyValueStore::class
     single { DatabaseDriverFactory(get()) }
+    single { GoogleOidcTokenExchanger(io.ktor.client.HttpClient()) }
+    single { IosSocialAuthClient(get(), get()) } bind SocialAuthClient::class
     single { createVoyageDatabase(get()) }
     single { SqlDelightTripLocalStore(get()) } bind TripLocalStore::class
     single { SqlDelightPurchaseLocalStore(get()) } bind PurchaseLocalStore::class
@@ -106,14 +111,21 @@ fun MainViewController(): UIViewController {
             config = AppConfig.forClient(
                 isReleaseBuild = !Platform.isDebugBinary,
                 platform = ClientPlatform.IOS,
-            ).copy(sentryDsn = iosSentryDsn()),
+            ).copy(
+                sentryDsn = iosSentryDsn(),
+                googleIosClientId = plistString("GOOGLE_IOS_CLIENT_ID").orEmpty(),
+                googleWebClientId = plistString("GOOGLE_WEB_CLIENT_ID").orEmpty(),
+                appleServicesId = plistString("APPLE_SERVICES_ID").orEmpty(),
+            ),
             extraModules = listOf(iosDatabaseModule),
         )
     }
     return ComposeUIViewController { App() }
 }
 
-private fun iosSentryDsn(): String? {
-    val fromPlist = NSBundle.mainBundle.objectForInfoDictionaryKey("SENTRY_DSN") as? String
+private fun iosSentryDsn(): String? = plistString("SENTRY_DSN")
+
+private fun plistString(key: String): String? {
+    val fromPlist = NSBundle.mainBundle.objectForInfoDictionaryKey(key) as? String
     return fromPlist?.trim()?.takeIf { it.isNotEmpty() }
 }

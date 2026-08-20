@@ -72,6 +72,12 @@ fun AppError.toUiError(): UiError = when (this) {
         messageOverride = message,
         isRetryable = false,
     )
+    AppError.Cancelled -> UiError(
+        titleKey = "error_validation_title",
+        messageKey = "error_validation_message",
+        messageOverride = "",
+        isRetryable = false,
+    )
     is AppError.Unknown -> UiError(
         titleKey = "error_unknown_title",
         messageKey = "error_unknown_message",

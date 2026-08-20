@@ -2,6 +2,7 @@ package com.example.shoptourr.fake
 
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.AuthSession
+import com.example.shoptourr.domain.model.SocialProvider
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.repository.AuthRepository
 
@@ -16,6 +17,25 @@ class FakeAuthRepository(
 
     override suspend fun login(email: String, password: String, deviceName: String?): Result<AuthSession> {
         loginCalls += 1
+        error?.let { return Result.failure(it) }
+        return session?.let { Result.success(it) }
+            ?: Result.failure(AppError.Unauthorized)
+    }
+
+    var socialLoginCalls: Int = 0
+        private set
+    var lastSocialProvider: SocialProvider? = null
+        private set
+
+    override suspend fun loginSocial(
+        provider: SocialProvider,
+        idToken: String,
+        nonce: String?,
+        displayName: String?,
+        deviceName: String?,
+    ): Result<AuthSession> {
+        socialLoginCalls += 1
+        lastSocialProvider = provider
         error?.let { return Result.failure(it) }
         return session?.let { Result.success(it) }
             ?: Result.failure(AppError.Unauthorized)

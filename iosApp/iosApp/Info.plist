@@ -35,6 +35,12 @@
 	</array>
 	<key>SENTRY_DSN</key>
 	<string></string>
+	<key>GOOGLE_WEB_CLIENT_ID</key>
+	<string></string>
+	<key>GOOGLE_IOS_CLIENT_ID</key>
+	<string></string>
+	<key>APPLE_SERVICES_ID</key>
+	<string></string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

@@ -7,12 +7,14 @@ import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
 import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
 import com.example.shoptourr.data.remote.dto.auth.ResetPasswordRequest
+import com.example.shoptourr.data.remote.dto.auth.SocialLoginRequest
 import com.example.shoptourr.data.local.UserLocalStore
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.mapHttpAppError
 import com.example.shoptourr.data.settings.TokenStore
 import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.model.AuthSession
+import com.example.shoptourr.domain.model.SocialProvider
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.repository.AuthRepository
 
@@ -27,6 +29,25 @@ class AuthRepositoryImpl(
     override suspend fun login(email: String, password: String, deviceName: String?): Result<AuthSession> =
         runCatching {
             api.login(LoginRequest(email = email, password = password, deviceName = deviceName)).toSession()
+        }.mapHttpAppError()
+
+    override suspend fun loginSocial(
+        provider: SocialProvider,
+        idToken: String,
+        nonce: String?,
+        displayName: String?,
+        deviceName: String?,
+    ): Result<AuthSession> =
+        runCatching {
+            api.loginSocial(
+                SocialLoginRequest(
+                    provider = provider.name,
+                    idToken = idToken,
+                    nonce = nonce,
+                    displayName = displayName,
+                    deviceName = deviceName,
+                ),
+            ).toSession()
         }.mapHttpAppError()
 
     override suspend fun register(

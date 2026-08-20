@@ -10,6 +10,7 @@ sealed class AppError(message: String? = null) : Exception(message) {
     data class Api(val code: Int, override val message: String?) : AppError(message)
     data class Server(val code: Int) : AppError("server:$code")
     data class Validation(override val message: String?) : AppError(message)
+    data object Cancelled : AppError("cancelled")
     /** Use [origin], never a field named cause — reserved by Throwable. */
     data class Unknown(val origin: Throwable? = null) : AppError(origin?.message)
 }

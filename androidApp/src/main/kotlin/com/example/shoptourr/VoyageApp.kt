@@ -7,6 +7,7 @@ import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
 import com.example.shoptourr.analytics.QueuedAnalytics
 import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
+import com.example.shoptourr.data.auth.AndroidSocialAuthClient
 import com.example.shoptourr.data.connectivity.AndroidConnectivityMonitor
 import com.example.shoptourr.data.local.AlertsLocalStore
 import com.example.shoptourr.data.local.DatabaseDriverFactory
@@ -43,6 +44,7 @@ import com.example.shoptourr.data.sync.SyncOutbox
 import com.example.shoptourr.sync.AndroidBackgroundSyncScheduler
 import com.example.shoptourr.di.AppConfig
 import com.example.shoptourr.di.initKoin
+import com.example.shoptourr.domain.auth.SocialAuthClient
 import com.example.shoptourr.domain.connectivity.ConnectivityMonitor
 import com.example.shoptourr.data.platform.StaticAppBuildInfo
 import com.example.shoptourr.domain.model.ClientPlatform
@@ -69,7 +71,11 @@ class VoyageApp : Application() {
                 config = AppConfig.forClient(
                     isReleaseBuild = !debuggable,
                     platform = ClientPlatform.ANDROID,
-                ).copy(sentryDsn = sentryDsn),
+                ).copy(
+                    sentryDsn = sentryDsn,
+                    googleWebClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+                    appleServicesId = BuildConfig.APPLE_SERVICES_ID,
+                ),
                 extraModules = listOf(androidDatabaseModule),
             ) {
                 androidLogger()
@@ -134,4 +140,5 @@ private val androidDatabaseModule = module {
         val dsn = get<AppConfig>().sentryDsn
         if (dsn.isNullOrBlank()) NoOpObservability else AndroidSentryObservability()
     }
+    single<SocialAuthClient> { AndroidSocialAuthClient(androidContext(), get()) }
 }

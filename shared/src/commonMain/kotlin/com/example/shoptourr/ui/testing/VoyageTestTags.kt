@@ -11,6 +11,8 @@ object VoyageTestTags {
     const val LOGIN_EMAIL = "login_email"
     const val LOGIN_PASSWORD = "login_password"
     const val LOGIN_SUBMIT = "login_submit"
+    const val LOGIN_GOOGLE = "login_google"
+    const val LOGIN_APPLE = "login_apple"
 
     const val HOME_ROOT = "home_root"
     const val HOME_NEW_TRIP = "home_new_trip"

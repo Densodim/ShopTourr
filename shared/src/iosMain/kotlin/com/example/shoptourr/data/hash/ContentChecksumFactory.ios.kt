@@ -16,7 +16,7 @@ actual fun createDefaultContentChecksum(): ContentChecksum = ContentChecksum { b
 }
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun sha256Digest(bytes: ByteArray): ByteArray {
+actual fun sha256Digest(bytes: ByteArray): ByteArray {
     val digest = UByteArray(CC_SHA256_DIGEST_LENGTH)
     bytes.usePinned { pinned ->
         CC_SHA256(pinned.addressOf(0), bytes.size.toUInt(), digest.refTo(0))

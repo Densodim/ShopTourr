@@ -7,6 +7,7 @@ import com.example.shoptourr.data.remote.dto.auth.LogoutRequest
 import com.example.shoptourr.data.remote.dto.auth.RefreshTokenRequest
 import com.example.shoptourr.data.remote.dto.auth.RegisterRequest
 import com.example.shoptourr.data.remote.dto.auth.ResetPasswordRequest
+import com.example.shoptourr.data.remote.dto.auth.SocialLoginRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -25,6 +26,9 @@ class AuthApi(
 
     suspend fun login(request: LoginRequest): AuthTokensResponse =
         post("$root/auth/login", request)
+
+    suspend fun loginSocial(request: SocialLoginRequest): AuthTokensResponse =
+        post("$root/auth/oauth", request)
 
     suspend fun register(request: RegisterRequest): AuthTokensResponse =
         post("$root/auth/register", request)

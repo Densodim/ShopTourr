@@ -5,6 +5,7 @@ import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.CreateTripDraft
 import com.example.shoptourr.domain.model.ExchangeRate
 import com.example.shoptourr.domain.model.HomeSnapshot
+import com.example.shoptourr.domain.model.SocialProvider
 import com.example.shoptourr.domain.model.Traveler
 import com.example.shoptourr.domain.model.TripInvite
 import com.example.shoptourr.domain.model.TripSummary
@@ -14,6 +15,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     suspend fun login(email: String, password: String, deviceName: String? = null): Result<AuthSession>
+    suspend fun loginSocial(
+        provider: SocialProvider,
+        idToken: String,
+        nonce: String?,
+        displayName: String? = null,
+        deviceName: String? = null,
+    ): Result<AuthSession>
     suspend fun register(
         displayName: String,
         email: String,

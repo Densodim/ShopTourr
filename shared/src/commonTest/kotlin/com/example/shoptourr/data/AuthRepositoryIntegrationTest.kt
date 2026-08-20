@@ -63,6 +63,47 @@ class AuthRepositoryIntegrationTest {
     }
 
     @Test
+    fun `social login posts oauth and stores tokens`() = runTest {
+        val engine = MockEngine { request ->
+            assertTrue(request.url.encodedPath.endsWith("/auth/oauth"))
+            val body = AuthTokensResponse(
+                accessToken = "access-token",
+                accessExpiresIn = 900,
+                refreshToken = "refresh-token",
+                refreshExpiresIn = 2_592_000,
+                user = AuthUserDto(
+                    id = "u1",
+                    displayName = "Ada",
+                    email = "ada@voyage.app",
+                    locale = "en",
+                    createdAt = "2026-01-01T00:00:00Z",
+                ),
+            )
+            respond(
+                content = ByteReadChannel(json.encodeToString(body)),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json"),
+            )
+        }
+        val client = createVoyageHttpClient(
+            baseUrl = "https://api.test",
+            engine = engine,
+            tokenProvider = { null },
+        )
+        val tokenStore = SettingsTokenStore(MapSettings())
+        val repo = AuthRepositoryImpl(AuthApi(client, "https://api.test"), tokenStore)
+
+        val session = repo.loginSocial(
+            provider = com.example.shoptourr.domain.model.SocialProvider.GOOGLE,
+            idToken = "google-id-token",
+            nonce = "nonce",
+        ).getOrThrow()
+
+        assertEquals("Ada", session.user.displayName)
+        assertEquals("access-token", tokenStore.accessToken())
+    }
+
+    @Test
     fun `logout clears tokens even when api fails`() = runTest {
         val engine = MockEngine { request ->
             require(request.url.encodedPath.endsWith("/auth/logout"))

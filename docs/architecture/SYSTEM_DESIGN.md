@@ -15,7 +15,7 @@
 |---|---|---|
 | A1 | Platforms | Android + iOS only (no web/desktop v1) |
 | A2 | UI sharing | Compose Multiplatform in `shared` (already in project) |
-| A3 | Auth | Email/password + JWT access (15m) + refresh (30d) in HttpOnly-equivalent secure storage |
+| A3 | Auth | Email/password **or** Google/Apple ID token → first-party JWT access (15m) + refresh (30d) |
 | A4 | Offline | Cache-first for trips/purchases/diary; mutation outbox with **server-wins** (409 → refetch). LWW is not v1. |
 | A5 | Media | Receipt photos via pre-signed upload (S3-compatible); OCR async job v1.1 |
 | A6 | Money | `BigDecimal` + ISO-4217; trip locks currency at creation |
@@ -110,7 +110,7 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 
 | Screen | Primary endpoints |
 |---|---|
-| Welcome / SignUp / SignIn / Forgot | `POST /auth/register`, `/auth/login`, `/auth/forgot-password`, `/auth/refresh`, `/auth/logout` |
+| Welcome / SignUp / SignIn / Forgot | `POST /auth/register`, `/auth/login`, `/auth/oauth`, `/auth/forgot-password`, `/auth/refresh`, `/auth/logout` |
 | Home (tab) | `GET /home` (aggregate) |
 | Trip list / detail | `GET/POST /trips`, `GET/PATCH /trips/{id}` |
 | New trip | `POST /trips` |

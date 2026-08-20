@@ -6,7 +6,9 @@ import com.example.shoptourr.domain.model.AuthSession
 import com.example.shoptourr.domain.model.User
 import com.example.shoptourr.domain.usecase.LoginUseCase
 import com.example.shoptourr.domain.usecase.RegisterUseCase
+import com.example.shoptourr.domain.usecase.SocialLoginUseCase
 import com.example.shoptourr.fake.FakeAuthRepository
+import com.example.shoptourr.domain.auth.UnavailableSocialAuthClient
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthUiEvent
 import com.example.shoptourr.presentation.auth.AuthViewModel
@@ -42,7 +44,11 @@ class AuthViewModelTest {
     }
 
     private fun vm(repo: FakeAuthRepository) =
-        AuthViewModel(LoginUseCase(repo), RegisterUseCase(repo))
+        AuthViewModel(
+            LoginUseCase(repo),
+            RegisterUseCase(repo),
+            SocialLoginUseCase(UnavailableSocialAuthClient(), repo),
+        )
 
     @Test
     fun `successful login updates state and emits navigate home`() = runTest {
@@ -115,6 +121,28 @@ class AuthViewModelTest {
         assertTrue(viewModel.state.value.isRegisterMode)
         viewModel.onIntent(AuthIntent.SetRegisterMode(false))
         assertFalse(viewModel.state.value.isRegisterMode)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `cancelled social sign in does not surface an error`() = runTest {
+        val repo = FakeAuthRepository()
+        val social = object : com.example.shoptourr.domain.auth.SocialAuthClient {
+            override suspend fun signIn(
+                provider: com.example.shoptourr.domain.model.SocialProvider,
+                nonce: String,
+            ) = Result.failure<com.example.shoptourr.domain.model.SocialCredentials>(AppError.Cancelled)
+        }
+        val viewModel = AuthViewModel(
+            LoginUseCase(repo),
+            RegisterUseCase(repo),
+            SocialLoginUseCase(social, repo),
+        )
+        viewModel.onIntent(
+            AuthIntent.SocialSignIn(com.example.shoptourr.domain.model.SocialProvider.GOOGLE),
+        )
+        assertFalse(viewModel.state.value.isLoading)
+        assertEquals(null, viewModel.state.value.error)
         viewModel.onCleared()
     }
 }

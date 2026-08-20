@@ -35,6 +35,9 @@ coil3 = "3.3.0"
 firebase-bom = "33.16.0"
 google-services = "4.4.3"
 sentry = "8.21.1"
+androidx-credentials = "1.5.0"
+googleid = "1.1.1"
+androidx-browser = "1.9.0"
 play-services-maps = "19.2.0"
 spring-boot = "4.1.0"
 
@@ -106,6 +109,10 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentry" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "play-services-maps" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 
 valix-core = { module = "com.developersyndicate.valix:valix-core", version.ref = "valix" }
 valix-runtime = { module = "com.developersyndicate.valix:valix-runtime", version.ref = "valix" }

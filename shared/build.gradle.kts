@@ -107,6 +107,10 @@ kotlin {
             implementation(libs.androidx.security.crypto)
             implementation(libs.androidx.tracing)
             implementation(libs.play.services.maps)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play)
+            implementation(libs.googleid)
+            implementation(libs.androidx.browser)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

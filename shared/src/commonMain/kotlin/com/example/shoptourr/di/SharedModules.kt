@@ -8,6 +8,8 @@ import com.example.shoptourr.data.media.UploadCheckpointStore
 import com.example.shoptourr.data.push.InMemoryRegisteredPushDeviceStore
 import com.example.shoptourr.data.push.RegisteredPushDeviceStore
 import com.example.shoptourr.data.remote.KtorAuthTokenCache
+import com.example.shoptourr.domain.auth.SocialAuthClient
+import com.example.shoptourr.domain.auth.UnavailableSocialAuthClient
 import com.example.shoptourr.domain.session.AuthTokenCache
 import com.example.shoptourr.data.local.InMemoryAlertsLocalStore
 import com.example.shoptourr.data.local.ClientRemoteConfigStore
@@ -167,6 +169,7 @@ import com.example.shoptourr.domain.usecase.RefreshTripUseCase
 import com.example.shoptourr.domain.usecase.RefreshWishlistUseCase
 import com.example.shoptourr.domain.usecase.RegisterPushDeviceUseCase
 import com.example.shoptourr.domain.usecase.RegisterUseCase
+import com.example.shoptourr.domain.usecase.SocialLoginUseCase
 import com.example.shoptourr.domain.usecase.RequestPasswordResetUseCase
 import com.example.shoptourr.domain.usecase.ResetPasswordUseCase
 import com.example.shoptourr.domain.usecase.UnregisterPushDeviceUseCase
@@ -206,6 +209,9 @@ import kotlin.random.Random
 data class AppConfig(
     val apiBaseUrl: String = PRODUCTION_API_BASE_URL,
     val sentryDsn: String? = null,
+    val googleWebClientId: String = "",
+    val googleIosClientId: String = "",
+    val appleServicesId: String = "",
 ) {
     companion object {
         const val PRODUCTION_API_BASE_URL = "https://api.shoptourr.com/api"
@@ -237,6 +243,7 @@ val dataModule = module {
     single<TokenStore> {
         error("TokenStore must be provided by platform extraModules (SecureTokenStore)")
     }
+    single<SocialAuthClient> { UnavailableSocialAuthClient() }
     single<SettingsUserLocalStore>() bind UserLocalStore::class
     single<InMemorySyncOutbox>() bind SyncOutbox::class
     single<InMemoryTripLocalStore>() bind TripLocalStore::class
@@ -438,6 +445,13 @@ val domainModule = module {
     }
     factory {
         RegisterUseCase(
+            authRepository = get(),
+            registerPushDevice = get(),
+        )
+    }
+    factory {
+        SocialLoginUseCase(
+            socialAuth = get(),
             authRepository = get(),
             registerPushDevice = get(),
         )

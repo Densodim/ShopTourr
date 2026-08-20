@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.firebase.messaging)
     implementation(libs.sentry.android)
 
+    implementation(libs.androidx.browser)
+
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
 }
@@ -40,6 +42,10 @@ android {
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
         buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
+        fun envField(name: String): String =
+            (System.getenv(name) ?: "").replace("\\", "\\\\").replace("\"", "\\\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${envField("GOOGLE_WEB_CLIENT_ID")}\"")
+        buildConfigField("String", "APPLE_SERVICES_ID", "\"${envField("APPLE_SERVICES_ID")}\"")
         manifestPlaceholders["MAPS_API_KEY"] = System.getenv("MAPS_API_KEY").orEmpty()
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")

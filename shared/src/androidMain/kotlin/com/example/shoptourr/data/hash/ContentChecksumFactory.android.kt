@@ -7,5 +7,5 @@ actual fun createDefaultContentChecksum(): ContentChecksum = ContentChecksum { b
     sha256Digest(bytes).joinToString("") { byte -> "%02x".format(byte) }
 }
 
-internal actual fun sha256Digest(bytes: ByteArray): ByteArray =
+actual fun sha256Digest(bytes: ByteArray): ByteArray =
     MessageDigest.getInstance("SHA-256").digest(bytes)

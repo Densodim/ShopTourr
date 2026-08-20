@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import com.example.shoptourr.domain.model.SocialProvider
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthUiEvent
 import com.example.shoptourr.presentation.auth.AuthUiState
@@ -120,6 +121,28 @@ internal fun LoginContent(
             onClick = { onIntent(AuthIntent.Submit) },
             isLoading = state.isLoading,
             modifier = Modifier.testTag(VoyageTestTags.LOGIN_SUBMIT),
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = t("or_continue_with"),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(8.dp))
+        VoyageButton(
+            text = t("sign_in_google"),
+            onClick = { onIntent(AuthIntent.SocialSignIn(SocialProvider.GOOGLE)) },
+            variant = VoyageButtonVariant.Secondary,
+            enabled = !state.isLoading,
+            modifier = Modifier.testTag(VoyageTestTags.LOGIN_GOOGLE),
+        )
+        Spacer(Modifier.height(8.dp))
+        VoyageButton(
+            text = t("sign_in_apple"),
+            onClick = { onIntent(AuthIntent.SocialSignIn(SocialProvider.APPLE)) },
+            variant = VoyageButtonVariant.Secondary,
+            enabled = !state.isLoading,
+            modifier = Modifier.testTag(VoyageTestTags.LOGIN_APPLE),
         )
         Spacer(Modifier.height(8.dp))
         VoyageButton(

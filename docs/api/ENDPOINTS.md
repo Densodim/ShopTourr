@@ -7,6 +7,7 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 |---|---|---|---|
 | POST | `/auth/register` | `RegisterRequest` | `AuthTokensResponse` 201 |
 | POST | `/auth/login` | `LoginRequest` | `AuthTokensResponse` 200 |
+| POST | `/auth/oauth` | `SocialLoginRequest` | `AuthTokensResponse` 200 |
 | POST | `/auth/forgot-password` | `ForgotPasswordRequest` | 204 |
 | POST | `/auth/refresh` | `RefreshTokenRequest` | `AuthTokensResponse` 200 |
 | POST | `/auth/logout` | `LogoutRequest` | 204 |

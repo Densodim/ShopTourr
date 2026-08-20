@@ -14,8 +14,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
+import androidx.browser.auth.AuthTabIntent
+import com.example.shoptourr.data.auth.AndroidAuthHost
+import com.example.shoptourr.data.auth.AndroidSocialAuthClient
 import com.example.shoptourr.navigation.PendingDeepLinkStore
 import com.example.shoptourr.navigation.VoyageDeepLinkRouter
+import java.lang.ref.WeakReference
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -23,6 +27,13 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* best-effort */ }
+
+    private val authTabLauncher = AuthTabIntent.registerActivityResultLauncher(this) { result ->
+        when (result.resultCode) {
+            AuthTabIntent.RESULT_OK -> AndroidSocialAuthClient.complete(result.resultUri?.toString())
+            else -> AndroidSocialAuthClient.cancel()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // The app is light-only, so pin the bars to dark icons; the default `auto`
@@ -38,6 +49,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             App()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        AndroidAuthHost.activity = WeakReference(this)
+        AndroidAuthHost.authTabLauncher = authTabLauncher
+    }
+
+    override fun onPause() {
+        if (AndroidAuthHost.currentActivity() === this) {
+            AndroidAuthHost.activity = null
+            AndroidAuthHost.authTabLauncher = null
+        }
+        super.onPause()
     }
 
     override fun onNewIntent(intent: Intent) {

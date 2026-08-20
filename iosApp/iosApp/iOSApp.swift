@@ -24,6 +24,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
         Self.scheduleSync()
         Self.configureSentry()
+        IosSocialAuthCoordinator.shared.configure()
         return true
     }
 

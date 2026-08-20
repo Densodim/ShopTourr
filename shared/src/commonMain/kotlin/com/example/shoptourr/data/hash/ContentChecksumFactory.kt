@@ -4,4 +4,4 @@ import com.example.shoptourr.domain.hash.ContentChecksum
 
 expect fun createDefaultContentChecksum(): ContentChecksum
 
-internal expect fun sha256Digest(bytes: ByteArray): ByteArray
+expect fun sha256Digest(bytes: ByteArray): ByteArray
