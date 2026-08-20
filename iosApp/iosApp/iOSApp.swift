@@ -3,6 +3,7 @@ import UIKit
 import UserNotifications
 import BackgroundTasks
 import Shared
+import Sentry
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     static let syncTaskId = "com.shoptourr.sync"
@@ -22,7 +23,37 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             Self.handleSync(task: task)
         }
         Self.scheduleSync()
+        Self.configureSentry()
         return true
+    }
+
+    static func configureSentry() {
+        let plist = (Bundle.main.object(forInfoDictionaryKey: "SENTRY_DSN") as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let env = ProcessInfo.processInfo.environment["SENTRY_DSN"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let dsn = [plist, env].compactMap({ $0 }).first(where: { !$0.isEmpty }) else {
+            return
+        }
+        SentrySDK.start { options in
+            options.dsn = dsn
+        }
+        IosSentryBridge.shared.exceptionCapture = IosSentryExceptionCapture { message, stack in
+            SentrySDK.capture(message: message) { scope in
+                scope.setExtra(value: stack, key: "stack")
+            }
+        }
+        IosSentryBridge.shared.breadcrumbCapture = IosSentryBreadcrumbCapture { message, category in
+            let crumb = Breadcrumb()
+            crumb.message = message
+            crumb.category = category
+            SentrySDK.addBreadcrumb(crumb)
+        }
+        IosSentryBridge.shared.tagSetter = IosSentryTagSetter { key, value in
+            SentrySDK.configureScope { scope in
+                scope.setTag(value: value, key: key)
+            }
+        }
     }
 
     func application(

@@ -60,6 +60,8 @@ import com.example.shoptourr.observability.createDefaultTracer
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
+import com.example.shoptourr.analytics.AnalyticsSink
+import com.example.shoptourr.analytics.HttpAnalyticsSink
 import com.example.shoptourr.analytics.NoOpAnalytics
 import com.example.shoptourr.analytics.SettingsAnalyticsConsentStore
 import com.example.shoptourr.security.CertificatePinConfig
@@ -67,6 +69,7 @@ import com.example.shoptourr.security.CertificatePinPolicy
 import com.example.shoptourr.security.VoyageCertificatePins
 import com.example.shoptourr.data.push.createDefaultPushTokenProvider
 import com.example.shoptourr.data.remote.AlertsApi
+import com.example.shoptourr.data.remote.AnalyticsApi
 import com.example.shoptourr.data.remote.AuthApi
 import com.example.shoptourr.data.remote.DiaryApi
 import com.example.shoptourr.data.remote.ExportApi
@@ -339,6 +342,8 @@ val dataModule = module {
     single { StatsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { ExportApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
     single { PushApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { AnalyticsApi(client = get(), baseUrl = get<AppConfig>().apiBaseUrl) }
+    single { HttpAnalyticsSink(get()) } bind AnalyticsSink::class
     single {
         MediaApi(
             client = get(),

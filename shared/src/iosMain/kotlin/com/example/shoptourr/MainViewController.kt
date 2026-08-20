@@ -4,8 +4,6 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
-import com.example.shoptourr.analytics.AnalyticsSink
-import com.example.shoptourr.analytics.NoOpAnalyticsSink
 import com.example.shoptourr.analytics.QueuedAnalytics
 import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
 import com.example.shoptourr.data.connectivity.IosConnectivityMonitor
@@ -72,7 +70,6 @@ private val iosDatabaseModule = module {
     single { SqlDelightLocalCacheInventory(get()) } bind LocalCacheInventory::class
     single { SqlDelightSyncOutbox(get()) } bind SyncOutbox::class
     single { SqlDelightAnalyticsEventQueue(get()) } bind AnalyticsEventQueue::class
-    single { NoOpAnalyticsSink } bind AnalyticsSink::class
     single {
         QueuedAnalytics(
             queue = get(),
@@ -109,9 +106,14 @@ fun MainViewController(): UIViewController {
             config = AppConfig.forClient(
                 isReleaseBuild = !Platform.isDebugBinary,
                 platform = ClientPlatform.IOS,
-            ),
+            ).copy(sentryDsn = iosSentryDsn()),
             extraModules = listOf(iosDatabaseModule),
         )
     }
     return ComposeUIViewController { App() }
+}
+
+private fun iosSentryDsn(): String? {
+    val fromPlist = NSBundle.mainBundle.objectForInfoDictionaryKey("SENTRY_DSN") as? String
+    return fromPlist?.trim()?.takeIf { it.isNotEmpty() }
 }

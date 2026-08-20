@@ -1,5 +1,6 @@
 package com.example.shoptourr.data
 
+import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.data.sync.SyncScheduler
 import com.example.shoptourr.domain.model.SyncDrainResult
 import com.example.shoptourr.domain.usecase.DrainSyncOutboxUseCase
@@ -45,5 +46,35 @@ class SyncSchedulerTest {
         advanceUntilIdle()
         assertEquals(1, sync.drainCalls)
         scheduler.stop()
+    }
+
+    @Test
+    fun `flushes analytics when connectivity becomes online`() = runTest(UnconfinedTestDispatcher()) {
+        val analytics = CountingAnalytics()
+        val connectivity = FakeConnectivityMonitor(initiallyOnline = false)
+        val scheduler = SyncScheduler(
+            connectivity = connectivity,
+            drainSyncOutbox = DrainSyncOutboxUseCase(FakeSyncRepository()),
+            analytics = analytics,
+        )
+        scheduler.start(backgroundScope)
+        assertEquals(0, analytics.flushCalls)
+
+        connectivity.setOnline(true)
+        assertTrue(analytics.flushCalls >= 1)
+
+        scheduler.stop()
+    }
+}
+
+private class CountingAnalytics : Analytics {
+    var flushCalls: Int = 0
+
+    override suspend fun track(name: String, properties: Map<String, String>) = Unit
+
+    override fun identify(userId: String?) = Unit
+
+    override suspend fun flush() {
+        flushCalls += 1
     }
 }

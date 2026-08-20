@@ -13,10 +13,9 @@ class ObservabilityFactoryTest {
     }
 
     @Test
-    fun `dsn enables recording buffer until sentry sdk is wired`() {
+    fun `dsn enables a capturing observability`() {
         val obs = ObservabilityFactory.create("https://key@o0.ingest.sentry.io/1")
-        assertIs<RecordingObservability>(obs)
+        assertTrue(obs !is NoOpObservability)
         obs.captureException(IllegalStateException("boom"))
-        assertTrue(obs.exceptions.isNotEmpty())
     }
 }

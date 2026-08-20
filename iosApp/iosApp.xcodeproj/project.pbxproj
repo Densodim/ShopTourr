@@ -91,6 +91,7 @@
 			name = iosApp;
 			packageProductDependencies = (
 				E5F9B02C3D4A5162738495A6 /* SQLCipher */,
+				C0DE5E117E51A00000000002 /* Sentry */,
 			);
 			productName = iosApp;
 			productReference = FA978EB63C844F4CFD76EF0D /* ShopTourr.app */;
@@ -122,6 +123,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				D4E8A91B2C3F405162738495 /* XCRemoteSwiftPackageReference "SQLCipher.swift" */,
+				C0DE5E117E51A00000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 49D539E91A51AFFB16CC1507 /* Products */;
@@ -387,6 +389,14 @@
 				minimumVersion = 4.17.0;
 			};
 		};
+		C0DE5E117E51A00000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.49.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -394,6 +404,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D4E8A91B2C3F405162738495 /* XCRemoteSwiftPackageReference "SQLCipher.swift" */;
 			productName = SQLCipher;
+		};
+		C0DE5E117E51A00000000002 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0DE5E117E51A00000000001 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

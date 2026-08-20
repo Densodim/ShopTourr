@@ -154,12 +154,12 @@ Trip ── derived → Alerts, TaxFreeEligibility, RouteStops
 | Force update | `GET /me/app-config` → `minAndroidBuild` / `minIosBuild`; soft prompt then hard block | Wired (client) |
 | Feature flags / remote config | Same `/me/app-config` + boolean flags (`exportPdf`, `ocrAssist`, `nativeMaps`) | Wired (client) |
 | A/B | Flags only until analytics funnel exists; no client experiment SDK in v1 | Deferred |
-| Analytics | `QueuedAnalytics` + SQL queue; flush uses `ConnectivityMonitor.currentIsOnline()`; NoOp sink until PostHog/Firebase | Wired |
-| Crash / observability | `Observability` facade; Android `SentryAndroid` when `SENTRY_DSN` / `BuildConfig.SENTRY_DSN` is set; iOS stays recording until SPM | Wired (Android) |
+| Analytics | `QueuedAnalytics` + SQL queue; flush on reconnect and background drain; first-party `POST /me/analytics-events` (`HttpAnalyticsSink`) after consent | Wired |
+| Crash / observability | `Observability` facade; Android `SentryAndroid` when `SENTRY_DSN` / `BuildConfig.SENTRY_DSN` is set; iOS `SentrySDK` (SPM) + `IosSentryObservability` when Info.plist / env DSN is set | Wired |
 | Certificate pinning | Release + pins → OkHttp `CertificatePinner` / Darwin SPKI compare; empty pins on **release** crash HTTP client init (fail-closed). Debug unpinned. | Wired |
 | Account deletion | `DELETE /api/me` soft-deletes (`deleted_at`) and revokes refresh tokens; Privacy screen confirms then logs out | Wired |
 | App identity | Android `applicationId` / iOS bundle `com.shoptourr` (re-download `google-services.json` from Firebase after registering that package). Kotlin sources stay `com.example.shoptourr`. | Wired |
-| Local search | Purchase name/place `LIKE` filter (`PurchaseSearch`); FTS5 deferred (verifyMigrations + size) | Wired (LIKE) |
+| Local search | Purchase/diary FTS5 (`PurchaseFts` / `DiaryFts`) with LIKE fallback when the prefix is empty | Wired |
 | Maps | `nativeMaps` flag selects `VoyageNativeMap` expect/actual; actuals render canvas until MapLibre fits 40 MiB | Wired (slot) |
 | E2E | Maestro flows under `maestro/flows/`; CI `workflow_dispatch` installs debug APK and runs flows on an emulator | Wired |
 | CI/CD | GitHub Actions: shared host tests, iOS sim tests, APK size; Fastlane `assemble` / `size` lanes | Wired |

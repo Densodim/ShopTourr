@@ -9,7 +9,8 @@ import kotlinx.serialization.json.Json
 
 /**
  * Product analytics facade. Default is [NoOpAnalytics];
- * [QueuedAnalytics] buffers offline and flushes to PostHog/Firebase later.
+ * [QueuedAnalytics] buffers offline and flushes to [HttpAnalyticsSink]
+ * (`POST /me/analytics-events`) when online and consent is granted.
  */
 interface Analytics {
     suspend fun track(name: String, properties: Map<String, String> = emptyMap())

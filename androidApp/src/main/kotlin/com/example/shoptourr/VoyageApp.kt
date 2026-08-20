@@ -5,8 +5,6 @@ import android.content.pm.ApplicationInfo
 import com.example.shoptourr.analytics.Analytics
 import com.example.shoptourr.analytics.AnalyticsConsentStore
 import com.example.shoptourr.analytics.AnalyticsEventQueue
-import com.example.shoptourr.analytics.AnalyticsSink
-import com.example.shoptourr.analytics.NoOpAnalyticsSink
 import com.example.shoptourr.analytics.QueuedAnalytics
 import com.example.shoptourr.analytics.SqlDelightAnalyticsEventQueue
 import com.example.shoptourr.data.connectivity.AndroidConnectivityMonitor
@@ -100,7 +98,6 @@ private val androidDatabaseModule = module {
     single<LocalCacheInventory> { SqlDelightLocalCacheInventory(get()) }
     single<SyncOutbox> { SqlDelightSyncOutbox(get()) }
     single<AnalyticsEventQueue> { SqlDelightAnalyticsEventQueue(get()) }
-    single<AnalyticsSink> { NoOpAnalyticsSink }
     single<Analytics> {
         QueuedAnalytics(
             queue = get(),

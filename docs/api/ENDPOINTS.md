@@ -19,6 +19,7 @@ All under `/api`, Spring Boot 4 `version = "1"`.
 | GET | `/me/preferences` | — | `UserPreferencesDto` |
 | PATCH | `/me/preferences` | `UpdatePreferencesRequest` | `UserPreferencesDto` |
 | GET | `/me/app-config` | — | `ClientRemoteConfigDto` |
+| POST | `/me/analytics-events` | `AnalyticsBatchRequest` | 204 |
 
 ## Home
 | Method | Path | Response |
