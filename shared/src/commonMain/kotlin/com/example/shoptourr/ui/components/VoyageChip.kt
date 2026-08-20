@@ -32,6 +32,7 @@ fun VoyageChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    contentDescription: String = label,
 ) {
     val borderColor = if (selected) {
         MaterialTheme.colorScheme.primary
@@ -46,7 +47,7 @@ fun VoyageChip(
             .padding(horizontal = 14.dp, vertical = 10.dp)
             .semantics {
                 this.selected = selected
-                contentDescription = label
+                this.contentDescription = contentDescription
             },
         contentAlignment = Alignment.Center,
     ) {

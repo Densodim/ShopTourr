@@ -51,6 +51,16 @@ class DiaryUseCasesTest {
     }
 
     @Test
+    fun `create persists an emoji mood`() = runTest {
+        val repo = FakeDiaryRepository()
+        val entry = CreateDiaryEntryUseCase(repo)(
+            "lisbon",
+            CreateDiaryDraft(mood = "😍", text = "Tram 28"),
+        ).getOrThrow()
+        assertEquals("😍", entry.mood)
+    }
+
+    @Test
     fun `delete rejects blank ids`() = runTest {
         assertEquals(
             AppError.Validation("entryId"),

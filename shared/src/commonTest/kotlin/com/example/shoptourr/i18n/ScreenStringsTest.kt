@@ -23,7 +23,8 @@ class ScreenStringsTest {
         // alerts
         "loading", "alerts_empty", "alerts_empty_sub",
         // diary
-        "mood", "entry", "diary_empty", "diary_empty_sub",
+        "mood", "mood_good", "mood_love", "mood_ok", "mood_sad", "mood_mad", "mood_tired",
+        "entry", "diary_empty", "diary_empty_sub",
     )
 
     @Test

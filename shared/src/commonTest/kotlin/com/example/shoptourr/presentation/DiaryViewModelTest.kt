@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation
 
+import com.example.shoptourr.domain.model.DiaryMoods
 import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
@@ -33,14 +34,8 @@ class DiaryViewModelTest {
     @Test
     fun `add entry updates observed days`() = runTest {
         val repo = FakeDiaryRepository()
-        val vm = DiaryViewModel(
-            tripId = "lisbon",
-            observeDiary = ObserveDiaryUseCase(repo),
-            refreshDiary = RefreshDiaryUseCase(repo),
-            createEntry = CreateDiaryEntryUseCase(repo),
-            deleteEntry = DeleteDiaryEntryUseCase(repo),
-        )
-        vm.onIntent(DiaryIntent.MoodChanged("happy"))
+        val vm = createVm(repo)
+        vm.onIntent(DiaryIntent.MoodChanged("😍"))
         vm.onIntent(DiaryIntent.TextChanged("Pasteis day"))
         vm.onIntent(DiaryIntent.Add)
         assertTrue(vm.state.value.days.flatMap { it.entries }.any { it.text == "Pasteis day" })
@@ -49,19 +44,41 @@ class DiaryViewModelTest {
     }
 
     @Test
-    fun `validation maps to UiError`() = runTest {
+    fun `add uses the smiling mood until a chip is picked`() = runTest {
         val repo = FakeDiaryRepository()
-        val vm = DiaryViewModel(
-            tripId = "lisbon",
-            observeDiary = ObserveDiaryUseCase(repo),
-            refreshDiary = RefreshDiaryUseCase(repo),
-            createEntry = CreateDiaryEntryUseCase(repo),
-            deleteEntry = DeleteDiaryEntryUseCase(repo),
-        )
+        val vm = createVm(repo)
+        assertEquals(DiaryMoods.defaultGlyph, vm.state.value.moodDraft)
+        vm.onIntent(DiaryIntent.TextChanged("Pasteis day"))
+        vm.onIntent(DiaryIntent.Add)
+        val entry = vm.state.value.days.flatMap { it.entries }.single()
+        assertEquals("😊", entry.mood)
+        assertEquals("Pasteis day", entry.text)
+        vm.onCleared()
+    }
+
+    @Test
+    fun `mood chip updates the draft`() = runTest {
+        val vm = createVm()
+        vm.onIntent(DiaryIntent.MoodChanged("😢"))
+        assertEquals("😢", vm.state.value.moodDraft)
+        vm.onCleared()
+    }
+
+    @Test
+    fun `validation maps to UiError`() = runTest {
+        val vm = createVm()
         vm.onIntent(DiaryIntent.TextChanged(""))
         vm.onIntent(DiaryIntent.Add)
         assertEquals("Проверьте поля", vm.state.value.error?.title)
         assertEquals("text", vm.state.value.error?.message)
         vm.onCleared()
     }
+
+    private fun createVm(repo: FakeDiaryRepository = FakeDiaryRepository()) = DiaryViewModel(
+        tripId = "lisbon",
+        observeDiary = ObserveDiaryUseCase(repo),
+        refreshDiary = RefreshDiaryUseCase(repo),
+        createEntry = CreateDiaryEntryUseCase(repo),
+        deleteEntry = DeleteDiaryEntryUseCase(repo),
+    )
 }

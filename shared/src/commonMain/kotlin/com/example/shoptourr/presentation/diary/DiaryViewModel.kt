@@ -3,6 +3,7 @@ package com.example.shoptourr.presentation.diary
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateDiaryDraft
 import com.example.shoptourr.domain.model.DiaryDayGroup
+import com.example.shoptourr.domain.model.DiaryMoods
 import com.example.shoptourr.domain.usecase.CreateDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.DeleteDiaryEntryUseCase
 import com.example.shoptourr.domain.usecase.ObserveDiaryUseCase
@@ -21,7 +22,7 @@ data class DiaryUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val days: List<DiaryDayGroup> = emptyList(),
-    val moodDraft: String = "good",
+    val moodDraft: String = DiaryMoods.defaultGlyph,
     val textDraft: String = "",
     val error: UiError? = null,
 ) : UiState

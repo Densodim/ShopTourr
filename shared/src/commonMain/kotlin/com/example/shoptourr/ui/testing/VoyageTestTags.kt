@@ -43,4 +43,7 @@ object VoyageTestTags {
     const val APP_LOCK_OVERLAY = "app_lock_overlay"
     const val APP_LOCK_UNLOCK = "app_lock_unlock"
     const val SETTINGS_APP_LOCK = "settings_app_lock"
+
+    const val DIARY_MOODS = "diary_moods"
+    const val DIARY_MOOD = "diary_mood"
 }
