@@ -85,6 +85,11 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+        <!-- Context7-verified /getsentry/sentry-docs: disable ContentProvider auto-init.
+             Manual init is in initSentryIfConfigured — empty SENTRY_DSN must not crash. -->
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
     </application>
 
 </manifest>
