@@ -410,6 +410,7 @@ fun EmptyState(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    actionTestTag: String? = null,
 ) {
     // `.empty` — centred and muted on bare paper, no filled panel.
     Column(
@@ -433,7 +434,11 @@ fun EmptyState(
         )
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(14.dp))
-            VoyageButton(text = actionLabel, onClick = onAction)
+            VoyageButton(
+                text = actionLabel,
+                onClick = onAction,
+                modifier = if (actionTestTag != null) Modifier.testTag(actionTestTag) else Modifier,
+            )
         }
     }
 }

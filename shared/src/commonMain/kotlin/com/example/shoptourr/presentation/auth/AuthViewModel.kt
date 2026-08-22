@@ -131,7 +131,15 @@ class AuthViewModel(
                 .onFailure { throwable ->
                     val appError = throwable.asAppError()
                     val fieldKey = (appError as? AppError.Validation)?.message
-                    val uiError = if (fieldKey == null) appError.toUiError() else null
+                    val uiError = when {
+                        fieldKey != null -> null
+                        appError is AppError.Unauthorized -> UiError(
+                            titleKey = "wrong_password",
+                            messageKey = "check_email",
+                            isRetryable = false,
+                        )
+                        else -> appError.toUiError()
+                    }
                     updateState {
                         copy(
                             isLoading = false,

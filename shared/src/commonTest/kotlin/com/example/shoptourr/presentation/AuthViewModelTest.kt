@@ -12,7 +12,6 @@ import com.example.shoptourr.domain.auth.UnavailableSocialAuthClient
 import com.example.shoptourr.presentation.auth.AuthIntent
 import com.example.shoptourr.presentation.auth.AuthUiEvent
 import com.example.shoptourr.presentation.auth.AuthViewModel
-import com.example.shoptourr.presentation.error.UiErrorAction
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -138,8 +137,8 @@ class AuthViewModelTest {
 
         val state = viewModel.state.value
         assertFalse(state.isLoading)
-        assertEquals("Сессия истекла", state.error?.title)
-        assertEquals(UiErrorAction.Logout, state.error?.action)
+        assertEquals("Неверный пароль", state.error?.title)
+        assertEquals(null, state.error?.action)
         viewModel.onCleared()
     }
 

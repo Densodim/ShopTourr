@@ -161,6 +161,7 @@ internal fun HomeContent(
                 message = t("welcome_sub"),
                 actionLabel = t("create_trip"),
                 onAction = onCreateTrip,
+                actionTestTag = VoyageTestTags.HOME_NEW_TRIP,
             )
             Spacer(Modifier.height(12.dp))
         }
