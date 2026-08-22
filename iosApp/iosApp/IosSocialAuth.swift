@@ -10,12 +10,16 @@ final class IosSocialAuthCoordinator: NSObject, ASAuthorizationControllerDelegat
     private var webSession: ASWebAuthenticationSession?
 
     func configure() {
-        IosSocialAuthClientKt.registerIosSocialAuth(
-            apple: IosAppleSignIn { nonce, callback in
-                IosSocialAuthCoordinator.shared.startApple(nonce: nonce, callback: callback)
+        IosSocialAuthClientKt.registerIosSocialAuthBlocks(
+            apple: { nonce, callback in
+                IosSocialAuthCoordinator.shared.startApple(nonce: nonce) { idToken, name, error in
+                    _ = callback(idToken, name, error)
+                }
             },
-            browser: IosBrowserAuth { url, scheme, callback in
-                IosSocialAuthCoordinator.shared.startBrowser(url: url, scheme: scheme, callback: callback)
+            browser: { url, scheme, callback in
+                IosSocialAuthCoordinator.shared.startBrowser(url: url, scheme: scheme) { redirect, error in
+                    _ = callback(redirect, error)
+                }
             }
         )
     }

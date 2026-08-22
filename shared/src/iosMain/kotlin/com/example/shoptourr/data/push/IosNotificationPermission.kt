@@ -16,6 +16,11 @@ fun registerIosNotificationPermission(impl: IosNotificationPermission) {
     IosNotificationPermissionBridge.impl = impl
 }
 
+/** Swift cannot construct Kotlin fun interfaces; pass a closure instead. */
+fun registerIosNotificationPermissionBlock(ensure: (callback: (Boolean) -> Unit) -> Unit) {
+    IosNotificationPermissionBridge.impl = IosNotificationPermission { callback -> ensure(callback) }
+}
+
 class IosNotificationPermissionGate : NotificationPermissionGate {
     override suspend fun ensureGranted(): Boolean = suspendCancellableCoroutine { continuation ->
         val impl = IosNotificationPermissionBridge.impl

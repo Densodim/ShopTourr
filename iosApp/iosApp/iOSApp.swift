@@ -40,14 +40,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
 
     static func configureWidgetReload() {
-        IosWidgetBridge.shared.reloader = IosWidgetTimelineReloader {
+        IosBudgetWidgetRefresherKt.setIosWidgetReloader {
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
     static func configurePushPermission() {
-        IosNotificationPermissionKt.registerIosNotificationPermission(
-            impl: IosNotificationPermission { callback in
+        IosNotificationPermissionKt.registerIosNotificationPermissionBlock { callback in
                 let center = UNUserNotificationCenter.current()
                 center.getNotificationSettings { settings in
                     switch settings.authorizationStatus {
@@ -55,9 +54,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                         DispatchQueue.main.async {
                             UIApplication.shared.registerForRemoteNotifications()
                         }
-                        callback(true)
+                        callback(KotlinBoolean(bool: true))
                     case .denied:
-                        callback(false)
+                        callback(KotlinBoolean(bool: false))
                     default:
                         center.requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
                             if granted {
@@ -65,12 +64,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                                     UIApplication.shared.registerForRemoteNotifications()
                                 }
                             }
-                            callback(granted)
+                            callback(KotlinBoolean(bool: granted))
                         }
                     }
                 }
             }
-        )
     }
 
     static func configureSentry() {
@@ -84,22 +82,24 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         SentrySDK.start { options in
             options.dsn = dsn
         }
-        IosSentryBridge.shared.exceptionCapture = IosSentryExceptionCapture { message, stack in
-            SentrySDK.capture(message: message) { scope in
-                scope.setExtra(value: stack, key: "stack")
+        IosSentryObservabilityKt.bindIosSentryHooks(
+            onException: { message, stack in
+                SentrySDK.capture(message: message) { scope in
+                    scope.setExtra(value: stack, key: "stack")
+                }
+            },
+            onBreadcrumb: { message, category in
+                let crumb = Breadcrumb()
+                crumb.message = message
+                crumb.category = category
+                SentrySDK.addBreadcrumb(crumb)
+            },
+            onTag: { key, value in
+                SentrySDK.configureScope { scope in
+                    scope.setTag(value: value, key: key)
+                }
             }
-        }
-        IosSentryBridge.shared.breadcrumbCapture = IosSentryBreadcrumbCapture { message, category in
-            let crumb = Breadcrumb()
-            crumb.message = message
-            crumb.category = category
-            SentrySDK.addBreadcrumb(crumb)
-        }
-        IosSentryBridge.shared.tagSetter = IosSentryTagSetter { key, value in
-            SentrySDK.configureScope { scope in
-                scope.setTag(value: value, key: key)
-            }
-        }
+        )
     }
 
     func application(

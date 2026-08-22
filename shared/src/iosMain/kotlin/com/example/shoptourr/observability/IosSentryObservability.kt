@@ -22,6 +22,21 @@ object IosSentryBridge {
     var tagSetter: IosSentryTagSetter? = null
 }
 
+/** Swift cannot construct Kotlin fun interfaces; pass closures instead. */
+fun bindIosSentryHooks(
+    onException: (message: String, stack: String) -> Unit,
+    onBreadcrumb: (message: String, category: String) -> Unit,
+    onTag: (key: String, value: String) -> Unit,
+) {
+    IosSentryBridge.exceptionCapture = IosSentryExceptionCapture { message, stack ->
+        onException(message, stack)
+    }
+    IosSentryBridge.breadcrumbCapture = IosSentryBreadcrumbCapture { message, category ->
+        onBreadcrumb(message, category)
+    }
+    IosSentryBridge.tagSetter = IosSentryTagSetter { key, value -> onTag(key, value) }
+}
+
 class IosSentryObservability : Observability {
     override fun captureException(throwable: Throwable, extras: Map<String, String>) {
         val extraLines = extras.entries.joinToString("\n") { (key, value) -> "$key=$value" }

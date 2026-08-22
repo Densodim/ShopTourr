@@ -32,6 +32,17 @@ fun registerIosSocialAuth(
     IosSocialAuthBridge.browserAuth = browser
 }
 
+/** Swift cannot construct Kotlin fun interfaces; pass closures instead. */
+fun registerIosSocialAuthBlocks(
+    apple: (nonce: String, callback: (String?, String?, String?) -> Unit) -> Unit,
+    browser: (url: String, callbackScheme: String, callback: (String?, String?) -> Unit) -> Unit,
+) {
+    IosSocialAuthBridge.appleSignIn = IosAppleSignIn { nonce, callback -> apple(nonce, callback) }
+    IosSocialAuthBridge.browserAuth = IosBrowserAuth { url, scheme, callback ->
+        browser(url, scheme, callback)
+    }
+}
+
 class IosSocialAuthClient(
     private val config: AppConfig,
     private val googleTokens: GoogleOidcTokenExchanger,
