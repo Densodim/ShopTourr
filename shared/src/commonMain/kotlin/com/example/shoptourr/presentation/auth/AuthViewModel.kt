@@ -73,7 +73,7 @@ class AuthViewModel(
     private fun mapAuthField(fieldKey: String?, state: AuthUiState): AuthFieldErrors = when (fieldKey) {
         "displayName" -> AuthFieldErrors(
             displayName = if (state.displayName.isBlank()) {
-                "validation_name_required"
+                "validation_person_name_required"
             } else {
                 "validation_name_invalid"
             },

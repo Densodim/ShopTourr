@@ -85,6 +85,7 @@ internal fun LoginContent(
                 value = state.displayName,
                 onValueChange = { onIntent(AuthIntent.DisplayNameChanged(it)) },
                 label = t("name"),
+                testTag = VoyageTestTags.LOGIN_NAME,
                 errorMessage = state.fieldErrors.displayName?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))

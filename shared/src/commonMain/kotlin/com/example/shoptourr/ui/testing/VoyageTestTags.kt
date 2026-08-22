@@ -8,7 +8,10 @@ object VoyageTestTags {
     const val WELCOME_SIGN_IN = "welcome_sign_in"
     const val WELCOME_SIGN_UP = "welcome_sign_up"
 
+    const val LOGIN_NAME = "login_name"
     const val LOGIN_EMAIL = "login_email"
+    const val FORGOT_EMAIL = "forgot_email"
+    const val FORGOT_SUBMIT = "forgot_submit"
     const val LOGIN_PASSWORD = "login_password"
     const val LOGIN_SUBMIT = "login_submit"
     const val LOGIN_GOOGLE = "login_google"

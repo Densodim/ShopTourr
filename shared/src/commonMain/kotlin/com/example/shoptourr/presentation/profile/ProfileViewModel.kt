@@ -209,7 +209,7 @@ class ProfileViewModel(
         when (fieldKey) {
             "displayName" -> ProfileFieldErrors(
                 displayName = if (state.displayNameDraft.isBlank()) {
-                    "validation_name_required"
+                    "validation_person_name_required"
                 } else {
                     "validation_name_invalid"
                 },

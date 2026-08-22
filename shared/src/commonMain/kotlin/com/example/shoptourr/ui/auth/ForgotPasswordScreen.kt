@@ -9,6 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.shoptourr.presentation.auth.ForgotPasswordIntent
 import com.example.shoptourr.presentation.auth.ForgotPasswordUiEvent
@@ -22,6 +23,7 @@ import com.example.shoptourr.ui.components.VoyageSurfaceBlock
 import com.example.shoptourr.ui.components.VoyageTextField
 import com.example.shoptourr.ui.components.VoyageTopBar
 import com.example.shoptourr.ui.i18n.t
+import com.example.shoptourr.ui.testing.VoyageTestTags
 
 @Composable
 fun ForgotPasswordScreen(
@@ -81,6 +83,7 @@ internal fun ForgotPasswordContent(
                 value = state.email,
                 onValueChange = { onIntent(ForgotPasswordIntent.EmailChanged(it)) },
                 label = t("email"),
+                testTag = VoyageTestTags.FORGOT_EMAIL,
                 errorMessage = state.fieldErrors.email?.let { t(it) },
             )
             state.error?.let { err ->
@@ -92,6 +95,7 @@ internal fun ForgotPasswordContent(
                 text = t("send_reset"),
                 onClick = { onIntent(ForgotPasswordIntent.Submit) },
                 isLoading = state.isLoading,
+                modifier = Modifier.testTag(VoyageTestTags.FORGOT_SUBMIT),
             )
         }
     }

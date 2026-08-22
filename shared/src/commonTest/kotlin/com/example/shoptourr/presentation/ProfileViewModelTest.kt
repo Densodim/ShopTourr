@@ -121,7 +121,7 @@ class ProfileViewModelTest {
         vm.onIntent(ProfileIntent.DisplayNameChanged(" "))
         vm.onIntent(ProfileIntent.SaveProfile)
         assertNull(vm.state.value.error)
-        assertEquals("validation_name_required", vm.state.value.fieldErrors.displayName)
+        assertEquals("validation_person_name_required", vm.state.value.fieldErrors.displayName)
         vm.onCleared()
     }
 

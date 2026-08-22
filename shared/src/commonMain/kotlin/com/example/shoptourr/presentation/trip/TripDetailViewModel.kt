@@ -323,7 +323,7 @@ class TripDetailViewModel(
         when (fieldKey) {
             "name" -> TripDetailFieldErrors(
                 travelerName = if (state.travelerNameDraft.isBlank()) {
-                    "validation_name_required"
+                    "validation_person_name_required"
                 } else {
                     "validation_name_invalid"
                 },

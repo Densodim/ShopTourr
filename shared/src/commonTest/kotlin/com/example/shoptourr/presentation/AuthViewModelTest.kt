@@ -80,6 +80,17 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `empty register submit puts the error on the name field`() = runTest {
+        val viewModel = vm(FakeAuthRepository())
+        viewModel.onIntent(AuthIntent.SetRegisterMode(true))
+        viewModel.onIntent(AuthIntent.Submit)
+        val state = viewModel.state.value
+        assertNull(state.error)
+        assertEquals("validation_person_name_required", state.fieldErrors.displayName)
+        viewModel.onCleared()
+    }
+
+    @Test
     fun `empty login submit puts the error on the email field`() = runTest {
         val viewModel = vm(FakeAuthRepository())
         viewModel.onIntent(AuthIntent.Submit)

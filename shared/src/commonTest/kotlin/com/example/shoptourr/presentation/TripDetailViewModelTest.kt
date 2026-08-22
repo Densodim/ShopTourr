@@ -225,7 +225,7 @@ class TripDetailViewModelTest {
         val viewModel = vm(tripRepo(sampleTrip))
         viewModel.onIntent(TripDetailIntent.AddTraveler)
         assertEquals(null, viewModel.state.value.error)
-        assertEquals("validation_name_required", viewModel.state.value.fieldErrors.travelerName)
+        assertEquals("validation_person_name_required", viewModel.state.value.fieldErrors.travelerName)
         viewModel.onCleared()
     }
 
