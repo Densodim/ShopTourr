@@ -228,12 +228,13 @@ private fun CurrentTripHero(
     onOpenMap: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag(VoyageTestTags.HOME_CURRENT_TRIP),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenTrip),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(VoyageTestTags.HOME_CURRENT_TRIP)
+                .clickable(onClick = onOpenTrip),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val dayLine = trip.currentDayNumber?.let { day ->
