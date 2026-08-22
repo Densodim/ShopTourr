@@ -231,11 +231,11 @@ data class AppConfig(
 ) {
     companion object {
         const val PRODUCTION_API_BASE_URL = "https://api.shoptourr.com/api"
-        /** Android emulator → host loopback. Physical device: `adb reverse tcp:8083 tcp:8083` + [JVM_LOCAL_API]. */
-        const val ANDROID_EMULATOR_LOCAL_API = "http://10.0.2.2:8083/api"
-        const val IOS_SIMULATOR_LOCAL_API = "http://127.0.0.1:8083/api"
+        /** Android emulator → host loopback. Physical device: `adb reverse tcp:8080 tcp:8080` + [JVM_LOCAL_API]. */
+        const val ANDROID_EMULATOR_LOCAL_API = "http://10.0.2.2:8080/api"
+        const val IOS_SIMULATOR_LOCAL_API = "http://127.0.0.1:8080/api"
         /** JVM host tests and `adb reverse` against local ShopTourBoot. */
-        const val JVM_LOCAL_API = "http://127.0.0.1:8083/api"
+        const val JVM_LOCAL_API = "http://127.0.0.1:8080/api"
 
         fun forClient(
             isReleaseBuild: Boolean,

@@ -28,6 +28,6 @@ class AppConfigTest {
 
     @Test
     fun `jvm host tests talk to local boot on loopback`() {
-        assertEquals("http://127.0.0.1:8083/api", AppConfig.JVM_LOCAL_API)
+        assertEquals("http://127.0.0.1:8080/api", AppConfig.JVM_LOCAL_API)
     }
 }
