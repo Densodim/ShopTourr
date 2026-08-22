@@ -65,12 +65,12 @@ class DiaryViewModelTest {
     }
 
     @Test
-    fun `validation maps to UiError`() = runTest {
+    fun `validation maps to the text field`() = runTest {
         val vm = createVm()
         vm.onIntent(DiaryIntent.TextChanged(""))
         vm.onIntent(DiaryIntent.Add)
-        assertEquals("Проверьте поля", vm.state.value.error?.title)
-        assertEquals("text", vm.state.value.error?.message)
+        assertEquals(null, vm.state.value.error)
+        assertEquals("validation_text_required", vm.state.value.fieldErrors.text)
         vm.onCleared()
     }
 

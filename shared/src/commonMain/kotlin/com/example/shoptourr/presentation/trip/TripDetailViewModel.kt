@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.trip
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateTravelerDraft
 import com.example.shoptourr.domain.model.PurchaseCategory
@@ -27,6 +28,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+data class TripDetailFieldErrors(
+    val travelerName: String? = null,
+    val inviteEmail: String? = null,
+)
+
 data class TripDetailUiState(
     val tripId: String,
     val isLoading: Boolean = true,
@@ -41,6 +47,7 @@ data class TripDetailUiState(
     val hasMorePurchases: Boolean = false,
     val isLoadingMore: Boolean = false,
     val error: UiError? = null,
+    val fieldErrors: TripDetailFieldErrors = TripDetailFieldErrors(),
 ) : UiState {
     /** Categories offered as filter chips — only the ones actually spent on. */
     val categoryChips: List<PurchaseCategory> get() = detail?.categoriesUsed().orEmpty()
@@ -137,10 +144,22 @@ class TripDetailViewModel(
                     copy(categoryFilter = intent.category.takeIf { it != categoryFilter })
                 }
             is TripDetailIntent.TravelerNameChanged ->
-                updateState { copy(travelerNameDraft = intent.value, error = null) }
+                updateState {
+                    copy(
+                        travelerNameDraft = intent.value,
+                        error = null,
+                        fieldErrors = fieldErrors.copy(travelerName = null),
+                    )
+                }
             TripDetailIntent.AddTraveler -> addLocalTraveler()
             is TripDetailIntent.InviteEmailChanged ->
-                updateState { copy(inviteEmailDraft = intent.value, error = null) }
+                updateState {
+                    copy(
+                        inviteEmailDraft = intent.value,
+                        error = null,
+                        fieldErrors = fieldErrors.copy(inviteEmail = null),
+                    )
+                }
             TripDetailIntent.InviteTraveler -> sendInvite()
             TripDetailIntent.RefreshFx -> refreshFx()
             TripDetailIntent.Back -> emitEvent(TripDetailUiEvent.NavigateBack)
@@ -244,7 +263,9 @@ class TripDetailViewModel(
                 CreateTravelerDraft(name = state.value.travelerNameDraft),
             )
                 .onSuccess {
-                    updateState { copy(isWorking = false, travelerNameDraft = "") }
+                    updateState {
+                        copy(isWorking = false, travelerNameDraft = "", fieldErrors = TripDetailFieldErrors())
+                    }
                 }
                 .onFailure { handleFailure(it, working = true) }
         }
@@ -256,7 +277,12 @@ class TripDetailViewModel(
             inviteTraveler(state.value.tripId, state.value.inviteEmailDraft)
                 .onSuccess { invite ->
                     updateState {
-                        copy(isWorking = false, inviteEmailDraft = "", lastInvite = invite)
+                        copy(
+                            isWorking = false,
+                            inviteEmailDraft = "",
+                            lastInvite = invite,
+                            fieldErrors = TripDetailFieldErrors(),
+                        )
                     }
                 }
                 .onFailure { handleFailure(it, working = true) }
@@ -278,17 +304,39 @@ class TripDetailViewModel(
     }
 
     private fun handleFailure(throwable: Throwable, working: Boolean = false) {
-        val uiError = throwable.asAppError().toUiError()
+        val appError = throwable.asAppError()
+        val fieldKey = (appError as? AppError.Validation)?.message
+        val uiError = if (fieldKey == null) appError.toUiError() else null
         updateState {
             copy(
                 isLoading = false,
                 isLoadingMore = false,
                 isWorking = if (working) false else isWorking,
                 error = uiError,
+                fieldErrors = mapTripField(fieldKey, this),
             )
         }
-        if (uiError.action is UiErrorAction.Logout) emitEvent(TripDetailUiEvent.Logout)
+        if (uiError?.action is UiErrorAction.Logout) emitEvent(TripDetailUiEvent.Logout)
     }
+
+    private fun mapTripField(fieldKey: String?, state: TripDetailUiState): TripDetailFieldErrors =
+        when (fieldKey) {
+            "name" -> TripDetailFieldErrors(
+                travelerName = if (state.travelerNameDraft.isBlank()) {
+                    "validation_name_required"
+                } else {
+                    "validation_name_invalid"
+                },
+            )
+            "email" -> TripDetailFieldErrors(
+                inviteEmail = if (state.inviteEmailDraft.isBlank()) {
+                    "validation_email_required"
+                } else {
+                    "validation_email_invalid"
+                },
+            )
+            else -> TripDetailFieldErrors()
+        }
 
     companion object {
         const val DEFAULT_PURCHASE_PAGE_SIZE = 50

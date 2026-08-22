@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.auth
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.usecase.ResetPasswordUseCase
 import com.example.shoptourr.presentation.base.BaseViewModel
@@ -9,6 +10,12 @@ import com.example.shoptourr.presentation.error.UiError
 import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.launch
 
+data class ResetPasswordFieldErrors(
+    val email: String? = null,
+    val token: String? = null,
+    val password: String? = null,
+)
+
 data class ResetPasswordUiState(
     val email: String = "",
     val token: String = "",
@@ -16,6 +23,7 @@ data class ResetPasswordUiState(
     val isLoading: Boolean = false,
     val done: Boolean = false,
     val error: UiError? = null,
+    val fieldErrors: ResetPasswordFieldErrors = ResetPasswordFieldErrors(),
 ) : UiState
 
 sealed interface ResetPasswordIntent {
@@ -48,26 +56,54 @@ class ResetPasswordViewModel(
                     )
                 }
             is ResetPasswordIntent.EmailChanged ->
-                updateState { copy(email = intent.value, error = null) }
+                updateState { copy(email = intent.value, error = null, fieldErrors = fieldErrors.copy(email = null)) }
             is ResetPasswordIntent.TokenChanged ->
-                updateState { copy(token = intent.value, error = null) }
+                updateState { copy(token = intent.value, error = null, fieldErrors = fieldErrors.copy(token = null)) }
             is ResetPasswordIntent.PasswordChanged ->
-                updateState { copy(password = intent.value, error = null) }
+                updateState {
+                    copy(password = intent.value, error = null, fieldErrors = fieldErrors.copy(password = null))
+                }
             ResetPasswordIntent.Submit -> submit()
             ResetPasswordIntent.Finish -> emitEvent(ResetPasswordUiEvent.NavigateToSignIn)
             ResetPasswordIntent.Back -> emitEvent(ResetPasswordUiEvent.NavigateBack)
         }
     }
 
+    private fun mapResetField(fieldKey: String?, state: ResetPasswordUiState): ResetPasswordFieldErrors =
+        when (fieldKey) {
+            "email" -> ResetPasswordFieldErrors(
+                email = if (state.email.isBlank()) "validation_email_required" else "validation_email_invalid",
+            )
+            "token" -> ResetPasswordFieldErrors(
+                token = if (state.token.isBlank()) "validation_token_required" else "validation_token_invalid",
+            )
+            "newPassword" -> ResetPasswordFieldErrors(
+                password = if (state.password.isBlank()) {
+                    "validation_password_required"
+                } else {
+                    "validation_password_short"
+                },
+            )
+            else -> ResetPasswordFieldErrors()
+        }
+
     private fun submit() {
         launch {
             updateState { copy(isLoading = true, error = null) }
             val current = state.value
             resetPassword(current.email, current.token, current.password)
-                .onSuccess { updateState { copy(isLoading = false, done = true) } }
+                .onSuccess {
+                    updateState { copy(isLoading = false, done = true, fieldErrors = ResetPasswordFieldErrors()) }
+                }
                 .onFailure { throwable ->
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
                     updateState {
-                        copy(isLoading = false, error = throwable.asAppError().toUiError())
+                        copy(
+                            isLoading = false,
+                            error = if (fieldKey == null) appError.toUiError() else null,
+                            fieldErrors = mapResetField(fieldKey, current),
+                        )
                     }
                 }
         }

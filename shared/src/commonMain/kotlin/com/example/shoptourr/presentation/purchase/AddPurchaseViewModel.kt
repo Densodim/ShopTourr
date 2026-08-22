@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.purchase
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.Money
 import com.example.shoptourr.domain.model.PurchaseCategory
@@ -21,6 +22,12 @@ import com.example.shoptourr.presentation.error.UiError
 import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.launch
 
+data class AddPurchaseFieldErrors(
+    val name: String? = null,
+    val amount: String? = null,
+    val place: String? = null,
+)
+
 data class AddPurchaseUiState(
     val tripId: String,
     val name: String = "",
@@ -39,6 +46,7 @@ data class AddPurchaseUiState(
     val ocrAssistEnabled: Boolean = true,
     val isLoading: Boolean = false,
     val error: UiError? = null,
+    val fieldErrors: AddPurchaseFieldErrors = AddPurchaseFieldErrors(),
 ) : UiState {
     val yourShare: Money?
         get() {
@@ -100,13 +108,16 @@ class AddPurchaseViewModel(
 
     fun onIntent(intent: AddPurchaseIntent) {
         when (intent) {
-            is AddPurchaseIntent.NameChanged -> updateState { copy(name = intent.value, error = null) }
-            is AddPurchaseIntent.AmountChanged -> updateState { copy(amount = intent.value, error = null) }
+            is AddPurchaseIntent.NameChanged ->
+                updateState { copy(name = intent.value, error = null, fieldErrors = fieldErrors.copy(name = null)) }
+            is AddPurchaseIntent.AmountChanged ->
+                updateState { copy(amount = intent.value, error = null, fieldErrors = fieldErrors.copy(amount = null)) }
             is AddPurchaseIntent.CurrencyChanged ->
                 updateState { copy(currency = intent.value.uppercase(), error = null) }
             is AddPurchaseIntent.CategoryChanged ->
                 updateState { copy(category = intent.value, error = null) }
-            is AddPurchaseIntent.PlaceChanged -> updateState { copy(place = intent.value, error = null) }
+            is AddPurchaseIntent.PlaceChanged ->
+                updateState { copy(place = intent.value, error = null, fieldErrors = fieldErrors.copy(place = null)) }
             is AddPurchaseIntent.VatIncludedChanged ->
                 updateState { copy(vatIncluded = intent.value, error = null) }
             is AddPurchaseIntent.VatRateChanged ->
@@ -183,7 +194,14 @@ class AddPurchaseViewModel(
                 updateState {
                     copy(
                         isLoading = false,
-                        error = AppErrorValidation("amount").toUiError(),
+                        error = null,
+                        fieldErrors = AddPurchaseFieldErrors(
+                            amount = if (current.amount.isBlank()) {
+                                "validation_amount_required"
+                            } else {
+                                "validation_amount_invalid"
+                            },
+                        ),
                     )
                 }
                 return@launch
@@ -201,16 +219,38 @@ class AddPurchaseViewModel(
             )
             createPurchase(current.tripId, draft)
                 .onSuccess { purchase ->
-                    updateState { copy(isLoading = false, error = null) }
+                    updateState { copy(isLoading = false, error = null, fieldErrors = AddPurchaseFieldErrors()) }
                     emitEvent(AddPurchaseUiEvent.Created(purchase.id))
                 }
                 .onFailure { throwable ->
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
                     updateState {
-                        copy(isLoading = false, error = throwable.asAppError().toUiError())
+                        copy(
+                            isLoading = false,
+                            error = if (fieldKey == null) appError.toUiError() else null,
+                            fieldErrors = mapPurchaseField(fieldKey, current),
+                        )
                     }
                 }
         }
     }
+
+    private fun mapPurchaseField(fieldKey: String?, state: AddPurchaseUiState): AddPurchaseFieldErrors =
+        when (fieldKey) {
+            "name" -> AddPurchaseFieldErrors(
+                name = if (state.name.isBlank()) "validation_name_required" else "validation_name_invalid",
+            )
+            "amount" -> AddPurchaseFieldErrors(
+                amount = if (state.amount.isBlank() || state.amount == "0") {
+                    "validation_amount_required"
+                } else {
+                    "validation_amount_positive"
+                },
+            )
+            "place" -> AddPurchaseFieldErrors(place = "validation_name_invalid")
+            else -> AddPurchaseFieldErrors()
+        }
 
     private companion object {
         fun resolveSelected(

@@ -14,6 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,7 +71,8 @@ class ResetPasswordViewModelTest {
         vm.onIntent(ResetPasswordIntent.Submit)
 
         assertFalse(vm.state.value.done)
-        assertNotNull(vm.state.value.error)
+        assertNull(vm.state.value.error)
+        assertEquals("validation_token_invalid", vm.state.value.fieldErrors.token)
         assertEquals(0, repo.resetPasswordCalls)
     }
 

@@ -85,6 +85,7 @@ internal fun LoginContent(
                 value = state.displayName,
                 onValueChange = { onIntent(AuthIntent.DisplayNameChanged(it)) },
                 label = t("name"),
+                errorMessage = state.fieldErrors.displayName?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
         }
@@ -93,6 +94,7 @@ internal fun LoginContent(
             onValueChange = { onIntent(AuthIntent.EmailChanged(it)) },
             label = t("email"),
             testTag = VoyageTestTags.LOGIN_EMAIL,
+            errorMessage = state.fieldErrors.email?.let { t(it) },
         )
         Spacer(Modifier.height(12.dp))
         VoyageTextField(
@@ -101,6 +103,7 @@ internal fun LoginContent(
             label = t("password"),
             isPassword = true,
             testTag = VoyageTestTags.LOGIN_PASSWORD,
+            errorMessage = state.fieldErrors.password?.let { t(it) },
         )
         if (!state.isRegisterMode) {
             Spacer(Modifier.height(8.dp))

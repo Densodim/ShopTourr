@@ -221,6 +221,25 @@ class TripDetailViewModelTest {
     }
 
     @Test
+    fun `empty traveler name maps to the name field`() = runTest {
+        val viewModel = vm(tripRepo(sampleTrip))
+        viewModel.onIntent(TripDetailIntent.AddTraveler)
+        assertEquals(null, viewModel.state.value.error)
+        assertEquals("validation_name_required", viewModel.state.value.fieldErrors.travelerName)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `invalid invite email maps to the email field`() = runTest {
+        val viewModel = vm(tripRepo(sampleTrip))
+        viewModel.onIntent(TripDetailIntent.InviteEmailChanged("not-an-email"))
+        viewModel.onIntent(TripDetailIntent.InviteTraveler)
+        assertEquals(null, viewModel.state.value.error)
+        assertEquals("validation_email_invalid", viewModel.state.value.fieldErrors.inviteEmail)
+        viewModel.onCleared()
+    }
+
+    @Test
     fun `invite traveler stores last invite`() = runTest {
         val trips = tripRepo(sampleTrip)
         val viewModel = vm(trips)

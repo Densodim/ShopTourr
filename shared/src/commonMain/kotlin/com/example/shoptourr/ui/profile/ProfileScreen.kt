@@ -123,6 +123,7 @@ internal fun ProfileContent(
                 value = state.displayNameDraft,
                 onValueChange = { onIntent(ProfileIntent.DisplayNameChanged(it)) },
                 label = t("name"),
+                errorMessage = state.fieldErrors.displayName?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
             VoyageButton(

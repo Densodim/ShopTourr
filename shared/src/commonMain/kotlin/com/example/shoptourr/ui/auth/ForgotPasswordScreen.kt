@@ -81,6 +81,7 @@ internal fun ForgotPasswordContent(
                 value = state.email,
                 onValueChange = { onIntent(ForgotPasswordIntent.EmailChanged(it)) },
                 label = t("email"),
+                errorMessage = state.fieldErrors.email?.let { t(it) },
             )
             state.error?.let { err ->
                 Spacer(Modifier.height(12.dp))

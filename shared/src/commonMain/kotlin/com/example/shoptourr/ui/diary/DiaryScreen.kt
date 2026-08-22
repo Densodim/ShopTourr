@@ -92,6 +92,7 @@ internal fun DiaryContent(
                 onValueChange = { onIntent(DiaryIntent.TextChanged(it)) },
                 label = t("entry"),
                 singleLine = false,
+                errorMessage = state.fieldErrors.text?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
             VoyageButton(

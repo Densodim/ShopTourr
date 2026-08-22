@@ -118,6 +118,7 @@ internal fun SettingsContent(
                     onIntent(ProfileIntent.SavePreferences)
                 },
                 label = t("currency_pref"),
+                errorMessage = state.fieldErrors.currency?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
             Text(t("theme"), color = MaterialTheme.colorScheme.onBackground)

@@ -15,6 +15,12 @@ import com.example.shoptourr.presentation.error.UiErrorAction
 import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.launch
 
+data class AuthFieldErrors(
+    val displayName: String? = null,
+    val email: String? = null,
+    val password: String? = null,
+)
+
 data class AuthUiState(
     val isRegisterMode: Boolean = false,
     val displayName: String = "",
@@ -22,6 +28,7 @@ data class AuthUiState(
     val password: String = "",
     val isLoading: Boolean = false,
     val error: UiError? = null,
+    val fieldErrors: AuthFieldErrors = AuthFieldErrors(),
     val user: User? = null,
 ) : UiState
 
@@ -49,18 +56,39 @@ class AuthViewModel(
     fun onIntent(intent: AuthIntent) {
         when (intent) {
             AuthIntent.ToggleMode ->
-                updateState { copy(isRegisterMode = !isRegisterMode, error = null) }
+                updateState { copy(isRegisterMode = !isRegisterMode, error = null, fieldErrors = AuthFieldErrors()) }
             is AuthIntent.SetRegisterMode ->
-                updateState { copy(isRegisterMode = intent.enabled, error = null) }
+                updateState { copy(isRegisterMode = intent.enabled, error = null, fieldErrors = AuthFieldErrors()) }
             is AuthIntent.DisplayNameChanged ->
-                updateState { copy(displayName = intent.value, error = null) }
+                updateState { copy(displayName = intent.value, error = null, fieldErrors = fieldErrors.copy(displayName = null)) }
             is AuthIntent.EmailChanged ->
-                updateState { copy(email = intent.value, error = null) }
+                updateState { copy(email = intent.value, error = null, fieldErrors = fieldErrors.copy(email = null)) }
             is AuthIntent.PasswordChanged ->
-                updateState { copy(password = intent.value, error = null) }
+                updateState { copy(password = intent.value, error = null, fieldErrors = fieldErrors.copy(password = null)) }
             AuthIntent.Submit -> submit()
             is AuthIntent.SocialSignIn -> socialSignIn(intent.provider)
         }
+    }
+
+    private fun mapAuthField(fieldKey: String?, state: AuthUiState): AuthFieldErrors = when (fieldKey) {
+        "displayName" -> AuthFieldErrors(
+            displayName = if (state.displayName.isBlank()) {
+                "validation_name_required"
+            } else {
+                "validation_name_invalid"
+            },
+        )
+        "email" -> AuthFieldErrors(
+            email = if (state.email.isBlank()) "validation_email_required" else "validation_email_invalid",
+        )
+        "password" -> AuthFieldErrors(
+            password = if (state.password.isBlank()) {
+                "validation_password_required"
+            } else {
+                "validation_password_short"
+            },
+        )
+        else -> AuthFieldErrors()
     }
 
     private fun socialSignIn(provider: SocialProvider) {
@@ -95,13 +123,23 @@ class AuthViewModel(
             }
             result
                 .onSuccess { session ->
-                    updateState { copy(isLoading = false, user = session.user, error = null) }
+                    updateState {
+                        copy(isLoading = false, user = session.user, error = null, fieldErrors = AuthFieldErrors())
+                    }
                     emitEvent(AuthUiEvent.NavigateHome)
                 }
                 .onFailure { throwable ->
-                    val uiError = throwable.asAppError().toUiError()
-                    updateState { copy(isLoading = false, error = uiError) }
-                    if (uiError.action is UiErrorAction.Logout) emitEvent(AuthUiEvent.Logout)
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
+                    val uiError = if (fieldKey == null) appError.toUiError() else null
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            error = uiError,
+                            fieldErrors = mapAuthField(fieldKey, current),
+                        )
+                    }
+                    if (uiError?.action is UiErrorAction.Logout) emitEvent(AuthUiEvent.Logout)
                 }
         }
     }

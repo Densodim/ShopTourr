@@ -95,12 +95,14 @@ internal fun ResetPasswordContent(
             value = state.email,
             onValueChange = { onIntent(ResetPasswordIntent.EmailChanged(it)) },
             label = t("email"),
+            errorMessage = state.fieldErrors.email?.let { t(it) },
         )
         Spacer(Modifier.height(12.dp))
         VoyageTextField(
             value = state.token,
             onValueChange = { onIntent(ResetPasswordIntent.TokenChanged(it)) },
             label = t("reset_token"),
+            errorMessage = state.fieldErrors.token?.let { t(it) },
         )
         Spacer(Modifier.height(12.dp))
         VoyageTextField(
@@ -108,6 +110,7 @@ internal fun ResetPasswordContent(
             onValueChange = { onIntent(ResetPasswordIntent.PasswordChanged(it)) },
             label = t("password"),
             isPassword = true,
+            errorMessage = state.fieldErrors.password?.let { t(it) },
         )
         state.error?.let { err ->
             Spacer(Modifier.height(12.dp))

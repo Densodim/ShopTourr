@@ -116,12 +116,12 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `validation error maps to UiError`() = runTest {
+    fun `validation error maps to the display name field`() = runTest {
         val vm = createVm()
         vm.onIntent(ProfileIntent.DisplayNameChanged(" "))
         vm.onIntent(ProfileIntent.SaveProfile)
-        assertEquals("Проверьте поля", vm.state.value.error?.title)
-        assertEquals("displayName", vm.state.value.error?.message)
+        assertNull(vm.state.value.error)
+        assertEquals("validation_name_required", vm.state.value.fieldErrors.displayName)
         vm.onCleared()
     }
 

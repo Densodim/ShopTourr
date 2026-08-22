@@ -80,6 +80,43 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `empty login submit puts the error on the email field`() = runTest {
+        val viewModel = vm(FakeAuthRepository())
+        viewModel.onIntent(AuthIntent.Submit)
+        val state = viewModel.state.value
+        assertNull(state.error)
+        assertEquals("validation_email_required", state.fieldErrors.email)
+        assertNull(state.fieldErrors.password)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `invalid email puts the error on the email field`() = runTest {
+        val viewModel = vm(FakeAuthRepository())
+        viewModel.onIntent(AuthIntent.EmailChanged("not-an-email"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("secret1"))
+        viewModel.onIntent(AuthIntent.Submit)
+        val state = viewModel.state.value
+        assertNull(state.error)
+        assertEquals("validation_email_invalid", state.fieldErrors.email)
+        viewModel.onCleared()
+    }
+
+    @Test
+    fun `short register password puts the error on the password field`() = runTest {
+        val viewModel = vm(FakeAuthRepository())
+        viewModel.onIntent(AuthIntent.SetRegisterMode(true))
+        viewModel.onIntent(AuthIntent.DisplayNameChanged("Ada"))
+        viewModel.onIntent(AuthIntent.EmailChanged("ada@voyage.app"))
+        viewModel.onIntent(AuthIntent.PasswordChanged("short"))
+        viewModel.onIntent(AuthIntent.Submit)
+        val state = viewModel.state.value
+        assertNull(state.error)
+        assertEquals("validation_password_short", state.fieldErrors.password)
+        viewModel.onCleared()
+    }
+
+    @Test
     fun `failed login surfaces error`() = runTest {
         val repo = FakeAuthRepository(error = AppError.Unauthorized)
         val viewModel = vm(repo)

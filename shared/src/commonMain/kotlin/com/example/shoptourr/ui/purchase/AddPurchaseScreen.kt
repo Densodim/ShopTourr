@@ -103,6 +103,7 @@ internal fun AddPurchaseContent(
                 onValueChange = { onIntent(AddPurchaseIntent.NameChanged(it)) },
                 label = t("item_name"),
                 testTag = VoyageTestTags.ADD_PURCHASE_NAME,
+                errorMessage = state.fieldErrors.name?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
             VoyageTextField(
@@ -110,6 +111,7 @@ internal fun AddPurchaseContent(
                 onValueChange = { onIntent(AddPurchaseIntent.AmountChanged(it)) },
                 label = t("amount"),
                 testTag = VoyageTestTags.ADD_PURCHASE_AMOUNT,
+                errorMessage = state.fieldErrors.amount?.let { t(it) },
             )
             Spacer(Modifier.height(12.dp))
             VoyageCurrencyField(
@@ -141,6 +143,7 @@ internal fun AddPurchaseContent(
                 value = state.place,
                 onValueChange = { onIntent(AddPurchaseIntent.PlaceChanged(it)) },
                 label = t("place"),
+                errorMessage = state.fieldErrors.place?.let { t(it) },
             )
         }
         Spacer(Modifier.height(20.dp))

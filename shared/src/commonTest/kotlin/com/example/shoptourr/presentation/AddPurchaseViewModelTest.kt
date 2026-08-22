@@ -99,14 +99,13 @@ class AddPurchaseViewModelTest {
     }
 
     @Test
-    fun `validation failure maps to UiError`() = runTest {
+    fun `validation failure maps to the name field`() = runTest {
         val viewModel = vm()
         viewModel.onIntent(AddPurchaseIntent.Submit)
 
-        val error = viewModel.state.value.error
-        assertIs<UiError>(error)
-        assertEquals("Проверьте поля", error.title)
-        assertEquals("name", error.message)
+        val state = viewModel.state.value
+        assertNull(state.error)
+        assertEquals("validation_name_required", state.fieldErrors.name)
         viewModel.onCleared()
     }
 

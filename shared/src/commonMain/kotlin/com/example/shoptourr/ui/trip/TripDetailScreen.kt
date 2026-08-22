@@ -262,6 +262,7 @@ internal fun TripDetailContent(
                 value = state.travelerNameDraft,
                 onValueChange = { onIntent(TripDetailIntent.TravelerNameChanged(it)) },
                 label = t("traveler_name"),
+                errorMessage = state.fieldErrors.travelerName?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
             VoyageButton(
@@ -275,6 +276,7 @@ internal fun TripDetailContent(
                 value = state.inviteEmailDraft,
                 onValueChange = { onIntent(TripDetailIntent.InviteEmailChanged(it)) },
                 label = t("invite_email"),
+                errorMessage = state.fieldErrors.inviteEmail?.let { t(it) },
             )
             Spacer(Modifier.height(8.dp))
             VoyageButton(

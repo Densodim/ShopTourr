@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.diary
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.CreateDiaryDraft
 import com.example.shoptourr.domain.model.DiaryDayGroup
@@ -17,6 +18,10 @@ import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+data class DiaryFieldErrors(
+    val text: String? = null,
+)
+
 data class DiaryUiState(
     val tripId: String,
     val isLoading: Boolean = true,
@@ -25,6 +30,7 @@ data class DiaryUiState(
     val moodDraft: String = DiaryMoods.defaultGlyph,
     val textDraft: String = "",
     val error: UiError? = null,
+    val fieldErrors: DiaryFieldErrors = DiaryFieldErrors(),
 ) : UiState
 
 sealed interface DiaryIntent {
@@ -62,7 +68,8 @@ class DiaryViewModel(
         when (intent) {
             DiaryIntent.Refresh -> refresh()
             is DiaryIntent.MoodChanged -> updateState { copy(moodDraft = intent.value, error = null) }
-            is DiaryIntent.TextChanged -> updateState { copy(textDraft = intent.value, error = null) }
+            is DiaryIntent.TextChanged ->
+                updateState { copy(textDraft = intent.value, error = null, fieldErrors = fieldErrors.copy(text = null)) }
             DiaryIntent.Add -> add()
             is DiaryIntent.Delete -> remove(intent.entryId)
             DiaryIntent.Back -> emitEvent(DiaryUiEvent.NavigateBack)
@@ -87,7 +94,9 @@ class DiaryViewModel(
                 CreateDiaryDraft(mood = current.moodDraft, text = current.textDraft),
             )
                 .onSuccess {
-                    updateState { copy(isSaving = false, textDraft = "", error = null) }
+                    updateState {
+                        copy(isSaving = false, textDraft = "", error = null, fieldErrors = DiaryFieldErrors())
+                    }
                 }
                 .onFailure { handleFailure(it, saving = true) }
         }
@@ -103,14 +112,23 @@ class DiaryViewModel(
     }
 
     private fun handleFailure(throwable: Throwable, saving: Boolean = false) {
-        val uiError = throwable.asAppError().toUiError()
+        val appError = throwable.asAppError()
+        val fieldKey = (appError as? AppError.Validation)?.message
+        val uiError = if (fieldKey == null) appError.toUiError() else null
         updateState {
             copy(
                 isLoading = false,
                 isSaving = if (saving) false else isSaving,
                 error = uiError,
+                fieldErrors = if (fieldKey == "text") {
+                    DiaryFieldErrors(
+                        text = if (textDraft.isBlank()) "validation_text_required" else "validation_text_invalid",
+                    )
+                } else {
+                    fieldErrors
+                },
             )
         }
-        if (uiError.action is UiErrorAction.Logout) emitEvent(DiaryUiEvent.Logout)
+        if (uiError?.action is UiErrorAction.Logout) emitEvent(DiaryUiEvent.Logout)
     }
 }

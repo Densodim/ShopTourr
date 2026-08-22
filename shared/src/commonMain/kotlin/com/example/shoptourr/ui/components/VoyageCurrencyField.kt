@@ -31,6 +31,7 @@ fun VoyageCurrencyField(
     label: String,
     modifier: Modifier = Modifier,
     testTag: String? = null,
+    errorMessage: String? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selected = value.ifBlank { SupportedCurrencies.codes.first() }
@@ -59,6 +60,10 @@ fun VoyageCurrencyField(
                     .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
                     .semantics { contentDescription = label },
                 readOnly = true,
+                isError = errorMessage != null,
+                supportingText = errorMessage?.let { message ->
+                    { voyageFieldErrorText(message) }
+                },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             )
             ExposedDropdownMenu(

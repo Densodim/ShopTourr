@@ -1,5 +1,6 @@
 package com.example.shoptourr.presentation.profile
 
+import com.example.shoptourr.domain.error.AppError
 import com.example.shoptourr.domain.error.asAppError
 import com.example.shoptourr.domain.model.PremiumPlan
 import com.example.shoptourr.domain.model.ThemeMode
@@ -24,6 +25,12 @@ import com.example.shoptourr.presentation.error.toUiError
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+data class ProfileFieldErrors(
+    val displayName: String? = null,
+    val currency: String? = null,
+    val locale: String? = null,
+)
+
 data class ProfileUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -35,6 +42,7 @@ data class ProfileUiState(
     val themeDraft: ThemeMode = ThemeMode.SYSTEM,
     val pushDraft: Boolean = true,
     val error: UiError? = null,
+    val fieldErrors: ProfileFieldErrors = ProfileFieldErrors(),
 ) : UiState
 
 sealed interface ProfileIntent {
@@ -100,11 +108,25 @@ class ProfileViewModel(
         when (intent) {
             ProfileIntent.Refresh -> refresh()
             is ProfileIntent.DisplayNameChanged ->
-                updateState { copy(displayNameDraft = intent.value, error = null) }
+                updateState {
+                    copy(
+                        displayNameDraft = intent.value,
+                        error = null,
+                        fieldErrors = fieldErrors.copy(displayName = null),
+                    )
+                }
             is ProfileIntent.CurrencyChanged ->
-                updateState { copy(currencyDraft = intent.value.uppercase(), error = null) }
+                updateState {
+                    copy(
+                        currencyDraft = intent.value.uppercase(),
+                        error = null,
+                        fieldErrors = fieldErrors.copy(currency = null),
+                    )
+                }
             is ProfileIntent.LocaleChanged ->
-                updateState { copy(localeDraft = intent.value, error = null) }
+                updateState {
+                    copy(localeDraft = intent.value, error = null, fieldErrors = fieldErrors.copy(locale = null))
+                }
             is ProfileIntent.ThemeChanged ->
                 updateState { copy(themeDraft = intent.value, error = null) }
             is ProfileIntent.PushChanged ->
@@ -138,11 +160,18 @@ class ProfileViewModel(
     private fun saveProfile() {
         launch {
             updateState { copy(isSaving = true, error = null) }
-            updateProfile(UpdateProfileDraft(displayName = state.value.displayNameDraft))
-                .onSuccess { updateState { copy(isSaving = false) } }
+            val current = state.value
+            updateProfile(UpdateProfileDraft(displayName = current.displayNameDraft))
+                .onSuccess { updateState { copy(isSaving = false, fieldErrors = ProfileFieldErrors()) } }
                 .onFailure { throwable ->
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
                     updateState {
-                        copy(isSaving = false, error = throwable.asAppError().toUiError())
+                        copy(
+                            isSaving = false,
+                            error = if (fieldKey == null) appError.toUiError() else null,
+                            fieldErrors = mapProfileField(fieldKey, current),
+                        )
                     }
                 }
         }
@@ -161,14 +190,34 @@ class ProfileViewModel(
                     darkMode = current.themeDraft == ThemeMode.DARK,
                 )
             )
-                .onSuccess { updateState { copy(isSaving = false) } }
+                .onSuccess { updateState { copy(isSaving = false, fieldErrors = ProfileFieldErrors()) } }
                 .onFailure { throwable ->
+                    val appError = throwable.asAppError()
+                    val fieldKey = (appError as? AppError.Validation)?.message
                     updateState {
-                        copy(isSaving = false, error = throwable.asAppError().toUiError())
+                        copy(
+                            isSaving = false,
+                            error = if (fieldKey == null) appError.toUiError() else null,
+                            fieldErrors = mapProfileField(fieldKey, current),
+                        )
                     }
                 }
         }
     }
+
+    private fun mapProfileField(fieldKey: String?, state: ProfileUiState): ProfileFieldErrors =
+        when (fieldKey) {
+            "displayName" -> ProfileFieldErrors(
+                displayName = if (state.displayNameDraft.isBlank()) {
+                    "validation_name_required"
+                } else {
+                    "validation_name_invalid"
+                },
+            )
+            "preferredCurrency" -> ProfileFieldErrors(currency = "validation_currency_invalid")
+            "locale" -> ProfileFieldErrors(locale = "validation_locale_invalid")
+            else -> ProfileFieldErrors()
+        }
 
     private fun activatePlus() {
         launch {
