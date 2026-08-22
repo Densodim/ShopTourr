@@ -1,7 +1,5 @@
 package com.example.shoptourr.ui.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +39,6 @@ fun VoyageDateField(
     testTag: String? = null,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
     val tagged = if (testTag != null) {
         Modifier
             .fillMaxWidth()
@@ -58,12 +55,11 @@ fun VoyageDateField(
         Spacer(Modifier.height(10.dp))
         VoyageUnderlineField(
             value = value,
-            onValueChange = {},
-            modifier = tagged.clickable(
-                interactionSource = interactionSource,
-                indication = null,
-            ) { showPicker = true },
-            readOnly = true,
+            onValueChange = { raw ->
+                val filtered = DatePickerFormats.filterDateInput(raw)
+                onValueChange(DatePickerFormats.normalizeUserDate(filtered) ?: filtered)
+            },
+            modifier = tagged,
             isError = errorMessage != null,
             placeholder = { Text(t("date_pick_hint")) },
             trailingIcon = {

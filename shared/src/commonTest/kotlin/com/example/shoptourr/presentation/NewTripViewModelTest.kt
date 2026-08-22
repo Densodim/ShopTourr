@@ -105,4 +105,22 @@ class NewTripViewModelTest {
         assertEquals("Конфликт", vm.state.value.error?.title)
         vm.onCleared()
     }
+
+    @Test
+    fun `dotted day-first dates submit as iso`() = runTest {
+        val trips = FakeTripRepository(HomeSnapshot("Mila", null, 0, 0))
+        val vm = NewTripViewModel(CreateTripUseCase(trips))
+        vm.onIntent(NewTripIntent.CityChanged("Lisbon"))
+        vm.onIntent(NewTripIntent.CountryChanged("Portugal"))
+        vm.onIntent(NewTripIntent.StartDateChanged("22.08.2026"))
+        vm.onIntent(NewTripIntent.EndDateChanged("29.08.2026"))
+        vm.onIntent(NewTripIntent.BudgetChanged("1200"))
+        vm.events.test {
+            vm.onIntent(NewTripIntent.Submit)
+            assertIs<NewTripUiEvent.Created>(awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(1, trips.createCalls)
+        vm.onCleared()
+    }
 }

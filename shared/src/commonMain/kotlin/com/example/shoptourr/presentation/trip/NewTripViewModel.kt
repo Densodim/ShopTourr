@@ -114,11 +114,13 @@ class NewTripViewModel(
 
         launch {
             updateState { copy(isLoading = true, error = null) }
+            val startDate = DatePickerFormats.normalizeUserDate(current.startDate) ?: current.startDate
+            val endDate = DatePickerFormats.normalizeUserDate(current.endDate) ?: current.endDate
             val draft = CreateTripDraft(
                 city = current.city,
                 country = current.country,
-                startDate = current.startDate,
-                endDate = current.endDate,
+                startDate = startDate,
+                endDate = endDate,
                 budget = Money.parse(current.budgetAmount, current.budgetCurrency),
                 quoteCurrency = current.quoteCurrency.ifBlank { null },
                 travelers = current.travelers,
@@ -163,15 +165,17 @@ class NewTripViewModel(
             !FieldRules.isPlaceName(state.country.trim()) -> "validation_country_invalid"
             else -> null
         }
+        val startIso = DatePickerFormats.normalizeUserDate(state.startDate)
+        val endIso = DatePickerFormats.normalizeUserDate(state.endDate)
         val startDate = when {
             state.startDate.isBlank() -> "validation_start_date_required"
-            !DatePickerFormats.isValidIsoDate(state.startDate) -> "validation_date_invalid"
+            startIso == null -> "validation_date_invalid"
             else -> null
         }
         val endDate = when {
             state.endDate.isBlank() -> "validation_end_date_required"
-            !DatePickerFormats.isValidIsoDate(state.endDate) -> "validation_date_invalid"
-            state.startDate.isNotBlank() && state.endDate < state.startDate -> "validation_dates_order"
+            endIso == null -> "validation_date_invalid"
+            startIso != null && endIso < startIso -> "validation_dates_order"
             else -> null
         }
         val budget = when {
